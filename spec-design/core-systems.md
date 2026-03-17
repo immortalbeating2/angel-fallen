@@ -5,7 +5,23 @@
 ### 1.1 伤害计算公式
 
 ```
-最终伤害 = 基础伤害 × 武器倍率 × (1 + 伤害加成%) × 暴击倍率 × (1 - 目标护甲%)
+最终伤害 = 武器伤害 × (1 + 伤害加成%) × 暴击倍率 × (1 - 有效护甲%)
+
+其中:
+- 武器伤害 = WeaponDef.damage_per_level[current_level]（绝对值，非倍率）
+- 伤害加成% = 角色base_damage_bonus + 被动加成 + Buff加成
+- 暴击倍率 = 暴击时为 crit_damage_mult，未暴击为 1.0
+- 有效护甲% = min(目标护甲%, 75%)（护甲上限75%，防止无敌）
+- 最终伤害 = max(最终伤害, 1.0)（保底1点伤害）
+```
+
+**圣光伤害特殊公式:**
+```
+圣光伤害 = 武器伤害 × (1 + 伤害加成%) × 暴击倍率 × (1 - 有效护甲% × (1 - 穿透率))
+
+- 穿透率由武器/被动定义，基础30%，即无视目标30%的护甲
+- 示例: holy_dmg=50, armor=50%, penetration=30%
+  → 50 × (1 - 0.5 × (1 - 0.3)) = 50 × (1 - 0.35) = 50 × 0.65 = 32.5
 ```
 
 ### 1.2 伤害流程
@@ -14,20 +30,68 @@
 WeaponProjectile 进入 EnemyHurtbox
         │
         ▼
-DamageSystem.calculate_damage(source, target, base_damage)
+DamageSystem.calculate_damage(source, target, weapon_damage, damage_type, bonus_pct, is_crit, crit_mult)
         │
         ├── 1. 获取攻击方属性 (StatsComponent)
         ├── 2. 计算暴击: rand() < crit_rate ? crit_damage_mult : 1.0
-        ├── 3. 应用伤害加成 (武器等级加成 + 被动加成)
-        ├── 4. 应用目标减伤 (护甲)
-        ├── 5. 应用最终伤害到 HealthComponent
+        ├── 3. 应用伤害加成 (被动加成 + Buff加成)
+        ├── 4. 判断伤害类型:
+        │   ├── HOLY → 应用穿透公式: armor × (1 - penetration)
+        │   └── 其他 → 应用有效护甲: min(armor, 0.75)
+        ├── 5. 保底伤害 max(final, 1.0)
+        ├── 6. 应用最终伤害到 HealthComponent
+        ├── 7. 触发状态效果 (基于 damage_type)
         │
         ▼
-EventBus.damage_dealt.emit(target, final_damage, is_crit)
+EventBus.damage_dealt.emit(target, final_damage, damage_type, is_crit)
         │
-        ├── HUD 显示伤害数字
-        ├── 受击特效播放
-        └── 击退计算 (knockback)
+        ├── HUD 显示伤害数字（暴击金色加大）
+        ├── 受击特效播放（按伤害类型着色）
+        └── 击退计算 (knockback × source.knockback_mult)
+```
+
+**DamageSystem 函数签名:**
+
+```gdscript
+class_name DamageSystem
+
+## 计算并应用伤害
+## source: 攻击方节点（Player/Enemy）
+## target: 受击方节点
+## weapon_damage: 武器当前等级的绝对伤害值
+## damage_type: DamageType 枚举
+## bonus_pct: 额外伤害加成百分比（0.0 = 无加成）
+## penetration: 护甲穿透率（仅 HOLY 类型使用，其他类型传 0.0）
+## knockback_mult: 击退倍率（默认 1.0）
+static func calculate_damage(
+    source: Node,
+    target: Node,
+    weapon_damage: float,
+    damage_type: DamageType,
+    bonus_pct: float = 0.0,
+    penetration: float = 0.0,
+    knockback_mult: float = 1.0
+) -> float:
+    var stats = source.get_node("StatsComponent") as StatsComponent
+    var is_crit = randf() < stats.get_stat("crit_rate")
+    var crit_mult = stats.get_stat("crit_damage") if is_crit else 1.0
+    var total_bonus = bonus_pct + stats.get_stat("damage_bonus")
+    
+    var damage = weapon_damage * (1.0 + total_bonus) * crit_mult
+    
+    # 护甲计算
+    var target_armor = target.get_node("StatsComponent").get_stat("armor")
+    if damage_type == DamageType.HOLY:
+        damage *= (1.0 - target_armor * (1.0 - penetration))
+    else:
+        damage *= (1.0 - minf(target_armor, 0.75))
+    
+    damage = maxf(damage, 1.0)  # 保底伤害
+    
+    target.get_node("HealthComponent").take_damage(damage, damage_type)
+    EventBus.damage_dealt.emit(target, damage, damage_type, is_crit)
+    
+    return damage
 ```
 
 ### 1.3 伤害类型
@@ -63,6 +127,27 @@ class_name StatusEffect extends Resource
 @export var max_stacks: int
 ```
 
+### 1.5 状态效果叠加规则
+
+```
+同类效果叠加:
+├── is_stackable = true  → 叠加层数（最多 max_stacks），每层独立计时
+├── is_stackable = false → 刷新持续时间（取较长值）
+└── 数值计算: 叠加层数 × 单层 value
+
+不同类效果共存:
+├── 所有不同类型效果可同时存在
+├── 减速效果取最大值（不累加）: max(冰冻50%, 其他减速X%) 
+├── 增伤效果累加: 易伤25% + 其他增伤X% = 总增伤
+├── DOT效果独立计算: 燃烧 + 中毒 分别tick
+└── 眩晕覆盖减速（眩晕期间减速无效）
+
+特殊交互:
+├── 燃烧 + 冰冻 → 互相抵消（移除双方）
+├── 感电 + 水环境 → 伤害翻倍，范围扩大至5m
+└── 易伤期间被暴击 → 额外15%伤害加成
+```
+
 ---
 
 ## 2. 武器系统 (WeaponSystem)
@@ -90,11 +175,18 @@ func _process(delta: float) -> void:
 func _attack() -> void:
     pass
 
-# 获取当前等级的冷却时间（含CDR计算）
+# 获取当前等级的冷却时间（含CDR计算，CDR上限75%）
 func _get_cooldown() -> float:
     var base_cd = weapon_def.get_cooldown(current_level)
     var cdr = _get_owner_stat("cooldown_reduction")
+    cdr = minf(cdr, 0.75)  # CDR上限75%，最低冷却 = base × 0.25
     return base_cd * (1.0 - cdr)
+
+# 通过节点树向上查找 Player 的 StatsComponent 获取属性值
+func _get_owner_stat(stat_name: String) -> float:
+    var player = get_parent().get_parent()  # WeaponMount → Player
+    var stats = player.get_node("StatsComponent") as StatsComponent
+    return stats.get_stat(stat_name) if stats else 0.0
 
 func upgrade() -> void:
     current_level = mini(current_level + 1, weapon_def.max_level)
@@ -177,17 +269,39 @@ WeaponSystem.check_evolution_available()
 
 ## 3. 敌人生成系统 (EnemySpawner)
 
-### 3.1 生成策略
+### 3.1 生成策略（房间内计时制）
+
+敌人生成采用**楼层编号（基础强度）+ 房间战斗时间（压力递增）**双因子驱动。
+仅在战斗房间内生成敌人，安全营地/商店/事件房间不生成。
 
 ```gdscript
 class_name EnemySpawner extends Node
 
-# 生成配置
+# 房间战斗状态
+var _room_combat_time: float = 0.0   # 当前房间战斗时间（进入战斗房间重置）
 var _spawn_timer: float = 0.0
 var _wave_timer: float = 0.0
-var _difficulty_curve: Curve     # 难度曲线（时间→难度系数）
+var _is_combat_active: bool = false   # 仅战斗房间为 true
+
+# 楼层基础配置（从 enemy_scaling.json 加载）
+var _floor_config: Dictionary         # floor_multipliers[floor_index]
+
+func start_room_combat(floor_index: int) -> void:
+    _room_combat_time = 0.0
+    _is_combat_active = true
+    _floor_config = ConfigManager.get_floor_scaling(floor_index)
+    _spawn_timer = 0.0
+    _wave_timer = ELITE_WAVE_INTERVAL
+
+func stop_room_combat() -> void:
+    _is_combat_active = false
+    GameManager.run_data.room_combat_time += _room_combat_time
 
 func _process(delta: float) -> void:
+    if not _is_combat_active:
+        return
+    
+    _room_combat_time += delta
     _spawn_timer -= delta
     _wave_timer -= delta
     
@@ -198,23 +312,56 @@ func _process(delta: float) -> void:
     if _wave_timer <= 0.0:
         _spawn_elite_wave()
         _wave_timer = ELITE_WAVE_INTERVAL
+
+# 生成间隔随房间内战斗时间缩短
+func _get_spawn_interval() -> float:
+    var time_pressure = _get_time_pressure()
+    return base_interval / (1.0 + time_pressure * 0.5)
+
+# 时间压力系数: 0s→0.0, 30s→0.5, 60s→1.5, 120s+→3.0
+func _get_time_pressure() -> float:
+    if _room_combat_time < 30.0: return _room_combat_time / 60.0
+    elif _room_combat_time < 60.0: return 0.5 + (_room_combat_time - 30.0) / 30.0
+    else: return 1.5 + minf((_room_combat_time - 60.0) / 40.0, 1.5)
 ```
 
-### 3.2 难度缩放
+### 3.2 难度缩放（双因子表）
 
-| 游戏时间 | 生成间隔 | 敌人HP倍率 | 敌人速度倍率 | 同屏上限 | 精英概率 |
-|----------|----------|-----------|-------------|---------|---------|
-| 0-2min | 1.5s | 1.0x | 1.0x | 50 | 0% |
-| 2-5min | 1.2s | 1.5x | 1.1x | 100 | 5% |
-| 5-10min | 0.8s | 2.5x | 1.2x | 200 | 10% |
-| 10-15min | 0.5s | 4.0x | 1.3x | 350 | 15% |
-| 15-20min | 0.3s | 7.0x | 1.4x | 500 | 20% |
-| 20min+ | 0.2s | 10.0x+ | 1.5x | 500 | 25% |
+**楼层基础倍率**（决定敌人基础属性）：
+
+| 章节 | 楼层 | HP倍率 | 速度倍率 | 基础生成间隔 | 精英概率 |
+|------|------|--------|---------|-------------|---------|
+| 第一章 | F1 | 1.0x | 1.0x | 2.0s | 0% |
+| | F2 | 1.3x | 1.05x | 1.8s | 3% |
+| | F3 | 1.7x | 1.1x | 1.5s | 5% |
+| | F4 | 2.5x | 1.15x | 1.3s | 8% |
+| 第二章 | F5 | 3.0x | 1.2x | 1.2s | 10% |
+| | F6 | 3.8x | 1.25x | 1.0s | 12% |
+| | F7 | 5.0x | 1.3x | 0.8s | 15% |
+| | F8 | 6.0x | 1.35x | 0.7s | 18% |
+| 第三章 | F9 | 7.0x | 1.4x | 0.6s | 20% |
+| | F10 | 8.5x | 1.4x | 0.5s | 22% |
+| | F11 | 10.0x | 1.45x | 0.4s | 24% |
+| | F12 | 12.0x | 1.5x | 0.3s | 26% |
+| 最终章 | F13 | 15.0x | 1.5x | 0.25s | 30% |
+| 隐藏层 | FS1 | 20.0x | 1.6x | 0.2s | 35% |
+| | FS2 | 25.0x | 1.7x | 0.15s | 40% |
+
+**房间内时间压力**（在楼层基础上叠加）：
+
+| 房间战斗时间 | 生成间隔倍率 | HP追加倍率 | 同屏上限 | 说明 |
+|-------------|-------------|-----------|---------|------|
+| 0-30s | ×1.0 | ×1.0 | 50 | 初始压力，正常清怪 |
+| 30-60s | ×0.8 | ×1.3 | 100 | 压力上升，催促进攻 |
+| 60-120s | ×0.6 | ×1.8 | 200 | 高压，必须快速清场 |
+| 120s+ | ×0.4 | ×2.5 | 350 | 极限压力，惩罚拖延 |
+
+> 设计意图：玩家应在 60-90秒内清完一个房间。超过120秒意味着当前build不够强，需要回头提升。
 
 ### 3.3 Roguelike 房间内生成规则
 
 ```
-进入房间 → 关闭出口
+进入战斗房间 → 关闭出口 → EnemySpawner.start_room_combat(floor_index)
     │
     ▼
 根据房间类型和楼层确定敌人配置
@@ -227,8 +374,13 @@ func _process(delta: float) -> void:
 每波间隔2-3秒，波内敌人从房间边缘/生成点出现
     │
     ▼
-所有波次清除 → 掉落奖励 → 开启出口
+所有波次清除 → EnemySpawner.stop_room_combat()
+    │
+    ▼
+掉落奖励 → 开启出口
 ```
+
+> 注意: 安全营地、商店房间、事件房间不触发战斗，不启动 EnemySpawner。
 
 ### 3.4 敌人AI行为树
 
@@ -247,19 +399,20 @@ BaseEnemy AI:
 │       └── → 移动 + 接触伤害判定
 ```
 
-Boss AI 扩展：
+Boss AI 扩展（阶段阈值由 boss_phases.json 独立配置）：
 ```
 BossEnemy AI:
-├── [Selector] 阶段切换
-│   ├── HP > 66% → Phase1 行为
-│   ├── HP > 33% → Phase2 行为（增加技能）
-│   └── HP <= 33% → Phase3 行为（狂暴）
+├── [Selector] 阶段切换（读取 EnemyDef.phase_thresholds）
+│   ├── 岩石巨像: [0.60, 0.30]    → 3阶段
+│   ├── 炎魔领主: [0.70, 0.40]    → 3阶段
+│   ├── 寒霜君王: [0.70, 0.40]    → 3阶段
+│   └── 虚空之主: [0.75, 0.50, 0.25] → 4阶段
 │
 Phase 行为:
 ├── [Sequence]
 │   ├── 冷却完毕?
-│   ├── 随机选择当前阶段可用技能
-│   ├── 播放预警动画（给玩家反应时间）
+│   ├── 从当前阶段可用技能池加权随机选择
+│   ├── 播放预警动画（给玩家反应时间: 0.5-1.5s 按技能类型）
 │   └── 执行技能
 ```
 
@@ -288,10 +441,13 @@ Phase 行为:
     └── L形走廊（先水平后垂直或反之）
 
 步骤5: 分配房间类型
+    ├── 选择一个边缘叶节点作为入口/起始房间
+    ├── 从起始房间BFS计算各房间距离
     ├── 距离入口最远的房间 → Boss房间
-    ├── 随机1个房间 → 商店
+    ├── 距离中位数的房间中随机1个 → 商店
     ├── 随机0-1个房间 → 宝藏
-    ├── 1-2个房间 → 精英
+    ├── 距离较远的 1-2个房间 → 精英
+    ├── 0-1个房间 → 随机事件（由事件概率表决定）
     └── 其余 → 普通战斗
 ```
 
@@ -387,31 +543,47 @@ func reroll() -> bool:
 
 ### 6.1 掉落表
 
-```gdscript
-# 普通敌人掉落
-var normal_drop_table = {
-    "xp_gem_small": { "weight": 100, "min": 1, "max": 1 },
-    "coin":         { "weight": 15,  "min": 1, "max": 3 },
-    "health_orb":   { "weight": 3,   "min": 1, "max": 1 },
-}
+掉落表采用统一 JSON 格式定义（详见 data-structures.md Section 3.3），每个掉落表包含：
+- `guaranteed`: 必定掉落的物品列表
+- `random`: 加权随机物品池（按 weight 加权抽取）
+- `max_random_drops`: 最大随机掉落数量
 
-# 精英敌人掉落
-var elite_drop_table = {
-    "xp_gem_large": { "weight": 100, "min": 1, "max": 1 },
-    "coin":         { "weight": 60,  "min": 5, "max": 15 },
-    "health_orb":   { "weight": 20,  "min": 1, "max": 2 },
-    "chest":        { "weight": 10,  "min": 1, "max": 1 },
-    "magnet":       { "weight": 8,   "min": 1, "max": 1 },
-}
-
-# Boss掉落
-var boss_drop_table = {
-    "xp_gem_huge":  { "weight": 100, "min": 1, "max": 1 },
-    "coin":         { "weight": 100, "min": 20, "max": 50 },
-    "chest_rare":   { "weight": 50,  "min": 1, "max": 1 },
-    "health_orb":   { "weight": 40,  "min": 2, "max": 3 },
+```json
+// data/drop_tables.json 格式示例
+{
+    "normal": {
+        "guaranteed": ["xp_gem_small"],
+        "random": [
+            { "item": "coin", "weight": 15, "min": 1, "max": 3 },
+            { "item": "health_orb", "weight": 3, "min": 1, "max": 1 }
+        ],
+        "max_random_drops": 1
+    },
+    "elite": {
+        "guaranteed": ["xp_gem_large"],
+        "random": [
+            { "item": "coin", "weight": 60, "min": 5, "max": 15 },
+            { "item": "health_orb", "weight": 20, "min": 1, "max": 2 },
+            { "item": "chest", "weight": 10, "min": 1, "max": 1 },
+            { "item": "magnet", "weight": 8, "min": 1, "max": 1 },
+            { "item": "ore", "weight": 15, "min": 1, "max": 2 }
+        ],
+        "max_random_drops": 2
+    },
+    "boss": {
+        "guaranteed": ["xp_gem_huge", "chest_rare", "ore"],
+        "random": [
+            { "item": "coin", "weight": 100, "min": 20, "max": 50 },
+            { "item": "health_orb", "weight": 40, "min": 2, "max": 3 },
+            { "item": "ore", "weight": 60, "min": 2, "max": 4 },
+            { "item": "accessory", "weight": 20, "min": 1, "max": 1 }
+        ],
+        "max_random_drops": 3
+    }
 }
 ```
+
+> 注意: `EnemyDef.drop_table_id` 引用此文件中的 key（"normal"/"elite"/"boss"），不再使用 GDScript 内联定义。
 
 ### 6.2 经验宝石类型
 
@@ -515,9 +687,29 @@ var shop_pool = {
 
 ### 8.2 商品品质与定价
 
-- 品质受当前楼层和玩家Luck影响
-- 价格 = 基础价格 × 品质倍率 × 楼层倍率
+品质由楼层和 Luck 属性共同决定：
+
+```gdscript
+# 品质权重计算
+func _get_quality_weights(floor_index: int, luck: float) -> Dictionary:
+    var floor_bonus = floor_index * 0.02    # 每层+2%稀有率
+    var luck_bonus = luck * 0.05            # 每点Luck+5%稀有率
+    return {
+        "common":    maxf(0.7 - floor_bonus - luck_bonus, 0.2),  # 最低20%
+        "uncommon":  0.2 + floor_bonus * 0.5 + luck_bonus * 0.3,
+        "rare":      0.08 + floor_bonus * 0.3 + luck_bonus * 0.5,
+        "legendary": 0.02 + floor_bonus * 0.2 + luck_bonus * 0.2,
+    }
+
+# 定价公式
+# 最终价格 = base_price × quality_mult × floor_mult
+# quality_mult: common=1.0, uncommon=1.5, rare=2.5, legendary=4.0
+# floor_mult: 1.0 + (floor_index - 1) × 0.15
+```
+
 - 商品可预览完整属性后再购买
+- 每层商店刷新一次，重新进入不刷新
+- 详细 JSON 配置见 data-structures.md Section 3.5
 
 ---
 
@@ -535,3 +727,118 @@ var shop_pool = {
 | 锻造台 | 免费升级一个已有武器1级 | 10% |
 | 遗忘之泉 | 移除一个武器/被动，返还升级选择次数 | 10% |
 | 挑战房 | 限时击杀挑战，成功获得大量奖励 | 5% |
+
+---
+
+## 10. 耐力系统 (StaminaSystem)
+
+### 10.1 耐力消耗与恢复
+
+```gdscript
+# 耐力参数（定义在 StatsComponent 中）
+const STAMINA_MAX: float = 100.0          # 最大耐力
+const STAMINA_DRAIN_RATE: float = 30.0    # 冲刺消耗速率（/秒）
+const STAMINA_REGEN_RATE: float = 20.0    # 恢复速率（/秒）
+const STAMINA_REGEN_DELAY: float = 0.5    # 停止冲刺后恢复延迟（秒）
+const STAMINA_MIN_SPRINT: float = 20.0    # 低于此值无法开始冲刺
+const SPRINT_SPEED_MULT: float = 1.6      # 冲刺速度倍率
+
+var _current_stamina: float = STAMINA_MAX
+var _regen_cooldown: float = 0.0
+
+func _process(delta: float) -> void:
+    if is_sprinting and _current_stamina > 0:
+        _current_stamina -= STAMINA_DRAIN_RATE * delta
+        _regen_cooldown = STAMINA_REGEN_DELAY
+        if _current_stamina <= 0:
+            _current_stamina = 0
+            _force_stop_sprint()
+    else:
+        _regen_cooldown -= delta
+        if _regen_cooldown <= 0:
+            _current_stamina = minf(_current_stamina + STAMINA_REGEN_RATE * delta, STAMINA_MAX)
+```
+
+### 10.2 环境对耐力的影响
+
+| 环境 | 耐力效果 |
+|------|---------|
+| 水流区域 | 消耗速率 ×1.5 |
+| 冰面 | 消耗速率 ×0.5（惯性滑行替代冲刺） |
+| 熔岩区域附近 | 恢复速率 ×0.7 |
+| 虚空腐蚀区 | 消耗速率 ×2.0，恢复速率 ×0.5 |
+
+---
+
+## 11. 路线亲和度系统 (RouteSystem)
+
+### 11.1 亲和度计算
+
+玩家在一局中的选择会累积路线亲和度（alignment），范围 -100 ~ +100：
+
+```gdscript
+# RunData 中的 alignment 字段
+# +100 = 完全救赎（Holy），-100 = 完全堕落（Void），0 = 平衡
+
+# 影响亲和度的行为:
+# - 选择 route_tag="holy" 被动: alignment += passive.alignment_value (正值)
+# - 选择 route_tag="void" 被动: alignment += passive.alignment_value (负值)
+# - 叙事分支选择: alignment += choice.alignment_change
+# - 特定事件选择（祝福/诅咒祭坛）: alignment ± 5~15
+
+func update_alignment(change: float) -> void:
+    alignment = clampf(alignment + change, -100.0, 100.0)
+    EventBus.route_changed.emit(alignment)
+```
+
+### 11.2 路线阈值与效果
+
+| 亲和度范围 | 路线 | 效果 |
+|-----------|------|------|
+| +60 ~ +100 | 救赎之路 | 圣光伤害+20%，治疗效果+15%，可触发救赎结局 |
+| +30 ~ +59 | 偏向光明 | 圣光伤害+10% |
+| -29 ~ +29 | 平衡 | 所有属性小幅提升+5%，可触发平衡结局 |
+| -59 ~ -30 | 偏向黑暗 | 虚空伤害+10% |
+| -100 ~ -60 | 堕落之路 | 虚空伤害+20%，暴击率+10%，可触发堕落结局 |
+
+### 11.3 结局触发条件
+
+```
+救赎结局: alignment >= +60 且 击败虚空之主
+堕落结局: alignment <= -60 且 击败虚空之主
+平衡结局: -30 <= alignment <= +30 且 击败虚空之主 且 收集 ≥ 20 记忆碎片
+```
+
+---
+
+## 12. 锻造系统 (ForgeSystem)
+
+### 12.1 锻造机制
+
+锻造台位于安全营地和特定房间事件中，消耗矿石强化当前武器：
+
+```gdscript
+# ForgeRecipe 定义详见 data-structures.md Section 1.9
+# 锻造操作
+func forge_weapon(weapon: WeaponInstance, recipe: ForgeRecipe) -> bool:
+    if GameManager.run_data.ore_count < recipe.ore_cost:
+        return false
+    if weapon.forge_count >= recipe.max_uses:
+        return false
+    
+    GameManager.run_data.ore_count -= recipe.ore_cost
+    weapon.apply_forge(recipe.effect_type, recipe.effect_value)
+    weapon.forge_count += 1
+    EventBus.ore_changed.emit(GameManager.run_data.ore_count)
+    return true
+```
+
+### 12.2 锻造配方
+
+| 配方 | 矿石消耗 | 效果 | 最大次数 |
+|------|---------|------|---------|
+| 强化锻造 | 3 | 伤害+10% | 3 |
+| 元素附魔 | 5 | 附加对应章节元素效果 | 1 |
+| 极限突破 | 8 | 等级上限+2 | 1 |
+
+> 锻造效果为当局有效，不保留至下局。矿石来源: 精英/Boss掉落、特定房间事件、可破坏环境物。

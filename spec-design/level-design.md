@@ -144,19 +144,29 @@ func play_narrative():
 ```gdscript
 # 叙事数据资源
 class_name NarrativeResource extends Resource
+# 注意: 完整 Resource 定义见 data-structures.md Section 1.8
 
-@export var segments: Array[NarrativeSegment]
+@export var chapter_id: String
+@export var trigger: String                 # "chapter_start" / "chapter_end" / "ending"
+@export var segments: Array[NarrativeSegment] = []
+@export var background: Texture2D           # 默认背景
+@export var bgm: AudioStream               # 默认BGM
 
-class NarrativeSegment:
-    var id: String
-    var background: Texture2D       # 背景插画
-    var portrait: Texture2D         # 角色立绘（可为null）
-    var text: String                # BBCode格式文字
-    var speed: float = 0.03         # 打字机速度（秒/字）
-    var transition_anim: String = "fade_in"
-    var has_choice: bool = false
-    var choices: Array[Dictionary]  # [{text, route_flag}]
-    var bgm_override: AudioStream   # 可选BGM切换
+class_name NarrativeSegment extends Resource
+# 注意: 完整 Resource 定义见 data-structures.md Section 1.8
+
+@export var id: String
+@export var type: String = "narration"     # "narration" / "dialogue" / "choice" / "cutscene"
+@export var speaker: String = ""           # 说话者名称（narration时为空）
+@export var text: String                   # BBCode格式文字
+@export var mood: String = "neutral"       # 角色情绪（影响立绘表情）
+@export var speed: float = 0.03            # 打字机速度（秒/字）
+@export var background: Texture2D          # 背景插画
+@export var portrait: Texture2D            # 角色立绘（可为null）
+@export var transition_anim: String = "fade_in"
+@export var has_choice: bool = false
+@export var choices: Array[Dictionary] = []  # [{text, route_flag, alignment_delta}]
+@export var bgm_override: AudioStream      # 可选BGM切换
 ```
 
 #### 序章 — 游戏开始
@@ -396,6 +406,10 @@ class NarrativeSegment:
 
 ### 2.6 章节难度参数总表
 
+> 敌人生成采用 **房间内计时** 机制：进入战斗房间开始计时，清空敌人停止。
+> 安全营地、商店、事件房间不计时。难度由"楼层编号（基础强度）+ 房间战斗时间（压力递增）"双因子驱动。
+> 详见 `core-systems.md` Section 3。
+
 | 章节 | 楼层范围 | 敌人倍率 | 房间数 | 新机制 | 预计时长 |
 |------|---------|---------|--------|--------|---------|
 | 第一章 | F1-F4 | 1.0x-2.5x | 5-8 | 基础战斗、宝箱、商店 | 15-20min |
@@ -533,10 +547,11 @@ class NarrativeSegment:
 | 环境色 | #7a4a1a (铜棕) |
 
 **环境机制 - 锻造系统:**
-- 锻造台（每层1-2个）: 消耗矿石材料强化当前武器
-  - 强化+1: 3矿石 → 伤害+10%
-  - 强化+2: 5矿石 → 伤害+10%, 附加火焰属性
-  - 强化+3: 8矿石 → 伤害+15%, 火焰属性增强
+- 锻造台（每层1-2个）: 消耗矿石材料强化当前武器（矿石对应 `RunData.ore_count`，通过 `EventBus.ore_changed` 同步）
+  - 强化+1: 3矿石 → 伤害+10%（对应 `ForgeRecipe.effect_type = "strengthen"`）
+  - 强化+2: 5矿石 → 伤害+10%, 附加火焰属性（`effect_type = "enchant"`）
+  - 强化+3: 8矿石 → 伤害+15%, 火焰属性增强（`effect_type = "breakthrough"`）
+- 矿石掉落: 精英敌人保底1-2个，可破坏矿脉3-5个，宝箱随机
 - 齿轮陷阱: 旋转齿轮造成物理伤害，可利用击退将敌人推入
 - 传送带地面: 强制移动方向，影响走位
 
@@ -603,11 +618,12 @@ class NarrativeSegment:
 | 环境色 | #1a3a6a (深冰蓝) |
 
 **环境机制 - 冰冻系统:**
-- 冰面地形: 移动时有惯性滑行（刹车距离+200%）
-- 冻伤计量表: 新增UI条，站在冰面/被冰攻击时累积
+- 冰面地形: 移动时有惯性滑行（刹车距离+200%），由 `MovementComponent` 的 `ICE_SLIDE` 模式处理
+- 冻伤计量表: 新增UI条（对应 `RunData.frostbite`，0.0~1.0），站在冰面/被冰攻击时累积
   - 50%冻伤: 攻速-20%
   - 80%冻伤: 移速-30%, 攻速-30%
   - 100%冻伤: 冰冻3秒（无法行动）
+  - 通过 `EventBus.frostbite_changed` 信号同步 HUD 显示
 - 篝火点: 房间内的温暖区域，站立可降低冻伤值
 - 可破坏冰墙: 打碎后可能释放被冰封的宝箱或敌人
 
@@ -971,12 +987,15 @@ const ENV_PRIORITY = {
 
 ### 6.2 Boss 专属掉落
 
+> **饰品（Accessory）** 为独立装备类型，最多装备2个，不占用被动槽位。
+> 完整数据结构见 `data-structures.md` Section 1.7 `AccessoryDef`。
+
 | Boss | 掉落物1 | 掉落物2 | 掉落物3 |
 |------|---------|---------|---------|
-| 岩石巨像 | 巨像之拳(武器) | 岩石护盾(被动) | 矿脉之心(饰品) |
-| 炎魔领主 | 炎魔之角(武器) | 熔岩铠甲(被动) | 永燃之焰(饰品) |
-| 寒霜君王 | 霜之哀伤(武器) | 冰晶王冠(被动) | 绝对零度(饰品) |
-| 虚空之主 | 虚空撕裂(武器) | 维度行者(被动) | 奥比利翁之眼(饰品) |
+| 岩石巨像 | 巨像之拳(武器) | 岩石护盾(被动) | 矿脉之心(饰品: 矿石掉落+50%) |
+| 炎魔领主 | 炎魔之角(武器) | 熔岩铠甲(被动) | 永燃之焰(饰品: 火伤免疫+灼烧光环) |
+| 寒霜君王 | 霜之哀伤(武器) | 冰晶王冠(被动) | 绝对零度(饰品: 冻伤抗性+被冻反伤) |
+| 虚空之主 | 虚空撕裂(武器) | 维度行者(被动) | 奥比利翁之眼(饰品: 虚空腐蚀免疫+暗视) |
 
 ### 6.3 Mini-Boss 系统
 
@@ -1064,26 +1083,33 @@ Mini-Boss特性:
 
 ### 8.2 玩家能力成长预期
 
-| 楼层 | 预期等级 | 武器数 | 被动数 | 预期DPS倍率 |
-|------|---------|--------|--------|------------|
-| F1 | 1-3 | 1 | 0-1 | 1.0x |
-| F2 | 3-5 | 1 | 1-2 | 1.5x |
-| F3 | 5-8 | 1-2 | 2-3 | 2.5x |
-| F4 | 8-10 | 2 | 3-4 | 4.0x |
-| F5 | 10-13 | 2 | 4-5 | 6.0x |
-| F6 | 13-16 | 2-3 | 5-6 | 8.0x |
-| F7 | 16-19 | 3 | 6-7 | 11.0x |
-| F8 | 19-22 | 3 | 7-8 | 15.0x |
-| F9 | 22-25 | 3-4 | 8-9 | 20.0x |
-| F10 | 25-28 | 4 | 9-10 | 26.0x |
-| F11 | 28-31 | 4 | 10-11 | 33.0x |
-| F12 | 31-34 | 4 | 11-12 | 42.0x |
-| F13 | 34-40 | 4-5 | 12-14 | 55.0x |
+> **被动槽位** 通过章节解锁逐步增加：初始6个，第一章完成后8个，第二章完成后10个，第三章完成后12个。
+> 下表"被动"列为"已用/已解锁槽位"。饰品最多2个，不计入被动。
+
+| 楼层 | 预期等级 | 武器数 | 被动 (用/解锁) | 饰品 | 预期DPS倍率 |
+|------|---------|--------|---------------|------|------------|
+| F1 | 1-3 | 1 | 0-1/6 | 0 | 1.0x |
+| F2 | 3-5 | 1 | 1-2/6 | 0 | 1.5x |
+| F3 | 5-8 | 1-2 | 2-3/6 | 0 | 2.5x |
+| F4 | 8-10 | 2 | 3-5/6 | 0-1 | 4.0x |
+| F5 | 10-13 | 2 | 5-6/8 | 0-1 | 6.0x |
+| F6 | 13-16 | 2-3 | 6-7/8 | 1 | 8.0x |
+| F7 | 16-19 | 3 | 7-8/8 | 1 | 11.0x |
+| F8 | 19-22 | 3 | 8/8 | 1-2 | 15.0x |
+| F9 | 22-25 | 3-4 | 8-9/10 | 1-2 | 20.0x |
+| F10 | 25-28 | 4 | 9-10/10 | 2 | 26.0x |
+| F11 | 28-31 | 4 | 10/10 | 2 | 33.0x |
+| F12 | 31-34 | 4 | 10-11/12 | 2 | 42.0x |
+| F13 | 34-40 | 4-5 | 11-12/12 | 2 | 55.0x |
 
 ### 8.3 难度调节参数
 
+> **DDA（动态难度调节）为可选辅助系统**，默认关闭，可在设置菜单中开启。
+> 开启后仅微调敌人强度和掉落率（±50%范围内），不影响楼层结构和Boss设计。
+> 不适用于隐藏关卡（FS1/FS2）。
+
 ```gdscript
-# 动态难度调节 (DDA)
+# 动态难度调节 (DDA) — 可选辅助系统
 class_name DifficultyAdjuster
 
 # 根据玩家表现动态微调
@@ -1114,17 +1140,24 @@ func get_adjusted_drop_rate(base_rate: float) -> float:
 ```
 每章结束时的平衡验证:
   第一章结束 (F4 Boss后):
-    - 玩家应有2把武器、3-4个被动
+    - 玩家应有2把武器、3-5个被动（6槽位中）
+    - 可能获得第1个饰品（Boss掉落）
     - HP应在50%-80%之间
     - 如果HP < 30%，安全营地提供免费回复
+    - 解锁被动槽位至8个
 
   第二章结束 (F8 Boss后):
-    - 玩家应有3把武器、7-8个被动
-    - 至少1把武器有强化
+    - 玩家应有3把武器、8个被动（8槽位满）
+    - 至少1把武器有锻造强化
+    - 应有1-2个饰品
     - 如果武器未强化，安全营地赠送矿石
+    - 解锁被动槽位至10个
 
   第三章结束 (F12 Boss后):
-    - 玩家应有4把武器、11-12个被动
+    - 玩家应有4把武器、10-11个被动（12槽位中）
     - 应有至少1个Boss专属道具
+    - 应有2个饰品
+    - 路线倾向已明确（alignment 绝对值 > 30 或平衡）
     - 进入最终章前提供最后的商店机会
+    - 解锁被动槽位至12个
 ```
