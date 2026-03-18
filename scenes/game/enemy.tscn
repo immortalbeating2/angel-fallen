@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/enemy.gd" id="1_2qqq5"]
+[ext_resource type="Script" path="res://scripts/components/health_component.gd" id="2_n7h4l"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_80y0s"]
+size = Vector2(20, 20)
+
+[node name="Enemy" type="CharacterBody2D"]
+script = ExtResource("1_2qqq5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_80y0s")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+color = Color(0.831373, 0.372549, 0.372549, 1)
+polygon = PackedVector2Array(-10, -10, 10, -10, 10, 10, -10, 10)
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("2_n7h4l")
+max_hp = 32.0

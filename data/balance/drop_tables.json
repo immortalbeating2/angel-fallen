@@ -1,0 +1,25 @@
+{
+  "normal": {
+    "guaranteed": ["xp_gem_small"],
+    "weighted": [
+      { "id": "gold_small", "weight": 45 },
+      { "id": "hp_orb", "weight": 8 },
+      { "id": "ore_small", "weight": 6 }
+    ]
+  },
+  "elite": {
+    "guaranteed": ["xp_gem_medium"],
+    "weighted": [
+      { "id": "gold_medium", "weight": 35 },
+      { "id": "ore_medium", "weight": 20 },
+      { "id": "chest_common", "weight": 10 }
+    ]
+  },
+  "boss": {
+    "guaranteed": ["xp_gem_large", "chest_rare"],
+    "weighted": [
+      { "id": "ore_large", "weight": 35 },
+      { "id": "accessory_drop", "weight": 25 }
+    ]
+  }
+}

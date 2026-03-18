@@ -1,0 +1,273 @@
+{
+  "chapter_transitions": {
+    "chapter_1": {
+      "title": "Chapter I Complete - Ashen Echo",
+      "body": "The campfire reflects on broken wings. You can preserve your light, or bargain with darkness to survive deeper floors.",
+      "choices": [
+        {
+          "id": "holy_vow",
+          "label": "Keep the Oath",
+          "delta": 10.0
+        },
+        {
+          "id": "void_oath",
+          "label": "Embrace the Abyss",
+          "delta": -10.0
+        }
+      ]
+    },
+    "chapter_2": {
+      "title": "Chapter II Complete - Furnace of Faith",
+      "body": "Steel and prayer clash in your chest. A righteous path grants grace; a darker path grants ruthless power.",
+      "choices": [
+        {
+          "id": "holy_vow",
+          "label": "Raise the Halo",
+          "delta": 14.0
+        },
+        {
+          "id": "void_oath",
+          "label": "Feed the Void",
+          "delta": -14.0
+        }
+      ]
+    },
+    "chapter_3": {
+      "title": "Chapter III Complete - Frozen Covenant",
+      "body": "Silence follows your steps before the final gate. One last vow will shape your ending.",
+      "choices": [
+        {
+          "id": "holy_vow",
+          "label": "Redeem the Light",
+          "delta": 18.0
+        },
+        {
+          "id": "void_oath",
+          "label": "Crown the Fall",
+          "delta": -18.0
+        }
+      ]
+    }
+  },
+  "chapter_intros": {
+    "chapter_1": {
+      "title": "Chapter I - Forsaken Catacombs",
+      "subtitle": "Survive and establish momentum",
+      "hazard_hint": "Water flow and spore clouds drain position and stamina."
+    },
+    "chapter_2": {
+      "title": "Chapter II - Ember Foundry",
+      "subtitle": "Pressure increases with heat",
+      "hazard_hint": "Lava pools punish greed. Conveyor lanes can push you into danger."
+    },
+    "chapter_3": {
+      "title": "Chapter III - Frost Cathedral",
+      "subtitle": "Control pace and spacing",
+      "hazard_hint": "Ice reduces control. Frostbite buildup can trigger heavy periodic damage."
+    },
+    "chapter_4": {
+      "title": "Chapter IV - Void Bastion",
+      "subtitle": "Final approach",
+      "hazard_hint": "Void corruption ramps damage over time. Keep gauges low between fights."
+    }
+  },
+  "chapter_events": {
+    "chapter_1": [
+      {
+        "id": "evt_ch1_shrine",
+        "title": "Ruined Shrine",
+        "body": "An ancient shrine still flickers with weak light. You may pray for grace or take the relic by force.",
+        "choices": [
+          {
+            "id": "offer_prayer",
+            "label": "Offer a prayer",
+            "alignment_delta": 8.0,
+            "gold": 0,
+            "ore": 1,
+            "frostbite_delta": -10.0,
+            "void_delta": -8.0,
+            "blessing": "holy_vow"
+          },
+          {
+            "id": "take_relic",
+            "label": "Take relic by force",
+            "alignment_delta": -8.0,
+            "gold": 18,
+            "ore": 0,
+            "frostbite_delta": 0.0,
+            "void_delta": 10.0,
+            "blessing": "void_oath"
+          }
+        ]
+      },
+      {
+        "id": "evt_ch1_survivor",
+        "title": "Lost Survivor",
+        "body": "A wounded survivor begs for help. Your supplies are limited.",
+        "choices": [
+          {
+            "id": "share_supplies",
+            "label": "Share supplies",
+            "alignment_delta": 10.0,
+            "gold": -10,
+            "ore": 0,
+            "frostbite_delta": -6.0,
+            "void_delta": -6.0
+          },
+          {
+            "id": "move_on",
+            "label": "Move on",
+            "alignment_delta": -6.0,
+            "gold": 10,
+            "ore": 1,
+            "frostbite_delta": 0.0,
+            "void_delta": 5.0
+          }
+        ]
+      }
+    ],
+    "chapter_2": [
+      {
+        "id": "evt_ch2_forge",
+        "title": "Overheated Forge",
+        "body": "A demon forge still burns. You can temper your weapon or salvage valuables.",
+        "choices": [
+          {
+            "id": "temper_weapon",
+            "label": "Temper weapon",
+            "alignment_delta": 4.0,
+            "gold": 0,
+            "ore": -2,
+            "frostbite_delta": 0.0,
+            "void_delta": -4.0,
+            "blessing": "holy_vow"
+          },
+          {
+            "id": "salvage_quick",
+            "label": "Quick salvage",
+            "alignment_delta": -5.0,
+            "gold": 26,
+            "ore": 2,
+            "frostbite_delta": 0.0,
+            "void_delta": 8.0,
+            "blessing": "void_oath"
+          }
+        ]
+      },
+      {
+        "id": "evt_ch2_arena",
+        "title": "Ash Arena",
+        "body": "A cursed arena offers reward for blood. Entering stirs the abyss.",
+        "choices": [
+          {
+            "id": "accept_trial",
+            "label": "Accept trial",
+            "alignment_delta": -8.0,
+            "gold": 30,
+            "ore": 1,
+            "frostbite_delta": 0.0,
+            "void_delta": 14.0
+          },
+          {
+            "id": "walk_away",
+            "label": "Walk away",
+            "alignment_delta": 6.0,
+            "gold": 0,
+            "ore": 0,
+            "frostbite_delta": 0.0,
+            "void_delta": -8.0
+          }
+        ]
+      }
+    ],
+    "chapter_3": [
+      {
+        "id": "evt_ch3_whispers",
+        "title": "Whispers in Ice",
+        "body": "Frozen whispers reveal fragments of your origin. Listening too long may scar your soul.",
+        "choices": [
+          {
+            "id": "listen_carefully",
+            "label": "Listen carefully",
+            "alignment_delta": 7.0,
+            "gold": 0,
+            "ore": 1,
+            "frostbite_delta": 8.0,
+            "void_delta": -10.0
+          },
+          {
+            "id": "embrace_whispers",
+            "label": "Embrace whispers",
+            "alignment_delta": -10.0,
+            "gold": 20,
+            "ore": 0,
+            "frostbite_delta": 0.0,
+            "void_delta": 16.0,
+            "blessing": "void_oath"
+          }
+        ]
+      }
+    ],
+    "chapter_4": [
+      {
+        "id": "evt_ch4_threshold",
+        "title": "Threshold of Dawn",
+        "body": "At the final threshold, a silent choir offers one last boon before the abyssal throne.",
+        "choices": [
+          {
+            "id": "accept_grace",
+            "label": "Accept grace",
+            "alignment_delta": 12.0,
+            "gold": 0,
+            "ore": 0,
+            "frostbite_delta": -20.0,
+            "void_delta": -20.0,
+            "blessing": "holy_vow"
+          },
+          {
+            "id": "accept_void",
+            "label": "Accept void",
+            "alignment_delta": -12.0,
+            "gold": 30,
+            "ore": 2,
+            "frostbite_delta": 0.0,
+            "void_delta": 12.0,
+            "blessing": "void_oath"
+          }
+        ]
+      }
+    ]
+  },
+  "memory_fragments": {
+    "memory_ch1_boss": {
+      "title": "Fragment I: Chapel Ash",
+      "text": "In ruined sanctuaries, your wings once shielded thousands."
+    },
+    "memory_ch2_boss": {
+      "title": "Fragment II: Furnace Oath",
+      "text": "You forged holy steel, then watched it melt in betrayal."
+    },
+    "memory_ch3_boss": {
+      "title": "Fragment III: Frozen Prayer",
+      "text": "Your final prayer froze midair when the heavens turned away."
+    },
+    "memory_ch4_boss": {
+      "title": "Fragment IV: Broken Crown",
+      "text": "At the edge of oblivion, you learned that mercy and ruin share one throne."
+    }
+  },
+  "endings": {
+    "nar_ending_redeem": {
+      "title": "Ending: REDEEM",
+      "story": "You rise with broken wings healed by grace. The abyss closes, but your oath remains."
+    },
+    "nar_ending_fall": {
+      "title": "Ending: FALL",
+      "story": "You wear the void as a crown. Salvation is denied, and power becomes your final prayer."
+    },
+    "nar_ending_balance": {
+      "title": "Ending: BALANCE",
+      "story": "Neither halo nor abyss claims you. You walk the narrow dusk, guarding both worlds."
+    }
+  }
+}

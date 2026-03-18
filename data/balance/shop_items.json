@@ -1,0 +1,15 @@
+{
+  "slots": 4,
+  "restock_cost": 20,
+  "quality_weights": {
+    "common": 65,
+    "rare": 25,
+    "epic": 8,
+    "legendary": 2
+  },
+  "pools": {
+    "consumable": ["hp_potion", "stamina_tonic"],
+    "passive": ["pas_might", "pas_armor"],
+    "weapon": ["wpn_magic_missile", "wpn_holy_cross"]
+  }
+}

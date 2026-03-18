@@ -1,0 +1,9 @@
+{
+  "evolutions": [
+    {
+      "weapon_id": "wpn_magic_missile",
+      "passive_id": "pas_focus",
+      "result_weapon_id": "wpn_arcane_comet"
+    }
+  ]
+}

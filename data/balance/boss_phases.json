@@ -1,0 +1,8 @@
+{
+  "bosses": {
+    "enemy_rock_colossus": [1.0, 0.6, 0.3],
+    "enemy_flame_lord": [1.0, 0.7, 0.4],
+    "enemy_frost_king": [1.0, 0.7, 0.4],
+    "enemy_void_lord": [1.0, 0.75, 0.5, 0.25]
+  }
+}

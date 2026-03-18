@@ -1,0 +1,24 @@
+{
+  "chapters": {
+    "chapter_1": {
+      "theme": "ruined_chapel",
+      "tile_palette": ["#4E5A64", "#72808A", "#A6B1B7"],
+      "hazards": ["water_flow", "spore_cloud"]
+    },
+    "chapter_2": {
+      "theme": "molten_forge",
+      "tile_palette": ["#5A2E20", "#8C3E26", "#D96A2B"],
+      "hazards": ["lava_pool", "conveyor"]
+    },
+    "chapter_3": {
+      "theme": "frozen_sanctum",
+      "tile_palette": ["#A6C8D8", "#DDEAF1", "#7CA5BD"],
+      "hazards": ["ice_slide", "frostbite"]
+    },
+    "chapter_4": {
+      "theme": "void_abyss",
+      "tile_palette": ["#1E1B2E", "#3A2C5A", "#6A4EA1"],
+      "hazards": ["void_rift", "void_corruption"]
+    }
+  }
+}

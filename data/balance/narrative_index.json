@@ -1,0 +1,17 @@
+{
+  "segments": [
+    { "id": "nar_ch1_start", "resource_path": "res://resources/narrative/nar_ch1_start.tres" },
+    { "id": "nar_ch1_end", "resource_path": "res://resources/narrative/nar_ch1_end.tres" },
+    { "id": "nar_ch2_start", "resource_path": "res://resources/narrative/nar_ch2_start.tres" },
+    { "id": "nar_ch2_end", "resource_path": "res://resources/narrative/nar_ch2_end.tres" },
+    { "id": "nar_ch3_start", "resource_path": "res://resources/narrative/nar_ch3_start.tres" },
+    { "id": "nar_ch3_end", "resource_path": "res://resources/narrative/nar_ch3_end.tres" },
+    { "id": "nar_ending_redeem", "resource_path": "res://resources/narrative/nar_ending_redeem.tres" },
+    { "id": "nar_ending_fall", "resource_path": "res://resources/narrative/nar_ending_fall.tres" },
+    { "id": "nar_ending_balance", "resource_path": "res://resources/narrative/nar_ending_balance.tres" }
+  ],
+  "memory_fragments": {
+    "total": 33,
+    "categories": ["origin", "war", "fall", "redemption"]
+  }
+}

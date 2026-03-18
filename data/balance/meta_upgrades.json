@@ -1,0 +1,49 @@
+{
+  "upgrades": [
+    {
+      "id": "meta_max_hp",
+      "title": "Vital Soul",
+      "effect": "max_hp",
+      "value_per_level": 10.0,
+      "max_level": 5,
+      "base_cost": 35,
+      "cost_step": 25
+    },
+    {
+      "id": "meta_damage",
+      "title": "Fallen Might",
+      "effect": "damage_bonus_pct",
+      "value_per_level": 0.06,
+      "max_level": 5,
+      "base_cost": 45,
+      "cost_step": 30
+    },
+    {
+      "id": "meta_speed",
+      "title": "Swift Wings",
+      "effect": "move_speed",
+      "value_per_level": 10.0,
+      "max_level": 5,
+      "base_cost": 30,
+      "cost_step": 20
+    },
+    {
+      "id": "meta_crit",
+      "title": "Holy Precision",
+      "effect": "crit_chance",
+      "value_per_level": 0.02,
+      "max_level": 5,
+      "base_cost": 55,
+      "cost_step": 35
+    },
+    {
+      "id": "meta_stamina",
+      "title": "Endless March",
+      "effect": "stamina_max",
+      "value_per_level": 10.0,
+      "max_level": 5,
+      "base_cost": 40,
+      "cost_step": 25
+    }
+  ]
+}
