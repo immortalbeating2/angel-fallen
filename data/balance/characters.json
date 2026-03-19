@@ -1,0 +1,198 @@
+{
+  "default_character_id": "char_knight",
+  "characters": [
+    {
+      "id": "char_knight",
+      "name": "Knight",
+      "description": "Balanced frontline with higher HP and armor.",
+      "unlock_type": "default",
+      "unlock_value": "",
+      "unlock_desc": "Available from start",
+      "trait_id": "trait_bulwark",
+      "trait_name": "Bulwark",
+      "trait_desc": "Gain extra armor and max HP at run start.",
+      "trait_effects": {
+        "armor_bonus": 0.05,
+        "max_hp_bonus": 16
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_holy_cross",
+        "mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0,
+        "spread_jitter_deg": 0,
+        "projectile_hits": 2,
+        "projectile_style": "knight_lance"
+      },
+      "max_hp": 130,
+      "move_speed": 172,
+      "stamina_max": 120,
+      "armor": 0.12,
+      "crit_chance": 0.06,
+      "crit_multiplier": 1.55,
+      "base_damage": 12.5,
+      "attack_interval": 0.48
+    },
+    {
+      "id": "char_mage",
+      "name": "Mage",
+      "description": "High burst caster with stronger shots but lower durability.",
+      "unlock_type": "ending",
+      "unlock_value": "nar_ending_redeem",
+      "unlock_desc": "Unlock by obtaining Redeem ending",
+      "trait_id": "trait_arcane_overload",
+      "trait_name": "Arcane Overload",
+      "trait_desc": "Start with increased damage and stronger critical hits.",
+      "trait_effects": {
+        "damage_bonus_pct": 0.12,
+        "crit_multiplier_bonus": 0.18
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_magic_missile",
+        "mode": "spread",
+        "projectile_count": 3,
+        "spread_angle_deg": 18,
+        "spread_jitter_deg": 2.5,
+        "projectile_hits": 1,
+        "projectile_style": "mage_orb"
+      },
+      "max_hp": 92,
+      "move_speed": 182,
+      "stamina_max": 105,
+      "armor": 0.03,
+      "crit_chance": 0.11,
+      "crit_multiplier": 1.75,
+      "base_damage": 15.0,
+      "attack_interval": 0.44
+    },
+    {
+      "id": "char_rogue",
+      "name": "Rogue",
+      "description": "Fast skirmisher with mobility and frequent criticals.",
+      "unlock_type": "achievement",
+      "unlock_value": "ach_slayer_120",
+      "unlock_desc": "Unlock by obtaining achievement 'Slayer 120'",
+      "trait_id": "trait_shadowstep",
+      "trait_name": "Shadowstep",
+      "trait_desc": "Move faster and attack quicker right from room 1.",
+      "trait_effects": {
+        "move_speed_mult": 1.08,
+        "attack_interval_mult": 0.9,
+        "crit_chance_bonus": 0.03
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_shadow_fang",
+        "mode": "spread",
+        "projectile_count": 2,
+        "spread_angle_deg": 9,
+        "spread_jitter_deg": 4.0,
+        "projectile_hits": 1,
+        "projectile_style": "rogue_dart"
+      },
+      "max_hp": 104,
+      "move_speed": 206,
+      "stamina_max": 112,
+      "armor": 0.05,
+      "crit_chance": 0.15,
+      "crit_multiplier": 1.68,
+      "base_damage": 11.0,
+      "attack_interval": 0.37
+    },
+    {
+      "id": "char_cleric",
+      "name": "Cleric",
+      "description": "Blessed support fighter with balanced defense and sustained fire.",
+      "unlock_type": "meta_runs",
+      "unlock_value": "5",
+      "unlock_desc": "Unlock after completing 5 runs",
+      "trait_id": "trait_hallowed_guard",
+      "trait_name": "Hallowed Guard",
+      "trait_desc": "Gain bonus armor and frostbite resistance at run start.",
+      "trait_effects": {
+        "armor_bonus": 0.06,
+        "frostbite_resistance_bonus": 0.1
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_holy_cross",
+        "mode": "spread",
+        "projectile_count": 2,
+        "spread_angle_deg": 10,
+        "spread_jitter_deg": 1.5,
+        "projectile_hits": 2,
+        "projectile_style": "cleric_halo"
+      },
+      "max_hp": 118,
+      "move_speed": 178,
+      "stamina_max": 120,
+      "armor": 0.1,
+      "crit_chance": 0.07,
+      "crit_multiplier": 1.6,
+      "base_damage": 12.2,
+      "attack_interval": 0.43
+    },
+    {
+      "id": "char_huntress",
+      "name": "Huntress",
+      "description": "A ranged tracker focused on mobility and precision shots.",
+      "unlock_type": "meta_runs",
+      "unlock_value": "8",
+      "unlock_desc": "Unlock after completing 8 runs",
+      "trait_id": "trait_trueshot",
+      "trait_name": "Trueshot",
+      "trait_desc": "Move faster and gain bonus critical chance.",
+      "trait_effects": {
+        "move_speed_mult": 1.06,
+        "crit_chance_bonus": 0.04
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_storm_bow",
+        "mode": "spread",
+        "projectile_count": 4,
+        "spread_angle_deg": 22,
+        "spread_jitter_deg": 3.0,
+        "projectile_hits": 1,
+        "projectile_style": "storm_arrow"
+      },
+      "max_hp": 96,
+      "move_speed": 210,
+      "stamina_max": 116,
+      "armor": 0.04,
+      "crit_chance": 0.14,
+      "crit_multiplier": 1.72,
+      "base_damage": 10.8,
+      "attack_interval": 0.36
+    },
+    {
+      "id": "char_exile",
+      "name": "Exile",
+      "description": "A void-scarred duelist with heavy spear strikes and resistance.",
+      "unlock_type": "ending",
+      "unlock_value": "nar_ending_balance",
+      "unlock_desc": "Unlock by obtaining Balance ending",
+      "trait_id": "trait_twilight_brand",
+      "trait_name": "Twilight Brand",
+      "trait_desc": "Gain flat weapon damage and void resistance at run start.",
+      "trait_effects": {
+        "weapon_damage_flat": 2.0,
+        "void_resistance_bonus": 0.1
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_solar_lance",
+        "mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0,
+        "spread_jitter_deg": 0,
+        "projectile_hits": 3,
+        "projectile_style": "twilight_spear"
+      },
+      "max_hp": 124,
+      "move_speed": 174,
+      "stamina_max": 114,
+      "armor": 0.11,
+      "crit_chance": 0.08,
+      "crit_multiplier": 1.66,
+      "base_damage": 13.6,
+      "attack_interval": 0.47
+    }
+  ]
+}

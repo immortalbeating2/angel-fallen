@@ -36,8 +36,14 @@ func show_event_panel(event_data: Dictionary, alignment: float) -> void:
         str(event_data.get("body", "")),
         alignment
     ]
-    _option_1.text = "1) %s" % str(_choice_1.get("label", "Option 1"))
-    _option_2.text = "2) %s" % str(_choice_2.get("label", "Option 2"))
+    _option_1.text = "1) %s%s" % [
+        str(_choice_1.get("label", "Option 1")),
+        _build_choice_effect_hint(_choice_1)
+    ]
+    _option_2.text = "2) %s%s" % [
+        str(_choice_2.get("label", "Option 2")),
+        _build_choice_effect_hint(_choice_2)
+    ]
     _hint_label.text = "Press 1/2 to choose"
 
     _option_1.disabled = false
@@ -92,3 +98,17 @@ func _close() -> void:
     _active = false
     visible = false
     event_closed.emit()
+
+
+func _build_choice_effect_hint(choice_data: Dictionary) -> String:
+    var effect_var: Variant = choice_data.get("chapter_effect", {})
+    if not (effect_var is Dictionary):
+        return ""
+
+    var effect_row: Dictionary = effect_var
+    if effect_row.is_empty():
+        return ""
+
+    var title: String = str(effect_row.get("title", "Effect"))
+    var duration: int = int(effect_row.get("duration_rooms", 2))
+    return "\n   -> %s (%d rooms)" % [title, duration]

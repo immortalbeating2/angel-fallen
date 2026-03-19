@@ -9,7 +9,7 @@
 | 引擎 | Godot 4.x (GDScript) |
 | 视角 | 俯视角 2D |
 | 目标平台 | PC (Windows / Linux / macOS) |
-| 测试框架 | GdUnit4 |
+| 测试框架 | GUT (Godot Unit Test) |
 | CI | GitHub Actions (Godot headless) |
 | 数据格式 | Godot Resource (.tres) + JSON配置表 + CSV (i18n) |
 
@@ -28,10 +28,10 @@ godot --path . scenes/main_menu/main_menu.tscn
 godot --headless --quit
 
 # 运行全部测试
-godot --headless --script addons/gdUnit4/bin/GdUnitCmdTool.gd --run-all
+godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -ginclude_subdirs -gexit
 
 # 运行指定测试目录
-godot --headless --script addons/gdUnit4/bin/GdUnitCmdTool.gd --run-dir res://test/unit/
+godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test/unit -ginclude_subdirs -gexit
 
 # JSON配置验证
 python scripts/validate_configs.py
@@ -93,7 +93,7 @@ angel-fallen/
 │   ├── audio/ambience/     # 环境音
 │   ├── fonts/              # 中英文字体
 │   └── shaders/            # 着色器
-├── addons/gdUnit4/         # 测试框架
+├── addons/gut/             # 测试框架
 └── test/                   # 单元测试/集成测试
     ├── unit/
     └── integration/
@@ -151,7 +151,7 @@ Data Layer     → Resource (.tres) + JSON配置表
 
 ### 测试命名
 
-- 测试类：`TestXxx extends GdUnitTestSuite`（如 `TestDamageSystem`）
+- 测试脚本：`extends GutTest`（如 `test_damage_system.gd`）
 - 测试方法：`test_xxx()`（如 `test_basic_damage()`, `test_armor_cap()`）
 
 ---
@@ -337,8 +337,8 @@ jobs:
       - uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.3.0
-      - name: Run GdUnit4 Tests
-        run: godot --headless --script addons/gdUnit4/bin/GdUnitCmdTool.gd --run-all
+      - name: Run GUT Tests
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -ginclude_subdirs -gexit
 
   data-validation:
     runs-on: ubuntu-latest
@@ -400,3 +400,4 @@ MVP版本（v1.0）只包含：
 | [level-design.md](spec-design/level-design.md) | 世界观/15层设计/Boss/房间/环境/叙事/难度曲线 |
 | [test-plan.md](spec-design/test-plan.md) | 105+测试用例 + 性能基准 + 平衡模拟 + CI流水线 |
 | [roadmap.md](spec-design/roadmap.md) | MVP 22周路线 + 后续v1.1/v1.2/v1.3 |
+| [supplement-updates.md](spec-design/supplement-updates.md) | 计划外实现增量与同步说明（含历史补录） |

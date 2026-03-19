@@ -30,7 +30,7 @@ Phase 0 ── Phase 1 ── Phase 2 ── Phase 3 ── Phase 4 ── Phase
 | Hitbox/Hurtbox 碰撞组件 | P0 | 4h | 2个组件脚本 |
 | 对象池工具类 (ObjectPool) | P1 | 4h | object_pool.gd |
 | 加权随机工具类 | P1 | 2h | weighted_random.gd |
-| GdUnit4 测试框架集成 | P0 | 2h | 测试可运行 |
+| GUT 测试框架集成 | P0 | 2h | 测试可运行 |
 | **美术风格定义** | P0 | 4h | 像素规格文档 (分辨率/瓦片/角色尺寸) |
 | **AI素材工作流搭建** (Stable Diffusion + Aseprite) | P0 | 6h | 工作流验证 + 第一批占位精灵 |
 | 占位符音效 (sfxr/freesound) | P1 | 2h | 基础音效 |

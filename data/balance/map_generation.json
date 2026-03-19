@@ -1,0 +1,109 @@
+{
+  "room_count": 15,
+  "layout_cols": 5,
+  "chapter_order": [
+    "chapter_1",
+    "chapter_2",
+    "chapter_3",
+    "chapter_4"
+  ],
+  "chapters": {
+    "chapter_1": {
+      "index": 1,
+      "start_room": 1,
+      "end_room": 4,
+      "intro_room": 1,
+      "boss_room": 4,
+      "boss_id": "boss_rock_colossus"
+    },
+    "chapter_2": {
+      "index": 2,
+      "start_room": 5,
+      "end_room": 8,
+      "intro_room": 5,
+      "boss_room": 8,
+      "boss_id": "boss_flame_lord"
+    },
+    "chapter_3": {
+      "index": 3,
+      "start_room": 9,
+      "end_room": 12,
+      "intro_room": 9,
+      "boss_room": 12,
+      "boss_id": "boss_frost_king"
+    },
+    "chapter_4": {
+      "index": 4,
+      "start_room": 13,
+      "end_room": 15,
+      "intro_room": 13,
+      "boss_room": 15,
+      "boss_id": "boss_void_lord"
+    }
+  },
+  "fixed_rooms": [
+    {
+      "index": 5,
+      "type": "safe_camp"
+    },
+    {
+      "index": 10,
+      "type": "safe_camp"
+    }
+  ],
+  "base_room_weights": {
+    "combat": 52,
+    "event": 14,
+    "shop": 16,
+    "treasure": 8,
+    "elite": 12
+  },
+  "chapter_room_weight_mult": {
+    "chapter_1": {
+      "combat": 1.15,
+      "event": 0.9,
+      "shop": 1.0,
+      "treasure": 0.85,
+      "elite": 0.45
+    },
+    "chapter_2": {
+      "combat": 1.0,
+      "event": 1.1,
+      "shop": 1.05,
+      "treasure": 1.05,
+      "elite": 0.8
+    },
+    "chapter_3": {
+      "combat": 0.95,
+      "event": 1.1,
+      "shop": 0.95,
+      "treasure": 1.2,
+      "elite": 1.2
+    },
+    "chapter_4": {
+      "combat": 0.85,
+      "event": 1.2,
+      "shop": 0.8,
+      "treasure": 0.9,
+      "elite": 1.55
+    }
+  },
+  "constraints": {
+    "max_consecutive_same_type": 2,
+    "max_room_type_per_chapter": {
+      "event": 2,
+      "shop": 2,
+      "elite": 2,
+      "treasure": 1
+    },
+    "min_room_type_per_chapter": {
+      "event": 0,
+      "shop": 1,
+      "elite": 0,
+      "treasure": 0
+    },
+    "max_treasure_per_chapter": 1,
+    "avoid_shop_near_boss": true,
+    "avoid_event_near_boss": true
+  }
+}

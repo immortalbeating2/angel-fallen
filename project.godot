@@ -1,17 +1,22 @@
 ; Engine configuration file.
-; Best edited from the Godot editor.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
 ;
 ; Format:
-;   [section]
-;   param=value
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
 config/name="angel-fallen"
 run/main_scene="res://scenes/main_menu/main_menu.tscn"
-config/features=PackedStringArray("4.3")
+config/features=PackedStringArray("4.6")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -31,9 +36,13 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
-[physics]
+[editor_plugins]
 
-common/physics_ticks_per_second=60
+enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg", "res://addons/gut/plugin.cfg")
+
+[network]
+
+tls/certificate_bundle_override="res://cacert.crt"
 
 [rendering]
 

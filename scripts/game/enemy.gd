@@ -24,24 +24,33 @@ var _dash_velocity: Vector2 = Vector2.ZERO
 var _dash_time: float = 0.0
 var _base_attack_interval: float = 0.7
 var _base_scale: Vector2 = Vector2.ONE
+var _tier: String = "normal"
+var _archetype: String = "normal"
+var _is_ranged: bool = false
+var _preferred_range: float = 170.0
+var _ranged_attack_range: float = 255.0
+var _ranged_attack_interval: float = 1.2
+var _ranged_damage_mult: float = 0.82
+var _ranged_cooldown: float = 0.0
+var _base_color: Color = Color(0.83, 0.37, 0.37, 1.0)
+var _pool_active: bool = true
+var _template_enemy_id: String = "enemy_shadowling"
+var _template_move_speed: float = 72.0
+var _template_touch_damage: float = 8.0
+var _template_attack_interval: float = 0.7
+var _template_max_hp: float = 32.0
+var _template_scale: Vector2 = Vector2.ONE
 
 
 func _ready() -> void:
-    add_to_group("enemy")
-    _base_attack_interval = attack_interval
-    _base_scale = scale
-    _is_boss = enemy_id.begins_with("boss_")
+    _capture_template_state()
+    _set_pool_active(true)
+    _reset_for_spawn()
 
     if _health_component != null and _health_component.has_signal("died"):
-        _health_component.died.connect(_on_health_died)
-
-    if _is_boss:
-        _load_boss_phase_thresholds()
-        _dash_cooldown_timer = randf_range(1.2, 2.2)
-        _pulse_cooldown_timer = randf_range(2.2, 3.2)
-        _apply_phase_stats()
-        if _visual != null:
-            _visual.color = Color(0.95, 0.45, 0.2, 1.0)
+        var callback: Callable = Callable(self, "_on_health_died")
+        if not _health_component.died.is_connected(callback):
+            _health_component.died.connect(callback)
 
 
 func _physics_process(delta: float) -> void:
@@ -51,6 +60,8 @@ func _physics_process(delta: float) -> void:
 
     if _touch_cooldown > 0.0:
         _touch_cooldown = maxf(0.0, _touch_cooldown - delta)
+    if _ranged_cooldown > 0.0:
+        _ranged_cooldown = maxf(0.0, _ranged_cooldown - delta)
 
     if _player == null or not is_instance_valid(_player):
         _player = get_tree().get_first_node_in_group("player") as CharacterBody2D
@@ -59,10 +70,15 @@ func _physics_process(delta: float) -> void:
         velocity = Vector2.ZERO
         return
 
-    var direction: Vector2 = (_player.global_position - global_position).normalized()
+    var to_player: Vector2 = _player.global_position - global_position
+    var distance_to_player: float = to_player.length()
+    var direction: Vector2 = to_player.normalized()
     if _is_boss:
         _update_phase_by_hp()
         _process_boss_skills(delta, direction)
+    elif _is_ranged:
+        direction = _get_ranged_direction(direction, distance_to_player)
+        _process_ranged_attack(distance_to_player)
 
     velocity = direction * (move_speed * _phase_speed_mult) + _knockback_velocity + _dash_velocity
     _knockback_velocity = _knockback_velocity.move_toward(Vector2.ZERO, 780.0 * delta)
@@ -107,7 +123,24 @@ func _on_health_died(owner_node: Node) -> void:
     if owner_node != self:
         return
     EventBus.enemy_killed.emit(enemy_id, global_position)
-    queue_free()
+    if ObjectPool != null:
+        ObjectPool.release("enemy_basic", self)
+    else:
+        queue_free()
+
+
+func on_pool_acquired() -> void:
+    _set_pool_active(true)
+    _reset_for_spawn()
+
+
+func on_pool_released() -> void:
+    _set_pool_active(false)
+    _reset_for_pool()
+
+
+func is_pool_active() -> bool:
+    return _pool_active
 
 
 func _play_hit_feedback(is_crit: bool) -> void:
@@ -124,15 +157,50 @@ func _play_hit_feedback(is_crit: bool) -> void:
     scale = target_scale
 
     var tween: Tween = create_tween()
-    var return_color: Color = Color(0.83, 0.37, 0.37, 1.0)
-    if _is_boss:
-        return_color = Color(0.95, 0.45, 0.2, 1.0)
-    tween.tween_property(_visual, "color", return_color, 0.12)
+    tween.tween_property(_visual, "color", _base_color, 0.12)
     tween.parallel().tween_property(self, "scale", _base_scale, 0.12)
 
 
 func set_visual_scale_base(new_scale: Vector2) -> void:
     _base_scale = new_scale
+
+
+func apply_spawn_profile(profile: Dictionary) -> void:
+    var new_tier: String = str(profile.get("tier", "normal"))
+    var new_archetype: String = str(profile.get("archetype", "normal"))
+    var new_enemy_id: String = str(profile.get("enemy_id", enemy_id))
+
+    if new_enemy_id != "":
+        enemy_id = new_enemy_id
+
+    _tier = new_tier
+    _archetype = new_archetype
+    _is_boss = _tier == "boss" or enemy_id.begins_with("boss_")
+    _is_ranged = bool(profile.get("ranged", _archetype == "ranged"))
+    _preferred_range = maxf(80.0, float(profile.get("preferred_range", 170.0)))
+    _ranged_attack_range = maxf(_preferred_range + 20.0, float(profile.get("ranged_attack_range", 255.0)))
+    _ranged_attack_interval = clampf(float(profile.get("ranged_attack_interval", 1.2)), 0.35, 4.0)
+    _ranged_damage_mult = clampf(float(profile.get("ranged_damage_mult", 0.82)), 0.2, 3.0)
+    _ranged_cooldown = randf_range(0.1, _ranged_attack_interval)
+
+    var base_color_var: Variant = profile.get("base_color", _resolve_default_color())
+    if base_color_var is Color:
+        _base_color = base_color_var
+    else:
+        _base_color = _resolve_default_color()
+
+    var scale_var: Variant = profile.get("scale", _base_scale)
+    if scale_var is Vector2:
+        _base_scale = scale_var
+
+    scale = _base_scale
+    _base_attack_interval = attack_interval
+    _apply_visual_defaults()
+
+    if _is_boss:
+        _load_boss_phase_thresholds()
+        _phase_index = 0
+        _apply_phase_stats()
 
 
 func _update_phase_by_hp() -> void:
@@ -197,7 +265,7 @@ func _cast_phase_pulse() -> void:
     if _visual != null:
         var pulse_tween: Tween = create_tween()
         pulse_tween.tween_property(_visual, "color", Color(1.0, 0.78, 0.34, 1.0), 0.08)
-        pulse_tween.tween_property(_visual, "color", Color(0.95, 0.45, 0.2, 1.0), 0.12)
+        pulse_tween.tween_property(_visual, "color", _base_color, 0.12)
 
 
 func _load_boss_phase_thresholds() -> void:
@@ -220,3 +288,133 @@ func _load_boss_phase_thresholds() -> void:
         parsed.append(clampf(float(value), 0.0, 1.0))
     if parsed.size() >= 2:
         _phase_thresholds = parsed
+
+
+func _get_ranged_direction(direction_to_player: Vector2, distance_to_player: float) -> Vector2:
+    if distance_to_player > _preferred_range + 28.0:
+        return direction_to_player
+    if distance_to_player < _preferred_range - 24.0:
+        return -direction_to_player
+
+    var strafe: Vector2 = Vector2(-direction_to_player.y, direction_to_player.x)
+    if strafe == Vector2.ZERO:
+        strafe = Vector2.RIGHT
+    var sign_value: float = 1.0
+    if int(Time.get_ticks_msec() / 550) % 2 == 0:
+        sign_value = -1.0
+    return strafe * sign_value
+
+
+func _process_ranged_attack(distance_to_player: float) -> void:
+    if _player == null:
+        return
+    if distance_to_player > _ranged_attack_range:
+        return
+    if _ranged_cooldown > 0.0:
+        return
+
+    _ranged_cooldown = _ranged_attack_interval
+    var damage: float = touch_damage * _phase_damage_mult * _ranged_damage_mult
+    if _player.has_method("apply_damage"):
+        _player.apply_damage(damage)
+    if _player.has_method("apply_knockback"):
+        var push: Vector2 = (_player.global_position - global_position).normalized()
+        if push == Vector2.ZERO:
+            push = Vector2.RIGHT
+        _player.apply_knockback(push * 38.0)
+
+    if _visual != null:
+        var pulse_tween: Tween = create_tween()
+        pulse_tween.tween_property(_visual, "color", Color(1.0, 0.9, 0.4, 1.0), 0.06)
+        pulse_tween.tween_property(_visual, "color", _base_color, 0.1)
+
+
+func _resolve_default_color() -> Color:
+    if enemy_id.begins_with("boss_"):
+        return Color(0.95, 0.45, 0.2, 1.0)
+    if enemy_id.begins_with("elite_"):
+        return Color(0.98, 0.84, 0.3, 1.0)
+    if enemy_id.find("stalker") >= 0:
+        return Color(0.78, 0.52, 0.96, 1.0)
+    if enemy_id.find("brute") >= 0:
+        return Color(0.55, 0.78, 0.72, 1.0)
+    if enemy_id.find("hexcaster") >= 0:
+        return Color(0.92, 0.62, 0.38, 1.0)
+    return Color(0.83, 0.37, 0.37, 1.0)
+
+
+func _apply_visual_defaults() -> void:
+    if _visual != null:
+        _visual.color = _base_color
+        if _tier == "elite":
+            _visual.color = _base_color.lightened(0.12)
+
+
+func _capture_template_state() -> void:
+    _template_enemy_id = enemy_id
+    _template_move_speed = move_speed
+    _template_touch_damage = touch_damage
+    _template_attack_interval = attack_interval
+    _template_scale = scale
+    if _health_component != null and _health_component.get("max_hp") != null:
+        _template_max_hp = float(_health_component.max_hp)
+
+
+func _reset_for_spawn() -> void:
+    enemy_id = _template_enemy_id
+    _player = null
+    velocity = Vector2.ZERO
+    move_speed = _template_move_speed
+    touch_damage = _template_touch_damage
+    attack_interval = _template_attack_interval
+
+    _touch_cooldown = 0.0
+    _knockback_velocity = Vector2.ZERO
+    _dash_velocity = Vector2.ZERO
+    _dash_time = 0.0
+    _dash_cooldown_timer = 0.0
+    _pulse_cooldown_timer = 0.0
+    _ranged_cooldown = 0.0
+
+    _tier = "normal"
+    _archetype = "normal"
+    _is_ranged = false
+    _preferred_range = 170.0
+    _ranged_attack_range = 255.0
+    _ranged_attack_interval = 1.2
+    _ranged_damage_mult = 0.82
+
+    _is_boss = false
+    _phase_index = 0
+    _phase_speed_mult = 1.0
+    _phase_damage_mult = 1.0
+    _phase_thresholds = [1.0, 0.6, 0.3]
+
+    _base_attack_interval = attack_interval
+    _base_scale = _template_scale
+    scale = _base_scale
+    _base_color = _resolve_default_color()
+    _apply_visual_defaults()
+
+    if _health_component != null and _health_component.get("max_hp") != null:
+        _health_component.max_hp = _template_max_hp
+        _health_component.current_hp = _template_max_hp
+
+
+func _reset_for_pool() -> void:
+    velocity = Vector2.ZERO
+    _touch_cooldown = 0.0
+    _knockback_velocity = Vector2.ZERO
+    _dash_velocity = Vector2.ZERO
+    _dash_time = 0.0
+    _ranged_cooldown = 0.0
+
+
+func _set_pool_active(active: bool) -> void:
+    _pool_active = active
+    if active:
+        if not is_in_group("enemy"):
+            add_to_group("enemy")
+    else:
+        if is_in_group("enemy"):
+            remove_from_group("enemy")

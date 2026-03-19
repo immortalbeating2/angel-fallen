@@ -21,5 +21,38 @@
     "13": 7.2,
     "14": 8.4,
     "15": 9.8
+  },
+  "elite_wave_interval": 8,
+  "enemy_type_weights": {
+    "normal": 46,
+    "fast": 24,
+    "tank": 18,
+    "ranged": 12
+  },
+  "chapter_archetype_map": {
+    "chapter_1": {
+      "normal": "enemy_shadowling",
+      "fast": "enemy_stalker",
+      "tank": "enemy_brute",
+      "ranged": "enemy_hexcaster"
+    },
+    "chapter_2": {
+      "normal": "enemy_emberling",
+      "fast": "enemy_scorch_runner",
+      "tank": "enemy_burn_guard",
+      "ranged": "enemy_flame_channeler"
+    },
+    "chapter_3": {
+      "normal": "enemy_frostling",
+      "fast": "enemy_glacier_runner",
+      "tank": "enemy_ice_guard",
+      "ranged": "enemy_blizzard_mage"
+    },
+    "chapter_4": {
+      "normal": "enemy_voidling",
+      "fast": "enemy_rift_runner",
+      "tank": "enemy_abyss_guard",
+      "ranged": "enemy_void_priest"
+    }
   }
 }

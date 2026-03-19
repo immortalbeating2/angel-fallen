@@ -1,15 +1,196 @@
 {
   "slots": 4,
   "restock_cost": 20,
+  "restock_growth": 0.35,
+  "restock_cost_cap": 180,
+  "catchup_discount": {
+    "target_gold_per_room": 26,
+    "max_discount": 0.35,
+    "high_gold_markup": 0.15,
+    "high_gold_threshold_mult": 1.8
+  },
+  "ore_exchange": {
+    "enabled": true,
+    "ore_per_trade": 2,
+    "gold_per_trade": 14,
+    "max_trades_per_shop": 3,
+    "bonus_trade_chance": 0.15,
+    "bonus_gold": 4
+  },
+  "chapter_overrides": {
+    "chapter_1": {
+      "price_mult": 0.93,
+      "restock_cost_mult": 0.9,
+      "restock_growth_add": -0.06,
+      "target_gold_mult": 0.82,
+      "max_discount_add": 0.06,
+      "high_markup_add": -0.04,
+      "ore_exchange_gold_add": 2,
+      "ore_exchange_max_trades_add": 1,
+      "ore_exchange_bonus_chance_add": 0.04,
+      "ore_exchange_bonus_gold_add": 1,
+      "quality_weight_mult": {
+        "common": 1.15,
+        "rare": 1.0,
+        "epic": 0.82,
+        "legendary": 0.6
+      },
+      "category_weight_mult": {
+        "consumable": 1.3,
+        "passive": 1.0,
+        "weapon": 0.85
+      },
+      "pool_overrides": {}
+    },
+    "chapter_2": {
+      "price_mult": 1.0,
+      "restock_cost_mult": 1.0,
+      "restock_growth_add": 0.0,
+      "target_gold_mult": 1.0,
+      "max_discount_add": 0.0,
+      "high_markup_add": 0.0,
+      "ore_exchange_gold_add": 0,
+      "ore_exchange_max_trades_add": 0,
+      "ore_exchange_bonus_chance_add": 0.0,
+      "ore_exchange_bonus_gold_add": 0,
+      "quality_weight_mult": {
+        "common": 1.0,
+        "rare": 1.0,
+        "epic": 1.0,
+        "legendary": 1.0
+      },
+      "category_weight_mult": {
+        "consumable": 1.0,
+        "passive": 1.0,
+        "weapon": 1.0
+      },
+      "pool_overrides": {}
+    },
+    "chapter_3": {
+      "price_mult": 1.08,
+      "restock_cost_mult": 1.14,
+      "restock_growth_add": 0.08,
+      "target_gold_mult": 1.2,
+      "max_discount_add": -0.03,
+      "high_markup_add": 0.05,
+      "ore_exchange_gold_add": 1,
+      "ore_exchange_max_trades_add": 0,
+      "ore_exchange_bonus_chance_add": 0.0,
+      "ore_exchange_bonus_gold_add": 1,
+      "quality_weight_mult": {
+        "common": 0.92,
+        "rare": 1.06,
+        "epic": 1.18,
+        "legendary": 1.28
+      },
+      "category_weight_mult": {
+        "consumable": 0.9,
+        "passive": 1.08,
+        "weapon": 1.16
+      },
+      "pool_overrides": {
+        "weapon": ["wpn_holy_cross", "wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest"],
+        "passive": ["pas_might", "pas_armor", "pas_focus", "pas_precision"]
+      }
+    },
+    "chapter_4": {
+      "price_mult": 1.14,
+      "restock_cost_mult": 1.22,
+      "restock_growth_add": 0.12,
+      "target_gold_mult": 1.33,
+      "max_discount_add": -0.05,
+      "high_markup_add": 0.08,
+      "ore_exchange_gold_add": 2,
+      "ore_exchange_max_trades_add": 0,
+      "ore_exchange_bonus_chance_add": 0.02,
+      "ore_exchange_bonus_gold_add": 2,
+      "quality_weight_mult": {
+        "common": 0.84,
+        "rare": 1.12,
+        "epic": 1.34,
+        "legendary": 1.45
+      },
+      "category_weight_mult": {
+        "consumable": 0.76,
+        "passive": 1.08,
+        "weapon": 1.24
+      },
+      "pool_overrides": {
+        "weapon": ["wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_solar_supernova"],
+        "passive": ["pas_might", "pas_armor", "pas_focus", "pas_precision", "pas_force"]
+      }
+    }
+  },
+  "route_style_overrides": {
+    "neutral": {
+      "price_mult": 1.0,
+      "target_gold_mult": 1.0,
+      "max_discount_add": 0.0,
+      "high_markup_add": 0.0,
+      "exchange_gold_add": 0,
+      "quality_weight_mult": {
+        "common": 1.0,
+        "rare": 1.0,
+        "epic": 1.0,
+        "legendary": 1.0
+      },
+      "category_weight_mult": {
+        "consumable": 1.0,
+        "passive": 1.0,
+        "weapon": 1.0
+      }
+    },
+    "vanguard": {
+      "price_mult": 0.95,
+      "target_gold_mult": 0.92,
+      "max_discount_add": 0.05,
+      "high_markup_add": -0.03,
+      "exchange_gold_add": -1,
+      "quality_weight_mult": {
+        "common": 1.12,
+        "rare": 1.05,
+        "epic": 0.92,
+        "legendary": 0.82
+      },
+      "category_weight_mult": {
+        "consumable": 1.22,
+        "passive": 1.06,
+        "weapon": 0.86
+      }
+    },
+    "raider": {
+      "price_mult": 1.06,
+      "target_gold_mult": 1.12,
+      "max_discount_add": -0.03,
+      "high_markup_add": 0.05,
+      "exchange_gold_add": 3,
+      "quality_weight_mult": {
+        "common": 0.9,
+        "rare": 1.06,
+        "epic": 1.18,
+        "legendary": 1.3
+      },
+      "category_weight_mult": {
+        "consumable": 0.82,
+        "passive": 1.02,
+        "weapon": 1.24
+      }
+    }
+  },
   "quality_weights": {
     "common": 65,
     "rare": 25,
     "epic": 8,
     "legendary": 2
   },
+  "category_weights": {
+    "consumable": 1.0,
+    "passive": 1.0,
+    "weapon": 1.0
+  },
   "pools": {
     "consumable": ["hp_potion", "stamina_tonic"],
-    "passive": ["pas_might", "pas_armor"],
-    "weapon": ["wpn_magic_missile", "wpn_holy_cross"]
+    "passive": ["pas_might", "pas_armor", "pas_focus", "pas_precision", "pas_force"],
+    "weapon": ["wpn_magic_missile", "wpn_holy_cross", "wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_solar_supernova"]
   }
 }

@@ -18,7 +18,7 @@
 
 ### 1.2 测试工具
 
-- Godot 内置测试: `GdUnit4` 插件（GDScript单元测试框架）
+- Godot 内置测试: `GUT` 插件（GDScript单元测试框架）
 - 性能分析: Godot Profiler + 自定义性能监控面板
 - 自动化回归: CI/CD 通过 Godot headless 模式运行测试
 
@@ -45,27 +45,27 @@
 
 ```gdscript
 # 示例测试代码（DamageSystem.calculate_damage 签名见 core-systems.md Section 1.2）
-class_name TestDamageSystem extends GdUnitTestSuite
+extends GutTest
 
 var _player: Node2D
 var _enemy: Node2D
 
-func before() -> void:
-    _player = auto_free(create_test_node("Player"))
-    _enemy = auto_free(create_test_node("Enemy"))
+func before_each() -> void:
+    _player = Node2D.new()
+    _enemy = Node2D.new()
 
 func test_basic_damage() -> void:
     # DMG-01: weapon_damage=10, no bonus, no armor
     var result = DamageSystem.calculate_damage(
         _player, _enemy, 10.0, DamageSystem.DamageType.PHYSICAL, 0.0, 0.0, 1.0)
-    assert_float(result.final_damage).is_equal(10.0)
+    assert_eq(result.final_damage, 10.0)
 
 func test_armor_reduction() -> void:
     # DMG-02: weapon_damage=100, armor=30%
     _enemy.get_node("StatsComponent").armor = 0.3
     var result = DamageSystem.calculate_damage(
         _player, _enemy, 100.0, DamageSystem.DamageType.PHYSICAL, 0.0, 0.0, 1.0)
-    assert_float(result.final_damage).is_equal(70.0)
+    assert_eq(result.final_damage, 70.0)
 
 func test_critical_hit() -> void:
     # DMG-03: 强制暴击
@@ -73,29 +73,29 @@ func test_critical_hit() -> void:
     _player.get_node("StatsComponent").crit_damage = 1.5
     var result = DamageSystem.calculate_damage(
         _player, _enemy, 10.0, DamageSystem.DamageType.PHYSICAL, 0.0, 0.0, 1.0)
-    assert_float(result.final_damage).is_equal(15.0)
-    assert_bool(result.is_crit).is_true()
+    assert_eq(result.final_damage, 15.0)
+    assert_true(result.is_crit)
 
 func test_minimum_damage() -> void:
     # DMG-05: 护甲极高时仍有最低1点伤害
     _enemy.get_node("StatsComponent").armor = 0.99
     var result = DamageSystem.calculate_damage(
         _player, _enemy, 1.0, DamageSystem.DamageType.PHYSICAL, 0.0, 0.0, 1.0)
-    assert_float(result.final_damage).is_greater_equal(1.0)
+    assert_gte(result.final_damage, 1.0)
 
 func test_holy_penetration() -> void:
     # DMG-09: 神圣伤害穿透护甲: 50 × (1 - 0.5 × (1 - 0.3)) = 32.5
     _enemy.get_node("StatsComponent").armor = 0.5
     var result = DamageSystem.calculate_damage(
         _player, _enemy, 50.0, DamageSystem.DamageType.HOLY, 0.0, 0.3, 1.0)
-    assert_float(result.final_damage).is_equal(32.5)
+    assert_eq(result.final_damage, 32.5)
 
 func test_armor_cap() -> void:
     # DMG-11: 护甲超过75%时按75%计算
     _enemy.get_node("StatsComponent").armor = 0.9
     var result = DamageSystem.calculate_damage(
         _player, _enemy, 100.0, DamageSystem.DamageType.PHYSICAL, 0.0, 0.0, 1.0)
-    assert_float(result.final_damage).is_equal(25.0)
+    assert_eq(result.final_damage, 25.0)
 ```
 
 ### 2.2 经验与升级测试 (test_level_system.gd)
@@ -300,6 +300,12 @@ func _process(_delta: float) -> void:
 | NAR-07 | 结局触发-救赎 | alignment > 50 时触发救赎结局 |
 | NAR-08 | 结局触发-堕落 | alignment < -50 时触发堕落结局 |
 | NAR-09 | 结局触发-平衡 | -30 ≤ alignment ≤ 30 时触发平衡结局 |
+| NAR-10 | 事件权重-路线联动 | alignment 偏神圣时 holy 权重事件出现率显著上升 |
+| NAR-11 | 事件权重-结局联动 | 解锁对应结局后，`requires_endings_any` 事件可进入候选池 |
+| NAR-12 | 事件门禁 | 命中 `forbid_endings_any` 条件时事件不会被选中 |
+| NAR-13 | 章节效果持续 | 事件产生的 chapter_effect 在 2~3 房间后自动过期 |
+| NAR-14 | 祝福互斥替换 | 新祝福应用前回滚旧祝福，属性不发生叠加膨胀 |
+| NAR-15 | 结局后记差分 | 首次解锁与重复解锁展示不同 epilogue 文本 |
 
 ## 6.6 环境机制测试 (test_environment_system.gd)
 
@@ -337,6 +343,9 @@ func _process(_delta: float) -> void:
 | EVT-03 | 祭坛事件 | 牺牲HP获得对应属性加成 |
 | EVT-04 | 灵魂商人 | 用HP换取稀有物品，HP扣除正确 |
 | EVT-05 | 连续事件独立 | 同层多个事件房不相互影响 |
+| EVT-06 | 事件近期历史抑制 | 同章重复事件权重下降，短窗口内不高频重复 |
+| EVT-07 | 章节效果叠加解析 | 同时存在多种 chapter_effect 时修正值按规则合并 |
+| EVT-08 | 章节效果HUD同步 | 效果图标/剩余房间数与实际状态一致 |
 
 ## 6.9 耐力系统测试 (test_stamina_system.gd)
 
@@ -372,6 +381,30 @@ func _process(_delta: float) -> void:
 | FRG-02 | 强化效果 | 强化+1后武器伤害+10% |
 | FRG-03 | 附魔效果 | 附魔后武器附加火焰属性 |
 | FRG-04 | 材料不足 | 矿石不够时无法锻造 |
+
+## 6.13 暂停与运行时设置测试 (test_pause_settings.gd)
+
+| 测试ID | 测试用例 | 预期行为 |
+|--------|----------|----------|
+| PAU-01 | ESC 暂停开关 | ESC 打开暂停面板，再次 ESC 恢复游戏 |
+| PAU-02 | 暂停继续 | 选择 Resume 后游戏状态回到 PLAYING |
+| PAU-03 | 暂停撤退 | 选择 Retreat 后触发本局结算并写入 last_run |
+| PAU-04 | 暂停回主菜单 | 选择 Main Menu 时直接切回菜单且不追加撤退结算 |
+| PAU-05 | 音量即时生效 | 调整 Master/BGM/SFX/Ambience 后 AudioBus 音量立即变化 |
+| PAU-06 | 设置持久化 | 修改设置后重启，runtime_settings 与 UI 展示一致 |
+| PAU-07 | UI缩放边界 | UI Scale 在 0.8~1.5 范围内 clamp，越界输入被修正 |
+| PAU-08 | 屏幕震动强度 | Screen Shake=0 时玩家受击无震动，>0 时有可感知震动 |
+
+## 6.14 HUD反馈测试 (test_hud_feedback.gd)
+
+| 测试ID | 测试用例 | 预期行为 |
+|--------|----------|----------|
+| HUD-01 | 吐司队列顺序 | 多个事件连续触发时按入队顺序逐条显示 |
+| HUD-02 | 吐司来源映射 | 成就/结局/碎片/饰品四类事件均显示正确标题 |
+| HUD-03 | 迷你地图标记 | 房型标记（C/B/E/S/H）与房间类型一致 |
+| HUD-04 | 当前房高亮 | 当前房间 token 显示高亮包裹（如 `>04B<`） |
+| HUD-05 | 已完成房状态 | 已完成房间标记转为小写，且在下一房仍保留 |
+| HUD-06 | 章节效果图标极性 | `[+]`/`[-]`/`[~]` 与效果净增益方向一致 |
 
 ---
 
@@ -409,8 +442,8 @@ jobs:
       - uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.3.0
-      - name: Run GdUnit4 Tests
-        run: godot --headless --script addons/gdUnit4/bin/GdUnitCmdTool.gd --run-all
+      - name: Run GUT Tests
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -ginclude_subdirs -gexit
 
   data-validation:
     runs-on: ubuntu-latest

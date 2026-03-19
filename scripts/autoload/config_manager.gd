@@ -1,6 +1,8 @@
 extends Node
 
 const CONFIG_PATHS: Dictionary = {
+    "characters": "res://data/balance/characters.json",
+    "map_generation": "res://data/balance/map_generation.json",
     "xp_curve": "res://data/balance/xp_curve.json",
     "enemy_scaling": "res://data/balance/enemy_scaling.json",
     "drop_tables": "res://data/balance/drop_tables.json",

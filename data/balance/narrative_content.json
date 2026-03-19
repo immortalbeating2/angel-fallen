@@ -71,12 +71,60 @@
       "hazard_hint": "Void corruption ramps damage over time. Keep gauges low between fights."
     }
   },
+  "route_styles": {
+    "neutral": {
+      "event_weight_mult": 1.0,
+      "hazard_mult": 1.0,
+      "gold_drop_mult": 1.0,
+      "ore_drop_mult": 1.0,
+      "theme_tint": "#d5dde6",
+      "theme_blend": 0.08,
+      "boss_hp_mult": 1.0,
+      "boss_damage_mult": 1.0,
+      "boss_speed_mult": 1.0,
+      "boss_scale_mult": 1.0,
+      "boss_color": "#f2734a"
+    },
+    "vanguard": {
+      "event_weight_mult": 1.12,
+      "hazard_mult": 0.9,
+      "gold_drop_mult": 0.95,
+      "ore_drop_mult": 1.08,
+      "theme_tint": "#7ecfff",
+      "theme_blend": 0.2,
+      "boss_hp_mult": 1.08,
+      "boss_damage_mult": 0.95,
+      "boss_speed_mult": 0.93,
+      "boss_scale_mult": 1.06,
+      "boss_color": "#59bcff"
+    },
+    "raider": {
+      "event_weight_mult": 1.08,
+      "hazard_mult": 1.1,
+      "gold_drop_mult": 1.15,
+      "ore_drop_mult": 0.92,
+      "theme_tint": "#ff8a73",
+      "theme_blend": 0.22,
+      "boss_hp_mult": 0.95,
+      "boss_damage_mult": 1.12,
+      "boss_speed_mult": 1.08,
+      "boss_scale_mult": 1.02,
+      "boss_color": "#ff6848"
+    }
+  },
   "chapter_events": {
     "chapter_1": [
       {
         "id": "evt_ch1_shrine",
         "title": "Ruined Shrine",
         "body": "An ancient shrine still flickers with weak light. You may pray for grace or take the relic by force.",
+        "weight_base": 1.0,
+        "weight_if_holy": 1.25,
+        "weight_if_void": 0.8,
+        "weight_if_route_vanguard": 1.18,
+        "weight_if_route_raider": 0.9,
+        "weight_if_ending_redeem": 1.35,
+        "weight_if_ending_fall": 0.75,
         "choices": [
           {
             "id": "offer_prayer",
@@ -86,7 +134,21 @@
             "ore": 1,
             "frostbite_delta": -10.0,
             "void_delta": -8.0,
-            "blessing": "holy_vow"
+            "blessing": "holy_vow",
+            "chapter_effect": {
+              "id": "effect_sanctified_ward",
+              "title": "Sanctified Ward",
+              "desc": "2 rooms: hazard pressure down, armor and damage up.",
+              "duration_rooms": 2,
+              "effects": {
+                "armor_bonus": 0.04,
+                "damage_bonus_pct": 0.08,
+                "enemy_spawn_rate_mult": 0.92,
+                "enemy_damage_mult": 0.88,
+                "hazard_intensity_mult": 0.82,
+                "move_speed_mult": 1.04
+              }
+            }
           },
           {
             "id": "take_relic",
@@ -96,7 +158,21 @@
             "ore": 0,
             "frostbite_delta": 0.0,
             "void_delta": 10.0,
-            "blessing": "void_oath"
+            "blessing": "void_oath",
+            "chapter_effect": {
+              "id": "effect_abyss_hunger",
+              "title": "Abyss Hunger",
+              "desc": "3 rooms: stronger offense but heavier hazards.",
+              "duration_rooms": 3,
+              "effects": {
+                "damage_bonus_pct": 0.14,
+                "armor_bonus": -0.04,
+                "enemy_spawn_rate_mult": 1.16,
+                "enemy_damage_mult": 1.12,
+                "hazard_intensity_mult": 1.18,
+                "move_speed_mult": 0.95
+              }
+            }
           }
         ]
       },
@@ -104,6 +180,11 @@
         "id": "evt_ch1_survivor",
         "title": "Lost Survivor",
         "body": "A wounded survivor begs for help. Your supplies are limited.",
+        "weight_base": 1.0,
+        "weight_if_holy": 1.15,
+        "weight_if_void": 0.85,
+        "weight_if_route_vanguard": 1.06,
+        "weight_if_route_raider": 0.95,
         "choices": [
           {
             "id": "share_supplies",
@@ -112,7 +193,20 @@
             "gold": -10,
             "ore": 0,
             "frostbite_delta": -6.0,
-            "void_delta": -6.0
+            "void_delta": -6.0,
+            "chapter_effect": {
+              "id": "effect_guardian_pace",
+              "title": "Guardian Pace",
+              "desc": "2 rooms: safer pace, moderate gains.",
+              "duration_rooms": 2,
+              "effects": {
+                "damage_bonus_pct": 0.05,
+                "enemy_spawn_rate_mult": 0.9,
+                "enemy_hp_mult": 0.92,
+                "hazard_intensity_mult": 0.88,
+                "move_speed_mult": 1.03
+              }
+            }
           },
           {
             "id": "move_on",
@@ -121,7 +215,86 @@
             "gold": 10,
             "ore": 1,
             "frostbite_delta": 0.0,
-            "void_delta": 5.0
+            "void_delta": 5.0,
+            "chapter_effect": {
+              "id": "effect_cold_detour",
+              "title": "Cold Detour",
+              "desc": "2 rooms: faster spawn pressure, extra gains.",
+              "duration_rooms": 2,
+              "effects": {
+                "damage_bonus_pct": 0.09,
+                "enemy_spawn_rate_mult": 1.1,
+                "enemy_damage_mult": 1.08,
+                "hazard_intensity_mult": 1.1,
+                "move_speed_mult": 0.97
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "evt_ch1_afterglow",
+        "title": "Afterglow Reflection",
+        "body": "The shrine mirrors an ending you once reached. The memory changes your next steps.",
+        "weight_base": 0.4,
+        "weight_if_holy": 1.2,
+        "weight_if_void": 1.2,
+        "weight_if_route_vanguard": 1.0,
+        "weight_if_route_raider": 1.12,
+        "weight_if_ending_redeem": 1.5,
+        "weight_if_ending_fall": 1.5,
+        "weight_if_ending_balance": 1.35,
+        "requires_endings_any": [
+          "nar_ending_redeem",
+          "nar_ending_fall",
+          "nar_ending_balance"
+        ],
+        "choices": [
+          {
+            "id": "follow_old_light",
+            "label": "Follow old light",
+            "alignment_delta": 10.0,
+            "gold": 0,
+            "ore": 1,
+            "frostbite_delta": -8.0,
+            "void_delta": -12.0,
+            "chapter_effect": {
+              "id": "effect_afterglow_grace",
+              "title": "Afterglow Grace",
+              "desc": "3 rooms: stable pacing and stronger defense.",
+              "duration_rooms": 3,
+              "effects": {
+                "armor_bonus": 0.06,
+                "enemy_spawn_rate_mult": 0.88,
+                "enemy_damage_mult": 0.86,
+                "hazard_intensity_mult": 0.8,
+                "move_speed_mult": 1.05
+              }
+            }
+          },
+          {
+            "id": "rewrite_memory",
+            "label": "Rewrite memory",
+            "alignment_delta": -10.0,
+            "gold": 24,
+            "ore": 2,
+            "frostbite_delta": 0.0,
+            "void_delta": 12.0,
+            "chapter_effect": {
+              "id": "effect_afterglow_ruin",
+              "title": "Afterglow Ruin",
+              "desc": "3 rooms: high pressure, high lethality.",
+              "duration_rooms": 3,
+              "effects": {
+                "damage_bonus_pct": 0.18,
+                "armor_bonus": -0.06,
+                "enemy_spawn_rate_mult": 1.2,
+                "enemy_hp_mult": 1.12,
+                "enemy_damage_mult": 1.15,
+                "hazard_intensity_mult": 1.22,
+                "move_speed_mult": 0.94
+              }
+            }
           }
         ]
       }
@@ -131,6 +304,12 @@
         "id": "evt_ch2_forge",
         "title": "Overheated Forge",
         "body": "A demon forge still burns. You can temper your weapon or salvage valuables.",
+        "weight_base": 1.0,
+        "weight_if_holy": 1.1,
+        "weight_if_void": 0.95,
+        "weight_if_route_vanguard": 1.12,
+        "weight_if_route_raider": 0.92,
+        "weight_if_ending_redeem": 1.2,
         "choices": [
           {
             "id": "temper_weapon",
@@ -140,7 +319,19 @@
             "ore": -2,
             "frostbite_delta": 0.0,
             "void_delta": -4.0,
-            "blessing": "holy_vow"
+            "blessing": "holy_vow",
+            "chapter_effect": {
+              "id": "effect_tempered_edge",
+              "title": "Tempered Edge",
+              "desc": "2 rooms: lower hazard pressure and better control.",
+              "duration_rooms": 2,
+              "effects": {
+                "damage_bonus_pct": 0.1,
+                "enemy_spawn_rate_mult": 0.94,
+                "hazard_intensity_mult": 0.86,
+                "move_speed_mult": 1.05
+              }
+            }
           },
           {
             "id": "salvage_quick",
@@ -150,7 +341,21 @@
             "ore": 2,
             "frostbite_delta": 0.0,
             "void_delta": 8.0,
-            "blessing": "void_oath"
+            "blessing": "void_oath",
+            "chapter_effect": {
+              "id": "effect_greedy_slag",
+              "title": "Greedy Slag",
+              "desc": "2 rooms: more pressure in exchange for burst damage.",
+              "duration_rooms": 2,
+              "effects": {
+                "damage_bonus_pct": 0.16,
+                "armor_bonus": -0.03,
+                "enemy_spawn_rate_mult": 1.14,
+                "enemy_damage_mult": 1.1,
+                "hazard_intensity_mult": 1.15,
+                "move_speed_mult": 0.96
+              }
+            }
           }
         ]
       },
@@ -158,6 +363,12 @@
         "id": "evt_ch2_arena",
         "title": "Ash Arena",
         "body": "A cursed arena offers reward for blood. Entering stirs the abyss.",
+        "weight_base": 1.0,
+        "weight_if_holy": 0.8,
+        "weight_if_void": 1.25,
+        "weight_if_route_vanguard": 0.88,
+        "weight_if_route_raider": 1.2,
+        "weight_if_ending_fall": 1.35,
         "choices": [
           {
             "id": "accept_trial",
@@ -166,7 +377,21 @@
             "gold": 30,
             "ore": 1,
             "frostbite_delta": 0.0,
-            "void_delta": 14.0
+            "void_delta": 14.0,
+            "chapter_effect": {
+              "id": "effect_arena_frenzy",
+              "title": "Arena Frenzy",
+              "desc": "3 rooms: rapid spawns and stronger weapon output.",
+              "duration_rooms": 3,
+              "effects": {
+                "damage_bonus_pct": 0.2,
+                "enemy_spawn_rate_mult": 1.24,
+                "enemy_hp_mult": 1.08,
+                "enemy_damage_mult": 1.16,
+                "hazard_intensity_mult": 1.2,
+                "move_speed_mult": 0.95
+              }
+            }
           },
           {
             "id": "walk_away",
@@ -175,7 +400,20 @@
             "gold": 0,
             "ore": 0,
             "frostbite_delta": 0.0,
-            "void_delta": -8.0
+            "void_delta": -8.0,
+            "chapter_effect": {
+              "id": "effect_calm_breath",
+              "title": "Calm Breath",
+              "desc": "2 rooms: lower incoming pressure and safer hazards.",
+              "duration_rooms": 2,
+              "effects": {
+                "armor_bonus": 0.04,
+                "enemy_spawn_rate_mult": 0.86,
+                "enemy_damage_mult": 0.84,
+                "hazard_intensity_mult": 0.82,
+                "move_speed_mult": 1.06
+              }
+            }
           }
         ]
       }
@@ -185,6 +423,12 @@
         "id": "evt_ch3_whispers",
         "title": "Whispers in Ice",
         "body": "Frozen whispers reveal fragments of your origin. Listening too long may scar your soul.",
+        "weight_base": 1.0,
+        "weight_if_holy": 0.95,
+        "weight_if_void": 1.1,
+        "weight_if_route_vanguard": 0.94,
+        "weight_if_route_raider": 1.14,
+        "weight_if_ending_balance": 1.25,
         "choices": [
           {
             "id": "listen_carefully",
@@ -193,7 +437,19 @@
             "gold": 0,
             "ore": 1,
             "frostbite_delta": 8.0,
-            "void_delta": -10.0
+            "void_delta": -10.0,
+            "chapter_effect": {
+              "id": "effect_frozen_focus",
+              "title": "Frozen Focus",
+              "desc": "2 rooms: stable movement and reduced hazard burden.",
+              "duration_rooms": 2,
+              "effects": {
+                "damage_bonus_pct": 0.08,
+                "enemy_spawn_rate_mult": 0.9,
+                "hazard_intensity_mult": 0.8,
+                "move_speed_mult": 1.08
+              }
+            }
           },
           {
             "id": "embrace_whispers",
@@ -203,7 +459,21 @@
             "ore": 0,
             "frostbite_delta": 0.0,
             "void_delta": 16.0,
-            "blessing": "void_oath"
+            "blessing": "void_oath",
+            "chapter_effect": {
+              "id": "effect_whisper_mania",
+              "title": "Whisper Mania",
+              "desc": "3 rooms: high damage with severe corruption pressure.",
+              "duration_rooms": 3,
+              "effects": {
+                "damage_bonus_pct": 0.22,
+                "armor_bonus": -0.05,
+                "enemy_spawn_rate_mult": 1.18,
+                "enemy_damage_mult": 1.14,
+                "hazard_intensity_mult": 1.24,
+                "move_speed_mult": 0.93
+              }
+            }
           }
         ]
       }
@@ -213,6 +483,14 @@
         "id": "evt_ch4_threshold",
         "title": "Threshold of Dawn",
         "body": "At the final threshold, a silent choir offers one last boon before the abyssal throne.",
+        "weight_base": 1.0,
+        "weight_if_holy": 1.2,
+        "weight_if_void": 1.2,
+        "weight_if_route_vanguard": 1.1,
+        "weight_if_route_raider": 1.1,
+        "weight_if_ending_redeem": 1.35,
+        "weight_if_ending_fall": 1.35,
+        "weight_if_ending_balance": 1.2,
         "choices": [
           {
             "id": "accept_grace",
@@ -222,7 +500,21 @@
             "ore": 0,
             "frostbite_delta": -20.0,
             "void_delta": -20.0,
-            "blessing": "holy_vow"
+            "blessing": "holy_vow",
+            "chapter_effect": {
+              "id": "effect_last_benediction",
+              "title": "Last Benediction",
+              "desc": "3 rooms: lower threat and steady holy momentum.",
+              "duration_rooms": 3,
+              "effects": {
+                "armor_bonus": 0.08,
+                "damage_bonus_pct": 0.12,
+                "enemy_spawn_rate_mult": 0.84,
+                "enemy_damage_mult": 0.82,
+                "hazard_intensity_mult": 0.76,
+                "move_speed_mult": 1.08
+              }
+            }
           },
           {
             "id": "accept_void",
@@ -232,7 +524,22 @@
             "ore": 2,
             "frostbite_delta": 0.0,
             "void_delta": 12.0,
-            "blessing": "void_oath"
+            "blessing": "void_oath",
+            "chapter_effect": {
+              "id": "effect_last_ruin",
+              "title": "Last Ruin",
+              "desc": "3 rooms: extreme power with punishing pressure.",
+              "duration_rooms": 3,
+              "effects": {
+                "damage_bonus_pct": 0.26,
+                "armor_bonus": -0.08,
+                "enemy_spawn_rate_mult": 1.28,
+                "enemy_hp_mult": 1.15,
+                "enemy_damage_mult": 1.2,
+                "hazard_intensity_mult": 1.28,
+                "move_speed_mult": 0.92
+              }
+            }
           }
         ]
       }
@@ -259,15 +566,21 @@
   "endings": {
     "nar_ending_redeem": {
       "title": "Ending: REDEEM",
-      "story": "You rise with broken wings healed by grace. The abyss closes, but your oath remains."
+      "story": "You rise with broken wings healed by grace. The abyss closes, but your oath remains.",
+      "epilogue_first_unlock": "At dawn, the camp bells ring again. Survivors whisper your true name and the first altar rekindles.",
+      "epilogue_repeat": "The redeemed path returns in clearer detail; each cycle reveals another vow you once forgot."
     },
     "nar_ending_fall": {
       "title": "Ending: FALL",
-      "story": "You wear the void as a crown. Salvation is denied, and power becomes your final prayer."
+      "story": "You wear the void as a crown. Salvation is denied, and power becomes your final prayer.",
+      "epilogue_first_unlock": "Ash storms kneel at your steps. The old sanctums seal their gates as your shadow claims the horizon.",
+      "epilogue_repeat": "The fall deepens with each return; the abyss no longer tempts you, it answers you."
     },
     "nar_ending_balance": {
       "title": "Ending: BALANCE",
-      "story": "Neither halo nor abyss claims you. You walk the narrow dusk, guarding both worlds."
+      "story": "Neither halo nor abyss claims you. You walk the narrow dusk, guarding both worlds.",
+      "epilogue_first_unlock": "In twilight archives, both hymns and curses answer your command. The borderlands breathe in peace.",
+      "epilogue_repeat": "Balance becomes sharper with every cycle; you begin to see hidden routes between mercy and ruin."
     }
   }
 }

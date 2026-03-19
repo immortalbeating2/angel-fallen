@@ -12,15 +12,41 @@ extends CanvasLayer
 @onready var _hazard_value: Label = $MarginContainer/PanelContainer/VBoxContainer/HazardValue
 @onready var _frostbite_value: Label = $MarginContainer/PanelContainer/VBoxContainer/FrostbiteValue
 @onready var _void_value: Label = $MarginContainer/PanelContainer/VBoxContainer/VoidCorruptionValue
+@onready var _chapter_effects_value: Label = $MarginContainer/PanelContainer/VBoxContainer/ChapterEffectsValue
+@onready var _route_style_value: Label = $MarginContainer/PanelContainer/VBoxContainer/RouteStyleValue
+@onready var _minimap_value: Label = $MarginContainer/PanelContainer/VBoxContainer/MinimapValue
 @onready var _state_value: Label = $MarginContainer/PanelContainer/VBoxContainer/StateValue
 @onready var _room_kill_value: Label = $MarginContainer/PanelContainer/VBoxContainer/RoomKillValue
 @onready var _room_status_value: Label = $MarginContainer/PanelContainer/VBoxContainer/RoomStatusValue
+@onready var _toast_panel: PanelContainer = $ToastLayer/ToastPanel
+@onready var _toast_label: Label = $ToastLayer/ToastPanel/MarginContainer/ToastLabel
 
 var _player: CharacterBody2D
 var _health_component: Node
 var _stats_component: Node
 var _progression_component: Node
 var _game_world: Node
+var _toast_queue: Array[Dictionary] = []
+var _toast_timer: float = 0.0
+
+const TOAST_DURATION: float = 2.6
+
+
+func _ready() -> void:
+    if EventBus != null:
+        if EventBus.has_signal("achievement_unlocked"):
+            EventBus.achievement_unlocked.connect(_on_achievement_unlocked)
+        if EventBus.has_signal("ending_unlocked"):
+            EventBus.ending_unlocked.connect(_on_ending_unlocked)
+        if EventBus.has_signal("memory_fragment_found"):
+            EventBus.memory_fragment_found.connect(_on_memory_fragment_found)
+        if EventBus.has_signal("accessory_acquired"):
+            EventBus.accessory_acquired.connect(_on_accessory_acquired)
+        if EventBus.has_signal("codex_unlocked"):
+            EventBus.codex_unlocked.connect(_on_codex_unlocked)
+
+    if _toast_panel != null:
+        _toast_panel.visible = false
 
 
 func _process(_delta: float) -> void:
@@ -64,8 +90,105 @@ func _process(_delta: float) -> void:
         _frostbite_value.text = "%.0f%%" % _game_world.get_frostbite_value()
     if _game_world != null and _game_world.has_method("get_void_corruption_value"):
         _void_value.text = "%.0f%%" % _game_world.get_void_corruption_value()
+    if _game_world != null and _game_world.has_method("get_chapter_effects_hud_text"):
+        _chapter_effects_value.text = _game_world.get_chapter_effects_hud_text()
+    if _game_world != null and _game_world.has_method("get_route_style_hud_text"):
+        _route_style_value.text = _game_world.get_route_style_hud_text()
+    if _game_world != null and _game_world.has_method("get_minimap_text"):
+        _minimap_value.text = _game_world.get_minimap_text()
 
     _state_value.text = _get_state_name(GameManager.current_state)
+    _process_toast(_delta)
+
+
+func _process_toast(delta: float) -> void:
+    if _toast_panel == null or _toast_label == null:
+        return
+
+    if _toast_timer > 0.0:
+        _toast_timer = maxf(0.0, _toast_timer - delta)
+        if _toast_timer <= 0.0:
+            _toast_panel.visible = false
+
+    if _toast_timer <= 0.0 and not _toast_queue.is_empty():
+        var row: Dictionary = _toast_queue.pop_front()
+        _toast_label.text = str(row.get("text", "Notice"))
+        _toast_label.modulate = row.get("color", Color(1, 1, 1, 1))
+        _toast_panel.visible = true
+        _toast_timer = TOAST_DURATION
+
+
+func _enqueue_toast(text: String, color: Color) -> void:
+    _toast_queue.append({
+        "text": text,
+        "color": color
+    })
+
+
+func _on_achievement_unlocked(_achievement_id: String, title: String) -> void:
+    _enqueue_toast("Achievement Unlocked: %s" % title, Color(1.0, 0.87, 0.25, 1.0))
+
+
+func _on_ending_unlocked(ending_id: String) -> void:
+    _enqueue_toast("Ending Unlocked: %s" % _get_ending_title(ending_id), Color(0.8, 0.92, 1.0, 1.0))
+
+
+func _on_memory_fragment_found(fragment_id: String) -> void:
+    var title: String = _get_fragment_title(fragment_id)
+    _enqueue_toast("Memory Fragment: %s" % title, Color(0.84, 1.0, 0.84, 1.0))
+
+
+func _on_accessory_acquired(accessory_id: String) -> void:
+    _enqueue_toast("Accessory Acquired: %s" % _get_accessory_title(accessory_id), Color(1.0, 0.84, 0.76, 1.0))
+
+
+func _on_codex_unlocked(category: String, entry_id: String) -> void:
+    var category_name: String = category.capitalize()
+    var entry_name: String = _prettify_id(entry_id)
+    _enqueue_toast("Codex Updated: [%s] %s" % [category_name, entry_name], Color(0.86, 0.84, 1.0, 1.0))
+
+
+func _get_fragment_title(fragment_id: String) -> String:
+    var content: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var rows_var: Variant = content.get("memory_fragments", {})
+    if rows_var is Dictionary:
+        var row_var: Variant = (rows_var as Dictionary).get(fragment_id, {})
+        if row_var is Dictionary:
+            return str((row_var as Dictionary).get("title", fragment_id))
+    return fragment_id
+
+
+func _get_ending_title(ending_id: String) -> String:
+    var content: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var rows_var: Variant = content.get("endings", {})
+    if rows_var is Dictionary:
+        var row_var: Variant = (rows_var as Dictionary).get(ending_id, {})
+        if row_var is Dictionary:
+            return str((row_var as Dictionary).get("title", ending_id))
+    return ending_id
+
+
+func _get_accessory_title(accessory_id: String) -> String:
+    match accessory_id:
+        "acc_heart_of_mine":
+            return "Heart of Mine"
+        "acc_flame_core":
+            return "Flame Core"
+        "acc_zero_mark":
+            return "Zero Mark"
+        "acc_void_eye":
+            return "Void Eye"
+        _:
+            return accessory_id
+
+
+func _prettify_id(raw_id: String) -> String:
+    var text: String = raw_id
+    if text.begins_with("char_") or text.begins_with("wpn_") or text.begins_with("acc_") or text.begins_with("enemy_"):
+        var parts: PackedStringArray = text.split("_", false, 1)
+        if parts.size() == 2:
+            text = parts[1]
+    return text.replace("_", " ").capitalize()
 
 
 func _get_state_name(state_value: int) -> String:

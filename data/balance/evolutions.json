@@ -1,9 +1,84 @@
 {
   "evolutions": [
     {
+      "id": "evo_arcane_comet",
       "weapon_id": "wpn_magic_missile",
       "passive_id": "pas_focus",
-      "result_weapon_id": "wpn_arcane_comet"
+      "required_passive_level": 2,
+      "result_weapon_id": "wpn_arcane_comet",
+      "title": "Arcane Comet",
+      "desc": "Focus your missile into a comet spread with heavier impact.",
+      "evolution_profile": {
+        "damage_mult": 1.28,
+        "flat_damage_bonus": 3.0,
+        "interval_mult": 0.88,
+        "weapon_mode": "spread",
+        "projectile_count": 3,
+        "spread_angle_deg": 16.0,
+        "spread_jitter_deg": 2.0,
+        "projectile_hits": 2,
+        "projectile_style": "arcane_comet"
+      }
+    },
+    {
+      "id": "evo_holy_judgment",
+      "weapon_id": "wpn_holy_cross",
+      "passive_id": "pas_precision",
+      "required_passive_level": 2,
+      "result_weapon_id": "wpn_holy_judgment",
+      "title": "Holy Judgment",
+      "desc": "Condense holy bolts into piercing strikes with stronger critical follow-up.",
+      "evolution_profile": {
+        "damage_mult": 1.34,
+        "flat_damage_bonus": 4.5,
+        "interval_mult": 0.9,
+        "weapon_mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0.0,
+        "spread_jitter_deg": 0.0,
+        "projectile_hits": 4,
+        "projectile_style": "holy_judgment"
+      }
+    },
+    {
+      "id": "evo_shadow_tempest",
+      "weapon_id": "wpn_shadow_fang",
+      "passive_id": "pas_force",
+      "required_passive_level": 2,
+      "result_weapon_id": "wpn_shadow_tempest",
+      "title": "Shadow Tempest",
+      "desc": "Split fang shots into a rapid storm that shreds clustered enemies.",
+      "evolution_profile": {
+        "damage_mult": 1.22,
+        "flat_damage_bonus": 2.5,
+        "interval_mult": 0.8,
+        "weapon_mode": "spread",
+        "projectile_count": 5,
+        "spread_angle_deg": 24.0,
+        "spread_jitter_deg": 5.0,
+        "projectile_hits": 2,
+        "projectile_style": "shadow_tempest"
+      }
+    },
+    {
+      "id": "evo_solar_supernova",
+      "weapon_id": "wpn_solar_lance",
+      "passive_id": "pas_focus",
+      "required_passive_level": 3,
+      "result_weapon_id": "wpn_solar_supernova",
+      "title": "Solar Supernova",
+      "desc": "Ignite the lance into a radial burst with heavy impact and multi-hit trails.",
+      "evolution_profile": {
+        "damage_mult": 1.4,
+        "flat_damage_bonus": 6.0,
+        "interval_mult": 0.86,
+        "weapon_mode": "spread",
+        "projectile_count": 3,
+        "spread_angle_deg": 20.0,
+        "spread_jitter_deg": 1.5,
+        "projectile_hits": 3,
+        "projectile_style": "solar_supernova"
+      }
     }
   ]
 }

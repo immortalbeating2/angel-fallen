@@ -200,7 +200,7 @@ res://
 │   │   └── ambience/                 # 环境音效（OGG格式）
 │   ├── fonts/
 │   └── shaders/
-└── addons/                           # 第三方插件（GdUnit4等）
+└── addons/                           # 第三方插件（GUT等）
 ```
 
 ## 3. Autoload 单例设计

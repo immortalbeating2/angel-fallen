@@ -7,6 +7,7 @@ extends Node2D
 @onready var _hazard_tint: ColorRect = $HazardTint
 @onready var _hazard_flash: ColorRect = $HazardFlash
 @onready var _spawner: Node2D = $EnemySpawner
+@onready var _map_generator: Node = $MapGenerator
 @onready var _player: CharacterBody2D = $Player
 @onready var _pickups_root: Node2D = $Pickups
 @onready var _left_door: Polygon2D = $Doors/LeftDoor
@@ -15,6 +16,8 @@ extends Node2D
 @onready var _narrative_event_panel: Control = $NarrativeEventPanel
 @onready var _chapter_intro_panel: Control = $ChapterIntroPanel
 @onready var _chapter_transition_panel: Control = $ChapterTransitionPanel
+@onready var _memory_altar_panel: Control = $MemoryAltarPanel
+@onready var _pause_panel: Control = $PausePanel
 @onready var _run_result_panel: Control = $RunResultPanel
 
 @export var pickup_scene: PackedScene
@@ -28,7 +31,54 @@ var _gold: int = 0
 var _ore: int = 0
 var _alignment: float = 0.0
 var _shop_offers: Array[Dictionary] = []
+var _shop_restock_base_cost: int = 20
 var _shop_restock_cost: int = 20
+var _shop_restock_growth: float = 0.35
+var _shop_restock_cap: int = 180
+var _shop_restock_count: int = 0
+var _shop_last_economy_factor: float = 1.0
+var _shop_chapter_price_mult: float = 1.0
+var _shop_chapter_id: String = "chapter_1"
+var _shop_chapter_overrides: Dictionary = {}
+var _shop_route_overrides: Dictionary = {}
+var _shop_quality_weights: Dictionary = {}
+var _shop_pools: Dictionary = {}
+var _shop_base_quality_weights: Dictionary = {}
+var _shop_base_pools: Dictionary = {}
+var _shop_category_weights: Dictionary = {}
+var _shop_base_category_weights: Dictionary = {}
+
+var _shop_base_restock_cost: int = 20
+var _shop_base_restock_growth: float = 0.35
+var _shop_base_restock_cap: int = 180
+
+var _shop_catchup_target_per_room: float = 26.0
+var _shop_catchup_max_discount: float = 0.35
+var _shop_catchup_high_gold_markup: float = 0.15
+var _shop_catchup_high_gold_threshold_mult: float = 1.8
+var _shop_base_catchup_target_per_room: float = 26.0
+var _shop_base_catchup_max_discount: float = 0.35
+var _shop_base_catchup_high_gold_markup: float = 0.15
+var _shop_base_catchup_high_gold_threshold_mult: float = 1.8
+
+var _shop_ore_exchange_enabled: bool = true
+var _shop_ore_exchange_ore_cost: int = 2
+var _shop_ore_exchange_gold_gain: int = 14
+var _shop_ore_exchange_max_trades: int = 3
+var _shop_ore_exchange_bonus_chance: float = 0.15
+var _shop_ore_exchange_bonus_gold: int = 4
+var _shop_ore_exchange_count: int = 0
+var _shop_base_ore_exchange_enabled: bool = true
+var _shop_base_ore_exchange_ore_cost: int = 2
+var _shop_base_ore_exchange_gold_gain: int = 14
+var _shop_base_ore_exchange_max_trades: int = 3
+var _shop_base_ore_exchange_bonus_chance: float = 0.15
+var _shop_base_ore_exchange_bonus_gold: int = 4
+var _shop_route_price_mult: float = 1.0
+var _shop_route_target_mult: float = 1.0
+var _shop_route_max_discount_add: float = 0.0
+var _shop_route_high_markup_add: float = 0.0
+var _shop_route_exchange_gold_add: int = 0
 var _shop_message: String = ""
 var _camp_message: String = ""
 var _camp_route_chosen: bool = false
@@ -39,21 +89,55 @@ var _returning_to_menu: bool = false
 var _chapter_intro_pending: bool = false
 var _narrative_event_pending: bool = false
 var _chapter_transition_pending: bool = false
+var _memory_altar_pending: bool = false
+var _pause_menu_pending: bool = false
 var _shown_chapter_intro: Dictionary = {}
 var _active_blessing_id: String = "none"
 var _equipped_accessories: Array[String] = []
+var _chapter_effect_timeline: Array[Dictionary] = []
+var _active_chapter_effects: Array[Dictionary] = []
+var _chapter_effects_this_room: Array[Dictionary] = []
 var _active_hazards: Array[String] = []
 var _frostbite: float = 0.0
 var _void_corruption: float = 0.0
 var _hazard_tick_timer: float = 0.0
 var _hazard_wave: float = 0.0
 var _target_background_color: Color = Color(0.10, 0.09, 0.13, 1.0)
+var _chapter_effect_spawn_rate_mult: float = 1.0
+var _chapter_effect_enemy_hp_mult: float = 1.0
+var _chapter_effect_enemy_damage_mult: float = 1.0
+var _chapter_effect_hazard_mult: float = 1.0
+var _chapter_effect_move_speed_mult: float = 1.0
+var _chapter_effect_damage_bonus: float = 0.0
+var _chapter_effect_armor_bonus: float = 0.0
+var _chapter_effect_applied_armor_bonus: float = 0.0
+var _room_history: Dictionary = {}
+var _run_plan: Dictionary = {}
+var _room_plan_map: Dictionary = {}
+var _run_room_count: int = 15
+var _run_layout_cols: int = 5
+var _run_map_bounds: Dictionary = {}
+var _pending_next_rooms: Array[int] = []
+var _selected_next_room_slot: int = 0
+var _chapter_route_styles: Dictionary = {}
+var _current_route_style: String = "neutral"
+var _route_event_weight_mult: float = 1.0
+var _route_hazard_mult: float = 1.0
+var _route_gold_drop_mult: float = 1.0
+var _route_ore_drop_mult: float = 1.0
+var _route_theme_tint: Color = Color(0.18, 0.34, 0.50, 1.0)
+var _route_theme_blend: float = 0.0
+var _route_boss_style_profile: Dictionary = {}
+var _route_style_profiles: Dictionary = {}
+var _route_style_timeline: Array[Dictionary] = []
 
 const ROOM_TYPE_COMBAT: String = "combat"
 const ROOM_TYPE_BOSS: String = "boss"
 const ROOM_TYPE_EVENT: String = "event"
 const ROOM_TYPE_SHOP: String = "shop"
+const ROOM_TYPE_TREASURE: String = "treasure"
 const ROOM_TYPE_SAFE_CAMP: String = "safe_camp"
+const ROOM_TYPE_ELITE: String = "elite"
 
 
 func _ready() -> void:
@@ -64,8 +148,8 @@ func _ready() -> void:
     if pickup_scene != null and ObjectPool != null:
         ObjectPool.register_scene("pickup_basic", pickup_scene, 32)
 
-    var shop_config: Dictionary = ConfigManager.get_config("shop_items", {})
-    _shop_restock_cost = int(shop_config.get("restock_cost", 20))
+    _load_shop_economy_config()
+    _build_run_plan()
     _run_kills = 0
     _run_rooms_cleared = 0
     _run_finished = false
@@ -73,8 +157,29 @@ func _ready() -> void:
     _chapter_intro_pending = false
     _narrative_event_pending = false
     _chapter_transition_pending = false
+    _memory_altar_pending = false
+    _pause_menu_pending = false
     _shown_chapter_intro = {}
     _active_blessing_id = "none"
+    _chapter_effect_timeline.clear()
+    _active_chapter_effects.clear()
+    _chapter_effects_this_room.clear()
+    _chapter_effect_applied_armor_bonus = 0.0
+    _room_history.clear()
+    _pending_next_rooms.clear()
+    _selected_next_room_slot = 0
+    _chapter_route_styles.clear()
+    _current_route_style = "neutral"
+    _route_event_weight_mult = 1.0
+    _route_hazard_mult = 1.0
+    _route_gold_drop_mult = 1.0
+    _route_ore_drop_mult = 1.0
+    _route_theme_tint = Color(0.18, 0.34, 0.50, 1.0)
+    _route_theme_blend = 0.0
+    _route_boss_style_profile = {}
+    _route_style_timeline.clear()
+    _load_route_style_profiles()
+    _room_index = _get_run_start_room()
 
     GameManager.set_state(GameManager.GameState.PLAYING)
     EventBus.enemy_killed.connect(_on_enemy_killed)
@@ -84,6 +189,7 @@ func _ready() -> void:
     EventBus.route_changed.emit(_alignment)
     EventBus.frostbite_changed.emit(_frostbite)
     EventBus.void_corruption_changed.emit(_void_corruption)
+    _apply_selected_character_profile()
     _apply_meta_upgrades()
     if _narrative_system != null and _narrative_system.has_method("reset_run_choices"):
         _narrative_system.reset_run_choices()
@@ -97,13 +203,24 @@ func _ready() -> void:
         _chapter_transition_panel.choice_committed.connect(_on_transition_choice_committed)
     if _chapter_transition_panel != null and _chapter_transition_panel.has_signal("transition_closed"):
         _chapter_transition_panel.transition_closed.connect(_on_transition_closed)
+    if _memory_altar_panel != null and _memory_altar_panel.has_signal("altar_closed"):
+        _memory_altar_panel.altar_closed.connect(_on_memory_altar_closed)
+    if _pause_panel != null and _pause_panel.has_signal("resume_requested"):
+        _pause_panel.resume_requested.connect(_on_pause_resume_requested)
+    if _pause_panel != null and _pause_panel.has_signal("retreat_requested"):
+        _pause_panel.retreat_requested.connect(_on_pause_retreat_requested)
+    if _pause_panel != null and _pause_panel.has_signal("quit_to_menu_requested"):
+        _pause_panel.quit_to_menu_requested.connect(_on_pause_quit_to_menu_requested)
     if _run_result_panel != null and _run_result_panel.has_signal("back_to_menu_requested"):
         _run_result_panel.back_to_menu_requested.connect(_on_run_result_back_to_menu)
+    if _pause_panel != null and _pause_panel.has_method("close_panel"):
+        _pause_panel.close_panel()
+    get_tree().paused = false
     _start_room()
 
 
 func _process(delta: float) -> void:
-    if _room_active and (_current_room_type == ROOM_TYPE_COMBAT or _current_room_type == ROOM_TYPE_BOSS) and _spawner != null and _spawner.has_method("get_room_time"):
+    if _room_active and (_current_room_type == ROOM_TYPE_COMBAT or _current_room_type == ROOM_TYPE_ELITE or _current_room_type == ROOM_TYPE_BOSS) and _spawner != null and _spawner.has_method("get_room_time"):
         _room_timer_label.text = "%.1f s" % _spawner.get_room_time()
     elif not _room_active:
         _room_timer_label.text = "-"
@@ -115,11 +232,16 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed("pause"):
-        if _chapter_intro_pending or _narrative_event_pending or _chapter_transition_pending:
+        if _chapter_intro_pending or _narrative_event_pending or _chapter_transition_pending or _memory_altar_pending:
             return
+
+        if _pause_menu_pending:
+            _close_pause_panel()
+            return
+
         if GameManager.current_state == GameManager.GameState.PLAYING and not _run_finished:
-            _finish_run("retreat")
-        else:
+            _open_pause_panel()
+        elif _run_finished:
             SceneManager.go_to_main_menu()
         return
 
@@ -133,6 +255,12 @@ func _unhandled_input(event: InputEvent) -> void:
         return
 
     if _chapter_transition_pending:
+        return
+
+    if _memory_altar_pending:
+        return
+
+    if _pause_menu_pending:
         return
 
     if not _room_active and _current_room_type == ROOM_TYPE_SHOP:
@@ -151,6 +279,9 @@ func _unhandled_input(event: InputEvent) -> void:
         if event.is_action_pressed("shop_restock"):
             _try_restock_shop()
             return
+        if event.is_action_pressed("shop_exchange_ore"):
+            _try_exchange_ore_for_gold()
+            return
 
     if not _room_active and _current_room_type == ROOM_TYPE_SAFE_CAMP:
         if event.is_action_pressed("camp_forge_damage"):
@@ -159,6 +290,9 @@ func _unhandled_input(event: InputEvent) -> void:
         if event.is_action_pressed("camp_forge_speed"):
             _try_forge_speed()
             return
+        if event.is_action_pressed("camp_memory_altar"):
+            _open_memory_altar()
+            return
         if event.is_action_pressed("camp_route_holy"):
             _try_route_choice("holy")
             return
@@ -166,9 +300,18 @@ func _unhandled_input(event: InputEvent) -> void:
             _try_route_choice("void")
             return
 
+    if not _room_active and _pending_next_rooms.size() > 1:
+        if event.is_action_pressed("narrative_choice_1"):
+            _selected_next_room_slot = 0
+            _refresh_idle_route_prompt()
+            return
+        if event.is_action_pressed("narrative_choice_2"):
+            _selected_next_room_slot = mini(1, _pending_next_rooms.size() - 1)
+            _refresh_idle_route_prompt()
+            return
+
     if event.is_action_pressed("interact") and not _room_active:
-        _room_index += 1
-        _start_room()
+        _advance_to_next_room()
 
 
 func get_room_progress_text() -> String:
@@ -215,14 +358,234 @@ func get_void_corruption_value() -> float:
     return _void_corruption
 
 
+func get_chapter_effects_hud_text() -> String:
+    if _chapter_effects_this_room.is_empty():
+        return "-"
+
+    var rows: Array[String] = []
+    for item: Variant in _chapter_effects_this_room:
+        if not (item is Dictionary):
+            continue
+        var row: Dictionary = item
+        rows.append("%s %s (%dR)" % [
+            str(row.get("icon", "[~]")),
+            str(row.get("title", "Effect")),
+            int(row.get("remaining_rooms", 1))
+        ])
+
+    if rows.is_empty():
+        return "-"
+    return "\n".join(PackedStringArray(rows))
+
+
+func get_route_style_hud_text() -> String:
+    var rows: Array[String] = []
+    rows.append("Current: %s" % _get_route_style_label())
+
+    var chapter_rows: Array[String] = []
+    for idx in range(1, 5):
+        var chapter_id: String = "chapter_%d" % idx
+        var style_id: String = str(_chapter_route_styles.get(chapter_id, "neutral"))
+        chapter_rows.append("CH%d:%s" % [idx, _get_route_style_label(style_id)])
+    rows.append(" | ".join(PackedStringArray(chapter_rows)))
+
+    if not _route_style_timeline.is_empty():
+        var latest: Dictionary = _route_style_timeline[_route_style_timeline.size() - 1]
+        rows.append("Latest lock: R%d %s -> %s" % [
+            int(latest.get("room_index", _room_index)),
+            str(latest.get("chapter_id", "chapter")),
+            _get_route_style_label(str(latest.get("style_id", "neutral")))
+        ])
+
+    return "\n".join(PackedStringArray(rows))
+
+
+func get_minimap_text() -> String:
+    var coordinate_lookup: Dictionary = _build_minimap_coordinate_lookup()
+    if not coordinate_lookup.is_empty():
+        var bounds: Dictionary = _get_minimap_bounds()
+        var min_x: int = int(bounds.get("min_x", 0))
+        var max_x: int = int(bounds.get("max_x", 0))
+        var min_y: int = int(bounds.get("min_y", 0))
+        var max_y: int = int(bounds.get("max_y", 0))
+
+        var coord_rows: Array[String] = []
+        for map_y in range(min_y, max_y + 1):
+            var parts: Array[String] = []
+            for map_x in range(min_x, max_x + 1):
+                var coord_key: String = "%d:%d" % [map_x, map_y]
+                if not coordinate_lookup.has(coord_key):
+                    parts.append("----")
+                    continue
+
+                var room_id: int = int(coordinate_lookup.get(coord_key, 0))
+                parts.append(_build_minimap_room_token(room_id))
+            coord_rows.append(" ".join(PackedStringArray(parts)))
+        return "\n".join(PackedStringArray(coord_rows))
+
+    return _build_minimap_index_grid()
+
+
+func _build_minimap_index_grid() -> String:
+    var room_count: int = _get_run_room_count()
+    var cols: int = _get_run_layout_cols()
+    var rows_count: int = int(ceil(float(room_count) / float(cols)))
+    var rows: Array[String] = []
+    for row_index in range(rows_count):
+        var parts: Array[String] = []
+        for col_index in range(cols):
+            var room_id: int = row_index * cols + col_index + 1
+            if room_id > room_count:
+                parts.append("----")
+            else:
+                parts.append(_build_minimap_room_token(room_id))
+        rows.append(" ".join(PackedStringArray(parts)))
+    return "\n".join(PackedStringArray(rows))
+
+
+func _build_minimap_coordinate_lookup() -> Dictionary:
+    var lookup: Dictionary = {}
+    for room_id_var: Variant in _room_plan_map.keys():
+        var room_id: int = int(room_id_var)
+        var row_var: Variant = _room_plan_map.get(room_id, {})
+        if not (row_var is Dictionary):
+            continue
+        var row: Dictionary = row_var
+        if not row.has("map_x") or not row.has("map_y"):
+            continue
+        var key: String = "%d:%d" % [int(row.get("map_x", 0)), int(row.get("map_y", 0))]
+        lookup[key] = room_id
+    return lookup
+
+
+func _get_minimap_bounds() -> Dictionary:
+    if not _run_map_bounds.is_empty():
+        return _run_map_bounds
+
+    var has_any: bool = false
+    var min_x: int = 0
+    var max_x: int = 0
+    var min_y: int = 0
+    var max_y: int = 0
+    for row_var: Variant in _room_plan_map.values():
+        if not (row_var is Dictionary):
+            continue
+        var row: Dictionary = row_var
+        if not row.has("map_x") or not row.has("map_y"):
+            continue
+        var map_x: int = int(row.get("map_x", 0))
+        var map_y: int = int(row.get("map_y", 0))
+        if not has_any:
+            min_x = map_x
+            max_x = map_x
+            min_y = map_y
+            max_y = map_y
+            has_any = true
+        else:
+            min_x = mini(min_x, map_x)
+            max_x = maxi(max_x, map_x)
+            min_y = mini(min_y, map_y)
+            max_y = maxi(max_y, map_y)
+
+    if has_any:
+        return {
+            "min_x": min_x,
+            "max_x": max_x,
+            "min_y": min_y,
+            "max_y": max_y,
+            "cols": max_x - min_x + 1,
+            "rows": max_y - min_y + 1
+        }
+
+    var cols: int = _get_run_layout_cols()
+    var rows_count: int = int(ceil(float(_get_run_room_count()) / float(cols)))
+    return {
+        "min_x": 0,
+        "max_x": cols - 1,
+        "min_y": 0,
+        "max_y": maxi(0, rows_count - 1),
+        "cols": cols,
+        "rows": rows_count
+    }
+
+
+func _build_minimap_room_token(room_id: int) -> String:
+    if not _room_history.has(room_id):
+        return "??"
+
+    var row_var: Variant = _room_history.get(room_id, {})
+    if not (row_var is Dictionary):
+        return "??"
+
+    var row: Dictionary = row_var
+    var room_type: String = str(row.get("type", ROOM_TYPE_COMBAT))
+    var completed: bool = bool(row.get("completed", false))
+    var marker: String = _room_type_to_minimap_marker(room_type)
+    if completed:
+        marker = marker.to_lower()
+
+    var token: String = "%02d%s" % [room_id, marker]
+    if room_id == _room_index and not _run_finished:
+        return ">%s<" % token
+    return token
+
+
+func _room_type_to_minimap_marker(room_type: String) -> String:
+    match room_type:
+        ROOM_TYPE_BOSS:
+            return "B"
+        ROOM_TYPE_EVENT:
+            return "E"
+        ROOM_TYPE_SHOP:
+            return "S"
+        ROOM_TYPE_TREASURE:
+            return "T"
+        ROOM_TYPE_SAFE_CAMP:
+            return "H"
+        ROOM_TYPE_ELITE:
+            return "L"
+        _:
+            return "C"
+
+
+func _ensure_room_history(index: int, room_type: String) -> void:
+    _room_history[index] = {
+        "type": room_type,
+        "completed": bool((_room_history.get(index, {}) as Dictionary).get("completed", false))
+    }
+
+
+func _mark_room_completed(index: int) -> void:
+    if not _room_history.has(index):
+        return
+    var row_var: Variant = _room_history.get(index, {})
+    if row_var is Dictionary:
+        var row: Dictionary = row_var
+        row["completed"] = true
+        _room_history[index] = row
+
+
 func _start_room() -> void:
+    if _room_index > _get_run_room_count():
+        _finish_run("victory")
+        return
+
     _clear_active_enemies()
     _clear_active_pickups()
     _chapter_intro_pending = false
     _narrative_event_pending = false
     _chapter_transition_pending = false
+    _memory_altar_pending = false
+    _pause_menu_pending = false
+    _pending_next_rooms.clear()
+    _selected_next_room_slot = 0
     _current_room_type = _resolve_room_type(_room_index)
+    _sync_route_style_for_room(_room_index)
+    if GameManager != null and GameManager.has_method("set_run_context"):
+        GameManager.set_run_context(_room_index, _current_room_type, _get_chapter_id_for_room(_room_index))
+    _ensure_room_history(_room_index, _current_room_type)
     _active_hazards = _get_hazards_for_room(_room_index)
+    _advance_chapter_effects_for_room()
     _apply_room_theme(_room_index)
 
     _kills_in_room = 0
@@ -240,20 +603,27 @@ func _start_room() -> void:
 func _enter_current_room_type() -> void:
     if _current_room_type == ROOM_TYPE_COMBAT:
         _enter_combat_room()
+    elif _current_room_type == ROOM_TYPE_ELITE:
+        _enter_elite_room()
     elif _current_room_type == ROOM_TYPE_BOSS:
         _enter_boss_room()
     elif _current_room_type == ROOM_TYPE_EVENT:
         _enter_event_room()
     elif _current_room_type == ROOM_TYPE_SHOP:
         _enter_shop_room()
+    elif _current_room_type == ROOM_TYPE_TREASURE:
+        _enter_treasure_room()
     else:
         _enter_safe_camp_room()
 
 
 func _should_show_chapter_intro(index: int) -> bool:
-    if index != 1 and index != 5 and index != 9 and index != 13:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if room_plan.is_empty():
         return false
-    var chapter_key: String = _get_chapter_id_for_room(index)
+    if not bool(room_plan.get("show_intro", false)):
+        return false
+    var chapter_key: String = str(room_plan.get("chapter_id", _get_chapter_id_for_room(index)))
     return not bool(_shown_chapter_intro.get(chapter_key, false))
 
 
@@ -267,7 +637,7 @@ func _show_chapter_intro(index: int) -> void:
     _room_timer_label.text = "-"
     _room_status_label.text = "Chapter briefing..."
 
-    var chapter_index: int = 1 + int((index - 1) / 4)
+    var chapter_index: int = _get_chapter_index_for_room(index)
     if _chapter_intro_panel != null and _chapter_intro_panel.has_method("show_intro"):
         _chapter_intro_panel.show_intro(chapter_index, get_active_hazards_text(), _get_active_blessing_text())
 
@@ -282,11 +652,34 @@ func _enter_combat_room() -> void:
     _required_kills = 10 + _room_index * 3
     _room_active = true
     _room_timer_label.text = "0.0 s"
-    _room_status_label.text = "Combat Room %d: Defeat %d enemies | Hazards: %s" % [_room_index, _required_kills, get_active_hazards_text()]
+    _room_status_label.text = "Combat Room %d: Defeat %d enemies | Hazards: %s | Effects: %s" % [
+        _room_index,
+        _required_kills,
+        get_active_hazards_text(),
+        _get_active_chapter_effects_text()
+    ]
+    _room_status_label.text += " | Style: %s" % _get_route_style_label()
     _set_doors_locked(true)
 
     if _spawner != null and _spawner.has_method("start_room_combat"):
         _spawner.start_room_combat(_room_index, "normal")
+
+
+func _enter_elite_room() -> void:
+    _required_kills = 6 + _room_index * 2
+    _room_active = true
+    _room_timer_label.text = "0.0 s"
+    _room_status_label.text = "Elite Room %d: Eliminate %d elites | Hazards: %s | Effects: %s" % [
+        _room_index,
+        _required_kills,
+        get_active_hazards_text(),
+        _get_active_chapter_effects_text()
+    ]
+    _room_status_label.text += " | Style: %s" % _get_route_style_label()
+    _set_doors_locked(true)
+
+    if _spawner != null and _spawner.has_method("start_room_combat"):
+        _spawner.start_room_combat(_room_index, "elite")
 
 
 func _enter_boss_room() -> void:
@@ -294,11 +687,17 @@ func _enter_boss_room() -> void:
     _room_active = true
     _room_timer_label.text = "0.0 s"
     var boss_id: String = _get_boss_id_for_room(_room_index)
-    _room_status_label.text = "Boss Room %d: Defeat %s | Hazards: %s" % [_room_index, _get_boss_title(boss_id), get_active_hazards_text()]
+    _room_status_label.text = "Boss Room %d: Defeat %s | Hazards: %s | Effects: %s" % [
+        _room_index,
+        _get_boss_title(boss_id),
+        get_active_hazards_text(),
+        _get_active_chapter_effects_text()
+    ]
+    _room_status_label.text += " | Style: %s" % _get_route_style_label()
     _set_doors_locked(true)
 
     if _spawner != null and _spawner.has_method("start_room_combat"):
-        _spawner.start_room_combat(_room_index, "boss", boss_id)
+        _spawner.start_room_combat(_room_index, "boss", boss_id, _route_boss_style_profile)
 
 
 func _enter_shop_room() -> void:
@@ -307,12 +706,54 @@ func _enter_shop_room() -> void:
     if _spawner != null and _spawner.has_method("stop_room_combat"):
         _spawner.stop_room_combat()
 
+    _apply_shop_chapter_profile(_get_chapter_id_for_room(_room_index))
+
     _set_frostbite(maxf(0.0, _frostbite - 18.0))
     _set_void_corruption(maxf(0.0, _void_corruption - 14.0))
 
+    _shop_restock_count = 0
+    _shop_ore_exchange_count = 0
+    _shop_restock_cost = _shop_restock_base_cost
     _shop_offers = _build_shop_offers()
+    _prepare_next_room_candidates()
     _shop_message = "Shop refreshed. Buy with 1-4."
     _update_shop_text()
+
+
+func _enter_treasure_room() -> void:
+    _room_active = false
+    _set_doors_locked(false)
+    if _spawner != null and _spawner.has_method("stop_room_combat"):
+        _spawner.stop_room_combat()
+
+    _room_timer_label.text = "-"
+    _prepare_next_room_candidates()
+
+    var player_pos: Vector2 = _player.global_position if _player != null else global_position
+    var gold_reward: int = _scale_drop_amount(32 + _room_index * 2, _route_gold_drop_mult)
+    var ore_reward: int = _scale_drop_amount(1 + int((_room_index + 1) / 5), _route_ore_drop_mult)
+    _spawn_direct_pickup("gold", gold_reward, "treasure_gold", player_pos + Vector2(-18.0, -8.0))
+    _spawn_direct_pickup("ore", ore_reward, "treasure_ore", player_pos + Vector2(18.0, -10.0))
+
+    var accessory_chance: float = 0.28
+    if _current_route_style == "vanguard":
+        accessory_chance = 0.34
+    elif _current_route_style == "raider":
+        accessory_chance = 0.24
+
+    var accessory_note: String = ""
+    if randf() <= accessory_chance:
+        _spawn_direct_pickup("accessory", 1, "accessory_drop", player_pos + Vector2(0.0, 10.0))
+        accessory_note = " + accessory cache"
+
+    _room_status_label.text = "Treasure Room %d: Loot deployed (Gold +%d, Ore +%d%s) | Style: %s\n%s" % [
+        _room_index,
+        gold_reward,
+        ore_reward,
+        accessory_note,
+        _get_route_style_label(),
+        _get_next_route_hint_text()
+    ]
 
 
 func _enter_event_room() -> void:
@@ -325,14 +766,15 @@ func _enter_event_room() -> void:
     var chapter_index: int = _get_chapter_index_for_room(_room_index)
     var event_data: Dictionary = {}
     if _narrative_system != null and _narrative_system.has_method("get_chapter_event"):
-        event_data = _narrative_system.get_chapter_event(chapter_index)
+        event_data = _narrative_system.get_chapter_event(chapter_index, _alignment, _current_route_style, _route_event_weight_mult)
 
     if event_data.is_empty():
         _room_status_label.text = "Event Room: no event data. Press E for next room"
         return
 
     _room_timer_label.text = "-"
-    _room_status_label.text = "Event Room: choose your path"
+    _prepare_next_room_candidates()
+    _room_status_label.text = "Event Room: choose your path | Effects: %s | Style: %s" % [_get_active_chapter_effects_text(), _get_route_style_label()]
     _narrative_event_pending = true
     if _narrative_event_panel != null and _narrative_event_panel.has_method("show_event_panel"):
         _narrative_event_panel.show_event_panel(event_data, _alignment)
@@ -356,6 +798,7 @@ func _enter_safe_camp_room() -> void:
     _set_frostbite(maxf(0.0, _frostbite - 45.0))
     _set_void_corruption(maxf(0.0, _void_corruption - 40.0))
 
+    _prepare_next_room_candidates()
     _camp_message = "Recovered: +25 HP, stamina refilled"
     _update_camp_text()
 
@@ -368,7 +811,7 @@ func _on_enemy_killed(_enemy_id: String, _position: Vector2) -> void:
     if not _room_active:
         return
 
-    if _current_room_type != ROOM_TYPE_COMBAT and _current_room_type != ROOM_TYPE_BOSS:
+    if _current_room_type != ROOM_TYPE_COMBAT and _current_room_type != ROOM_TYPE_ELITE and _current_room_type != ROOM_TYPE_BOSS:
         return
 
     _kills_in_room += 1
@@ -378,7 +821,7 @@ func _on_enemy_killed(_enemy_id: String, _position: Vector2) -> void:
 
 
 func _try_clear_room() -> void:
-    if _current_room_type != ROOM_TYPE_COMBAT and _current_room_type != ROOM_TYPE_BOSS:
+    if _current_room_type != ROOM_TYPE_COMBAT and _current_room_type != ROOM_TYPE_ELITE and _current_room_type != ROOM_TYPE_BOSS:
         return
 
     if _spawner != null and _spawner.has_method("get_alive_count"):
@@ -387,19 +830,25 @@ func _try_clear_room() -> void:
 
     _room_active = false
     _run_rooms_cleared += 1
+    _mark_room_completed(_room_index)
     if _spawner != null and _spawner.has_method("stop_room_combat"):
         _spawner.stop_room_combat()
 
     EventBus.room_cleared.emit("room_%d" % _room_index)
     _set_doors_locked(false)
-    if _room_index >= 15:
-        _finish_run("victory")
-    elif _current_room_type == ROOM_TYPE_BOSS:
-        var chapter: int = int(ceil(float(_room_index) / 4.0))
+    var next_rooms: Array[int] = _prepare_next_room_candidates()
+    if _current_room_type == ROOM_TYPE_BOSS:
+        if next_rooms.is_empty():
+            _finish_run("victory")
+            return
+        var chapter: int = _get_chapter_index_for_room(_room_index)
         EventBus.memory_fragment_found.emit("memory_ch%d_boss" % chapter)
         _begin_chapter_transition(chapter)
     else:
-        _room_status_label.text = "Room Cleared! Press E for next room"
+        if next_rooms.is_empty():
+            _finish_run("victory")
+            return
+        _room_status_label.text = "Room Cleared! %s" % _get_next_route_hint_text()
 
 
 func _on_player_died(_reason: String) -> void:
@@ -410,6 +859,7 @@ func _finish_run(outcome: String) -> void:
     if _run_finished:
         return
     _run_finished = true
+    _reset_pause_state()
 
     GameManager.set_state(GameManager.GameState.GAME_OVER)
     _room_active = false
@@ -429,7 +879,10 @@ func _finish_run(outcome: String) -> void:
         "gold": _gold,
         "ore": _ore,
         "alignment": _alignment,
-        "narrative_choices": _narrative_system.get_run_choices() if _narrative_system != null and _narrative_system.has_method("get_run_choices") else []
+        "narrative_choices": _narrative_system.get_run_choices() if _narrative_system != null and _narrative_system.has_method("get_run_choices") else [],
+        "chapter_effect_timeline": _chapter_effect_timeline.duplicate(true),
+        "chapter_route_styles": _chapter_route_styles.duplicate(true),
+        "route_style_timeline": _route_style_timeline.duplicate(true)
     })
 
     _room_status_label.text = "Run Ended: %s | Meta +%d" % [
@@ -447,11 +900,58 @@ func _return_to_main_menu() -> void:
     if _returning_to_menu:
         return
     _returning_to_menu = true
+    GameManager.set_state(GameManager.GameState.MENU)
     SceneManager.go_to_main_menu()
 
 
 func _on_run_result_back_to_menu() -> void:
     _return_to_main_menu()
+
+
+func _open_pause_panel() -> void:
+    if _run_finished or _pause_menu_pending:
+        return
+
+    _pause_menu_pending = true
+    GameManager.set_state(GameManager.GameState.PAUSED)
+    get_tree().paused = true
+    EventBus.game_paused.emit(true)
+
+    if _pause_panel != null and _pause_panel.has_method("open_panel"):
+        _pause_panel.open_panel(_room_index, _current_room_type, _alignment)
+
+
+func _close_pause_panel() -> void:
+    if not _pause_menu_pending:
+        return
+    _reset_pause_state()
+
+
+func _reset_pause_state() -> void:
+    _pause_menu_pending = false
+    get_tree().paused = false
+    EventBus.game_paused.emit(false)
+
+    if _pause_panel != null and _pause_panel.has_method("close_panel"):
+        _pause_panel.close_panel()
+
+    if not _run_finished:
+        GameManager.set_state(GameManager.GameState.PLAYING)
+
+
+func _on_pause_resume_requested() -> void:
+    _close_pause_panel()
+
+
+func _on_pause_retreat_requested() -> void:
+    _reset_pause_state()
+    _finish_run("retreat")
+
+
+func _on_pause_quit_to_menu_requested() -> void:
+    _reset_pause_state()
+    GameManager.set_state(GameManager.GameState.MENU)
+    SceneManager.go_to_main_menu()
 
 
 func _begin_chapter_transition(chapter: int) -> void:
@@ -480,7 +980,7 @@ func _on_transition_choice_committed(chapter_id: String, choice_id: String, alig
 
 func _on_transition_closed() -> void:
     _chapter_transition_pending = false
-    _room_status_label.text = "Chapter transition resolved. Press E for next room"
+    _room_status_label.text = "Chapter transition resolved. %s" % _get_next_route_hint_text()
 
 
 func _on_event_choice_committed(event_id: String, choice_id: String, choice_data: Dictionary) -> void:
@@ -490,10 +990,17 @@ func _on_event_choice_committed(event_id: String, choice_id: String, choice_data
     if _narrative_system != null and _narrative_system.has_method("record_choice"):
         _narrative_system.record_choice(chapter_id, event_id, choice_id, float(choice_data.get("alignment_delta", 0.0)))
 
+    var effect_var: Variant = choice_data.get("chapter_effect", {})
+    if effect_var is Dictionary and not (effect_var as Dictionary).is_empty():
+        _room_status_label.text = "Event committed: %s | New chapter effect queued: %s" % [
+            choice_id,
+            str((effect_var as Dictionary).get("title", "effect"))
+        ]
+
 
 func _on_event_closed() -> void:
     _narrative_event_pending = false
-    _room_status_label.text = "Event resolved. Press E for next room"
+    _room_status_label.text = "Event resolved. Next room effects: %s | %s" % [_get_pending_chapter_effects_text(), _get_next_route_hint_text()]
 
 
 func _apply_event_choice_effects(choice_data: Dictionary) -> void:
@@ -513,6 +1020,10 @@ func _apply_event_choice_effects(choice_data: Dictionary) -> void:
     var blessing: String = str(choice_data.get("blessing", ""))
     if blessing != "":
         _apply_transition_blessing(blessing)
+
+    var chapter_effect_var: Variant = choice_data.get("chapter_effect", {})
+    if chapter_effect_var is Dictionary:
+        _queue_chapter_effect(chapter_effect_var)
 
 
 func _apply_transition_blessing(choice_id: String) -> void:
@@ -579,6 +1090,190 @@ func _clear_active_blessing_effects() -> void:
     _active_blessing_id = "none"
 
 
+func _queue_chapter_effect(effect_data: Dictionary) -> void:
+    if effect_data.is_empty():
+        return
+
+    var duration_rooms: int = maxi(1, int(effect_data.get("duration_rooms", 2)))
+    var effects_var: Variant = effect_data.get("effects", {})
+    if not (effects_var is Dictionary):
+        return
+
+    var packed_effect: Dictionary = {
+        "id": str(effect_data.get("id", "effect_unknown")),
+        "title": str(effect_data.get("title", "Chapter Effect")),
+        "desc": str(effect_data.get("desc", "")),
+        "remaining_rooms": duration_rooms,
+        "effects": (effects_var as Dictionary).duplicate(true)
+    }
+    var icon: String = "[~]"
+    var score: float = 0.0
+    var packed_effects_var: Variant = packed_effect.get("effects", {})
+    if packed_effects_var is Dictionary:
+        icon = _get_chapter_effect_icon(packed_effects_var)
+        score = _evaluate_chapter_effect_score(packed_effects_var)
+
+    _active_chapter_effects.append(packed_effect)
+    _chapter_effect_timeline.append({
+        "room_index": _room_index,
+        "chapter_id": _get_chapter_id_for_room(_room_index),
+        "effect_id": str(packed_effect.get("id", "effect_unknown")),
+        "title": str(packed_effect.get("title", "Chapter Effect")),
+        "desc": str(packed_effect.get("desc", "")),
+        "duration_rooms": duration_rooms,
+        "icon": icon,
+        "score": score
+    })
+    _camp_message = "Gained chapter effect: %s (%d rooms)" % [packed_effect["title"], duration_rooms]
+
+
+func _advance_chapter_effects_for_room() -> void:
+    _chapter_effect_spawn_rate_mult = 1.0
+    _chapter_effect_enemy_hp_mult = 1.0
+    _chapter_effect_enemy_damage_mult = 1.0
+    _chapter_effect_hazard_mult = 1.0
+    _chapter_effect_move_speed_mult = 1.0
+    _chapter_effect_damage_bonus = 0.0
+    _chapter_effect_armor_bonus = 0.0
+    _chapter_effects_this_room.clear()
+
+    var retained_effects: Array[Dictionary] = []
+    for item: Variant in _active_chapter_effects:
+        if not (item is Dictionary):
+            continue
+
+        var row: Dictionary = (item as Dictionary).duplicate(true)
+        var remaining_rooms: int = int(row.get("remaining_rooms", 0))
+        if remaining_rooms <= 0:
+            continue
+
+        var effects_var: Variant = row.get("effects", {})
+        var effects_map: Dictionary = {}
+        if effects_var is Dictionary:
+            effects_map = (effects_var as Dictionary).duplicate(true)
+            _accumulate_chapter_effect_modifiers(effects_var)
+
+        _chapter_effects_this_room.append({
+            "id": str(row.get("id", "effect")),
+            "title": str(row.get("title", "Chapter Effect")),
+            "remaining_rooms": remaining_rooms,
+            "icon": _get_chapter_effect_icon(effects_map),
+            "score": _evaluate_chapter_effect_score(effects_map)
+        })
+
+        row["remaining_rooms"] = remaining_rooms - 1
+        if int(row.get("remaining_rooms", 0)) > 0:
+            retained_effects.append(row)
+
+    _active_chapter_effects = retained_effects
+    _apply_chapter_effect_runtime()
+
+
+func _accumulate_chapter_effect_modifiers(effects: Dictionary) -> void:
+    _chapter_effect_spawn_rate_mult *= maxf(0.55, float(effects.get("enemy_spawn_rate_mult", 1.0)))
+    _chapter_effect_enemy_hp_mult *= maxf(0.55, float(effects.get("enemy_hp_mult", 1.0)))
+    _chapter_effect_enemy_damage_mult *= maxf(0.55, float(effects.get("enemy_damage_mult", 1.0)))
+    _chapter_effect_hazard_mult *= maxf(0.5, float(effects.get("hazard_intensity_mult", 1.0)))
+    _chapter_effect_move_speed_mult *= clampf(float(effects.get("move_speed_mult", 1.0)), 0.6, 1.4)
+    _chapter_effect_damage_bonus += float(effects.get("damage_bonus_pct", 0.0))
+    _chapter_effect_armor_bonus += float(effects.get("armor_bonus", 0.0))
+
+
+func _apply_chapter_effect_runtime() -> void:
+    var stats: Node = _player.get_node_or_null("StatsComponent")
+    var weapon: Node = _player.get_node_or_null("AutoWeapon")
+
+    if _spawner != null and _spawner.has_method("set_runtime_modifiers"):
+        _spawner.set_runtime_modifiers(_chapter_effect_spawn_rate_mult, _chapter_effect_enemy_hp_mult, _chapter_effect_enemy_damage_mult)
+
+    if weapon != null and weapon.get("external_damage_bonus_pct") != null:
+        weapon.external_damage_bonus_pct = _chapter_effect_damage_bonus
+
+    var desired_armor_bonus: float = clampf(_chapter_effect_armor_bonus, -0.3, 0.3)
+    if stats != null and stats.get("armor") != null:
+        var delta: float = desired_armor_bonus - _chapter_effect_applied_armor_bonus
+        if not is_zero_approx(delta):
+            stats.armor = clampf(stats.armor + delta, 0.0, 0.75)
+        _chapter_effect_applied_armor_bonus = desired_armor_bonus
+    else:
+        _chapter_effect_applied_armor_bonus = 0.0
+
+
+func _get_active_chapter_effects_text() -> String:
+    if _chapter_effects_this_room.is_empty():
+        return "none"
+
+    var rows: Array[String] = []
+    for item: Variant in _chapter_effects_this_room:
+        if not (item is Dictionary):
+            continue
+        var row: Dictionary = item
+        rows.append("%s %s(%d)" % [
+            str(row.get("icon", "[~]")),
+            str(row.get("title", "Effect")),
+            int(row.get("remaining_rooms", 1))
+        ])
+    if rows.is_empty():
+        return "none"
+    return ", ".join(PackedStringArray(rows))
+
+
+func _get_pending_chapter_effects_text() -> String:
+    if _active_chapter_effects.is_empty():
+        return "none"
+
+    var rows: Array[String] = []
+    for item: Variant in _active_chapter_effects:
+        if not (item is Dictionary):
+            continue
+        var row: Dictionary = item
+        var effects_var: Variant = row.get("effects", {})
+        var icon: String = "[~]"
+        if effects_var is Dictionary:
+            icon = _get_chapter_effect_icon(effects_var)
+        rows.append("%s(%d)" % [
+            "%s %s" % [icon, str(row.get("title", "Effect"))],
+            int(row.get("remaining_rooms", 0))
+        ])
+    if rows.is_empty():
+        return "none"
+    return ", ".join(PackedStringArray(rows))
+
+
+func _get_chapter_effect_icon(effects: Dictionary) -> String:
+    var score: float = _evaluate_chapter_effect_score(effects)
+    if score >= 0.25:
+        return "[+]"
+    if score <= -0.25:
+        return "[-]"
+    return "[~]"
+
+
+func _evaluate_chapter_effect_score(effects: Dictionary) -> float:
+    if effects.is_empty():
+        return 0.0
+
+    var score: float = 0.0
+    score += float(effects.get("damage_bonus_pct", 0.0)) * 1.0
+    score += float(effects.get("armor_bonus", 0.0)) * 1.2
+
+    var move_mult: float = float(effects.get("move_speed_mult", 1.0))
+    score += (move_mult - 1.0) * 1.4
+
+    var spawn_mult: float = float(effects.get("enemy_spawn_rate_mult", 1.0))
+    score += (1.0 - spawn_mult) * 0.9
+
+    var hp_mult: float = float(effects.get("enemy_hp_mult", 1.0))
+    score += (1.0 - hp_mult) * 0.9
+
+    var dmg_mult: float = float(effects.get("enemy_damage_mult", 1.0))
+    score += (1.0 - dmg_mult) * 1.1
+
+    var hazard_mult: float = float(effects.get("hazard_intensity_mult", 1.0))
+    score += (1.0 - hazard_mult) * 1.1
+    return score
+
+
 func _get_active_blessing_text() -> String:
     match _active_blessing_id:
         "holy_vow":
@@ -589,11 +1284,292 @@ func _get_active_blessing_text() -> String:
             return "None"
 
 
+func _build_run_plan() -> void:
+    _run_plan = {}
+    _room_plan_map = {}
+    _run_room_count = 15
+    _run_layout_cols = 5
+    _run_map_bounds = {}
+
+    var config: Dictionary = ConfigManager.get_config("map_generation", {})
+    if _map_generator != null and _map_generator.has_method("generate_run_plan"):
+        _run_plan = _map_generator.generate_run_plan(config)
+    elif not config.is_empty():
+        _run_plan = config
+
+    _run_room_count = maxi(1, int(_run_plan.get("room_count", 15)))
+    _run_layout_cols = clampi(int(_run_plan.get("layout_cols", 5)), 3, 8)
+    var map_bounds_var: Variant = _run_plan.get("map_bounds", {})
+    if map_bounds_var is Dictionary:
+        _run_map_bounds = (map_bounds_var as Dictionary).duplicate(true)
+
+    var room_map_var: Variant = _run_plan.get("room_plan_map", {})
+    if room_map_var is Dictionary:
+        _room_plan_map = (room_map_var as Dictionary).duplicate(true)
+    else:
+        var rooms_var: Variant = _run_plan.get("rooms", [])
+        if rooms_var is Array:
+            for item: Variant in rooms_var:
+                if not (item is Dictionary):
+                    continue
+                var row: Dictionary = item
+                _room_plan_map[int(row.get("index", 0))] = row
+
+
+func _get_room_plan(index: int) -> Dictionary:
+    var row_var: Variant = _room_plan_map.get(index, {})
+    if row_var is Dictionary:
+        return row_var
+    return {}
+
+
+func _get_run_room_count() -> int:
+    return maxi(1, _run_room_count)
+
+
+func _get_run_layout_cols() -> int:
+    return clampi(_run_layout_cols, 3, 16)
+
+
+func _get_run_start_room() -> int:
+    var start_room: int = int(_run_plan.get("start_room", 1))
+    if start_room < 1:
+        start_room = 1
+    return start_room
+
+
+func _prepare_next_room_candidates() -> Array[int]:
+    var room_plan: Dictionary = _get_room_plan(_room_index)
+    var next_rows_out: Array[int] = []
+    var next_rows_var: Variant = room_plan.get("next_rooms", [])
+    if next_rows_var is Array:
+        for item: Variant in next_rows_var:
+            var room_id: int = int(item)
+            if room_id > 0 and not next_rows_out.has(room_id):
+                next_rows_out.append(room_id)
+
+    _pending_next_rooms = next_rows_out
+    _selected_next_room_slot = clampi(_selected_next_room_slot, 0, maxi(0, _pending_next_rooms.size() - 1))
+    return _pending_next_rooms
+
+
+func _advance_to_next_room() -> void:
+    var next_rooms: Array[int] = _prepare_next_room_candidates()
+    if next_rooms.is_empty():
+        if not _run_finished:
+            _finish_run("victory")
+        return
+
+    var selected_slot: int = clampi(_selected_next_room_slot, 0, next_rooms.size() - 1)
+    if next_rooms.size() > 1:
+        _commit_route_style_choice(_get_chapter_id_for_room(_room_index), selected_slot)
+    var next_room_id: int = next_rooms[selected_slot]
+    _mark_room_completed(_room_index)
+    _room_index = next_room_id
+    _start_room()
+
+
+func _refresh_idle_route_prompt() -> void:
+    if _room_active:
+        return
+    var route_hint: String = _get_next_route_hint_text()
+    if route_hint == "":
+        return
+
+    if _current_room_type == ROOM_TYPE_SHOP:
+        _update_shop_text()
+    elif _current_room_type == ROOM_TYPE_SAFE_CAMP:
+        _update_camp_text()
+    else:
+        _room_status_label.text = "Route updated: %s" % route_hint
+
+
+func _get_next_route_hint_text() -> String:
+    var next_rooms: Array[int] = _prepare_next_room_candidates()
+    if next_rooms.is_empty():
+        return "No route remains. Press E to finish run"
+
+    if next_rooms.size() == 1:
+        return "Press E -> %s" % _format_room_route_brief(next_rooms[0])
+
+    var rows: Array[String] = []
+    var chapter_id: String = _get_chapter_id_for_room(_room_index)
+    var chapter_style_locked: bool = _chapter_route_styles.has(chapter_id)
+    for idx in range(mini(2, next_rooms.size())):
+        var token: String = "[%d]%s" % [idx + 1, _format_room_route_brief(next_rooms[idx])]
+        if not chapter_style_locked:
+            var style_preview: String = "vanguard"
+            if idx == 1:
+                style_preview = "raider"
+            token += "{%s}" % style_preview
+        if idx == _selected_next_room_slot:
+            token = "*" + token
+        rows.append(token)
+    return "Routes: %s | E to confirm" % "  ".join(PackedStringArray(rows))
+
+
+func _format_room_route_brief(room_id: int) -> String:
+    var room_plan: Dictionary = _get_room_plan(room_id)
+    var room_type: String = str(room_plan.get("room_type", ROOM_TYPE_COMBAT))
+    return "R%d-%s" % [room_id, room_type.to_upper()]
+
+
+func _load_route_style_profiles() -> void:
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var styles_var: Variant = config.get("route_styles", {})
+    if styles_var is Dictionary:
+        _route_style_profiles = (styles_var as Dictionary).duplicate(true)
+    else:
+        _route_style_profiles = {}
+
+    if not _route_style_profiles.has("neutral"):
+        _route_style_profiles["neutral"] = {
+            "event_weight_mult": 1.0,
+            "hazard_mult": 1.0,
+            "gold_drop_mult": 1.0,
+            "ore_drop_mult": 1.0,
+            "theme_tint": "#2e5785",
+            "theme_blend": 0.0,
+            "boss_hp_mult": 1.0,
+            "boss_damage_mult": 1.0,
+            "boss_speed_mult": 1.0,
+            "boss_scale_mult": 1.0,
+            "boss_color": "#f2733a"
+        }
+
+
+func _sync_route_style_for_room(index: int) -> void:
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var style_id: String = str(_chapter_route_styles.get(chapter_id, "neutral")).strip_edges()
+    if style_id == "":
+        style_id = "neutral"
+    _current_route_style = style_id
+    _apply_route_style_profile(style_id)
+
+
+func _commit_route_style_choice(chapter_id: String, selected_slot: int) -> void:
+    if chapter_id == "":
+        return
+    if _chapter_route_styles.has(chapter_id):
+        return
+
+    var style_id: String = "neutral"
+    if selected_slot <= 0:
+        style_id = "vanguard"
+    elif selected_slot == 1:
+        style_id = "raider"
+
+    _chapter_route_styles[chapter_id] = style_id
+    _route_style_timeline.append({
+        "room_index": _room_index,
+        "chapter_id": chapter_id,
+        "selected_slot": selected_slot,
+        "style_id": style_id
+    })
+    if chapter_id == _get_chapter_id_for_room(_room_index):
+        _current_route_style = style_id
+        _apply_route_style_profile(style_id)
+
+
+func _apply_route_style_profile(style_id: String) -> void:
+    if _route_style_profiles.is_empty():
+        _load_route_style_profiles()
+
+    var fallback: Dictionary = _route_style_profiles.get("neutral", {
+        "event_weight_mult": 1.0,
+        "hazard_mult": 1.0,
+        "gold_drop_mult": 1.0,
+        "ore_drop_mult": 1.0,
+        "theme_tint": "#2e5785",
+        "theme_blend": 0.0,
+        "boss_hp_mult": 1.0,
+        "boss_damage_mult": 1.0,
+        "boss_speed_mult": 1.0,
+        "boss_scale_mult": 1.0,
+        "boss_color": "#f2733a"
+    })
+    var row: Dictionary = _route_style_profiles.get(style_id, fallback)
+
+    _route_event_weight_mult = clampf(float(row.get("event_weight_mult", 1.0)), 0.5, 1.8)
+    _route_hazard_mult = clampf(float(row.get("hazard_mult", 1.0)), 0.6, 1.5)
+    _route_gold_drop_mult = clampf(float(row.get("gold_drop_mult", 1.0)), 0.5, 2.0)
+    _route_ore_drop_mult = clampf(float(row.get("ore_drop_mult", 1.0)), 0.5, 2.0)
+
+    var theme_tint_raw: String = str(row.get("theme_tint", "#2e5785"))
+    _route_theme_tint = Color.from_string(theme_tint_raw, Color(0.18, 0.34, 0.50, 1.0))
+    _route_theme_tint.a = 1.0
+    _route_theme_blend = clampf(float(row.get("theme_blend", 0.0)), 0.0, 0.5)
+
+    _route_boss_style_profile = {
+        "hp_mult": clampf(float(row.get("boss_hp_mult", 1.0)), 0.7, 1.4),
+        "damage_mult": clampf(float(row.get("boss_damage_mult", 1.0)), 0.7, 1.5),
+        "speed_mult": clampf(float(row.get("boss_speed_mult", 1.0)), 0.7, 1.5),
+        "scale_mult": clampf(float(row.get("boss_scale_mult", 1.0)), 0.85, 1.25),
+        "color": str(row.get("boss_color", "#f2733a"))
+    }
+
+
+func _apply_shop_route_profile(style_id: String) -> void:
+    _shop_route_price_mult = 1.0
+    _shop_route_target_mult = 1.0
+    _shop_route_max_discount_add = 0.0
+    _shop_route_high_markup_add = 0.0
+    _shop_route_exchange_gold_add = 0
+
+    var profile_var: Variant = _shop_route_overrides.get(style_id, {})
+    if not (profile_var is Dictionary):
+        return
+    var profile: Dictionary = profile_var
+
+    _shop_route_price_mult = clampf(float(profile.get("price_mult", 1.0)), 0.7, 1.5)
+    _shop_route_target_mult = clampf(float(profile.get("target_gold_mult", 1.0)), 0.6, 1.8)
+    _shop_route_max_discount_add = clampf(float(profile.get("max_discount_add", 0.0)), -0.35, 0.35)
+    _shop_route_high_markup_add = clampf(float(profile.get("high_markup_add", 0.0)), -0.25, 0.35)
+    _shop_route_exchange_gold_add = clampi(int(profile.get("exchange_gold_add", 0)), -15, 25)
+
+    var quality_mult_var: Variant = profile.get("quality_weight_mult", {})
+    if quality_mult_var is Dictionary:
+        var quality_mult: Dictionary = quality_mult_var
+        for key in _shop_quality_weights.keys():
+            var base_weight: float = maxf(0.0, float(_shop_quality_weights.get(key, 0.0)))
+            var mult: float = clampf(float(quality_mult.get(key, 1.0)), 0.0, 3.0)
+            _shop_quality_weights[key] = base_weight * mult
+
+    var category_mult_var: Variant = profile.get("category_weight_mult", {})
+    if category_mult_var is Dictionary:
+        var category_mult: Dictionary = category_mult_var
+        for key in _shop_category_weights.keys():
+            var base_weight: float = maxf(0.0, float(_shop_category_weights.get(key, 0.0)))
+            var mult: float = clampf(float(category_mult.get(key, 1.0)), 0.0, 3.0)
+            _shop_category_weights[key] = base_weight * mult
+
+
+func _get_route_style_label(style_id: String = "") -> String:
+    var resolved: String = style_id
+    if resolved == "":
+        resolved = _current_route_style
+    match resolved:
+        "vanguard":
+            return "VANGUARD"
+        "raider":
+            return "RAIDER"
+        _:
+            return "NEUTRAL"
+
+
 func _get_chapter_id_for_room(index: int) -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty():
+        var chapter_id: String = str(room_plan.get("chapter_id", "")).strip_edges()
+        if chapter_id != "":
+            return chapter_id
     return "chapter_%d" % (1 + int((index - 1) / 4))
 
 
 func _get_chapter_index_for_room(index: int) -> int:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty():
+        return maxi(1, int(room_plan.get("chapter_index", 1)))
     return 1 + int((index - 1) / 4)
 
 
@@ -673,7 +1649,179 @@ func _apply_meta_upgrades() -> void:
         EventBus.stamina_changed.emit(float(stats.current_stamina), float(stats.stamina_max))
 
 
+func _apply_selected_character_profile() -> void:
+    var config: Dictionary = ConfigManager.get_config("characters", {})
+    var rows_var: Variant = config.get("characters", [])
+    if not (rows_var is Array):
+        return
+
+    var rows: Array = rows_var
+    if rows.is_empty():
+        return
+
+    var default_character_id: String = str(config.get("default_character_id", "char_knight"))
+    var selected_id: String = str(GameManager.selected_character_id)
+    if selected_id == "" and SaveManager != null and SaveManager.has_method("get_selected_character_id"):
+        selected_id = SaveManager.get_selected_character_id()
+    if selected_id == "":
+        selected_id = default_character_id
+
+    var selected_candidate: Dictionary = {}
+    var default_candidate: Dictionary = {}
+    var selected_row: Dictionary = {}
+    for item: Variant in rows:
+        if not (item is Dictionary):
+            continue
+        var row: Dictionary = item
+        var row_id: String = str(row.get("id", ""))
+        if row_id == selected_id:
+            selected_candidate = row
+        if row_id == default_character_id:
+            default_candidate = row
+
+    if not selected_candidate.is_empty() and _is_character_row_unlocked_runtime(selected_candidate):
+        selected_row = selected_candidate
+    elif not default_candidate.is_empty() and _is_character_row_unlocked_runtime(default_candidate):
+        selected_row = default_candidate
+    else:
+        for item: Variant in rows:
+            if item is Dictionary:
+                var unlocked_row: Dictionary = item
+                if _is_character_row_unlocked_runtime(unlocked_row):
+                    selected_row = unlocked_row
+                    break
+
+    if selected_row.is_empty() and rows[0] is Dictionary:
+        selected_row = rows[0]
+    if selected_row.is_empty():
+        return
+
+    selected_id = str(selected_row.get("id", selected_id))
+    GameManager.selected_character_id = selected_id
+    if SaveManager != null and SaveManager.has_method("set_selected_character_id"):
+        SaveManager.set_selected_character_id(selected_id)
+
+    var stats: Node = _player.get_node_or_null("StatsComponent")
+    var health: Node = _player.get_node_or_null("HealthComponent")
+    var weapon: Node = _player.get_node_or_null("AutoWeapon")
+
+    if health != null:
+        if health.get("max_hp") != null:
+            health.max_hp = float(selected_row.get("max_hp", health.max_hp))
+        if health.get("current_hp") != null:
+            health.current_hp = health.max_hp
+
+    if stats != null:
+        if stats.get("base_move_speed") != null:
+            stats.base_move_speed = float(selected_row.get("move_speed", stats.base_move_speed))
+        if stats.get("stamina_max") != null:
+            stats.stamina_max = float(selected_row.get("stamina_max", stats.stamina_max))
+        if stats.get("current_stamina") != null:
+            stats.current_stamina = stats.stamina_max
+        if stats.get("armor") != null:
+            stats.armor = clampf(float(selected_row.get("armor", stats.armor)), 0.0, 0.75)
+        if stats.get("crit_chance") != null:
+            stats.crit_chance = clampf(float(selected_row.get("crit_chance", stats.crit_chance)), 0.0, 0.95)
+        if stats.get("crit_multiplier") != null:
+            stats.crit_multiplier = maxf(1.1, float(selected_row.get("crit_multiplier", stats.crit_multiplier)))
+
+    if weapon != null:
+        var weapon_codex_id: String = ""
+        var base_weapon_id: String = "wpn_magic_missile"
+        if weapon.get("base_damage") != null:
+            weapon.base_damage = float(selected_row.get("base_damage", weapon.base_damage))
+        if weapon.get("attack_interval") != null:
+            weapon.attack_interval = maxf(0.12, float(selected_row.get("attack_interval", weapon.attack_interval)))
+
+        var weapon_profile_var: Variant = selected_row.get("weapon_profile", {})
+        if weapon_profile_var is Dictionary:
+            var weapon_profile: Dictionary = weapon_profile_var
+            base_weapon_id = str(weapon_profile.get("weapon_id", base_weapon_id)).strip_edges()
+            if weapon.get("weapon_mode") != null:
+                weapon.weapon_mode = str(weapon_profile.get("mode", weapon.weapon_mode))
+            if weapon.get("projectile_count") != null:
+                weapon.projectile_count = clampi(int(weapon_profile.get("projectile_count", weapon.projectile_count)), 1, 7)
+            if weapon.get("spread_angle_deg") != null:
+                weapon.spread_angle_deg = clampf(float(weapon_profile.get("spread_angle_deg", weapon.spread_angle_deg)), 0.0, 45.0)
+            if weapon.get("spread_jitter_deg") != null:
+                weapon.spread_jitter_deg = clampf(float(weapon_profile.get("spread_jitter_deg", weapon.spread_jitter_deg)), 0.0, 15.0)
+            if weapon.get("projectile_hits") != null:
+                weapon.projectile_hits = clampi(int(weapon_profile.get("projectile_hits", weapon.projectile_hits)), 1, 8)
+            if weapon.get("projectile_style") != null:
+                weapon.projectile_style = str(weapon_profile.get("projectile_style", weapon.projectile_style))
+            weapon_codex_id = str(weapon_profile.get("projectile_style", "")).strip_edges()
+
+        if weapon.has_method("reset_weapon_state"):
+            weapon.reset_weapon_state(base_weapon_id)
+
+        if weapon_codex_id == "":
+            weapon_codex_id = str(selected_row.get("id", "")).strip_edges()
+        if weapon_codex_id != "" and not weapon_codex_id.begins_with("wpn_"):
+            weapon_codex_id = "wpn_%s" % weapon_codex_id
+        if weapon_codex_id != "" and SaveManager != null and SaveManager.has_method("unlock_codex_entry"):
+            SaveManager.unlock_codex_entry("weapons", weapon_codex_id, "run_start", _get_chapter_id_for_room(_room_index))
+
+    var trait_effects_var: Variant = selected_row.get("trait_effects", {})
+    if trait_effects_var is Dictionary:
+        var trait_effects: Dictionary = trait_effects_var
+        if health != null:
+            if health.get("max_hp") != null:
+                health.max_hp += float(trait_effects.get("max_hp_bonus", 0.0))
+            if health.get("current_hp") != null:
+                health.current_hp = health.max_hp
+
+        if stats != null:
+            if stats.get("base_move_speed") != null:
+                stats.base_move_speed *= maxf(0.1, float(trait_effects.get("move_speed_mult", 1.0)))
+            if stats.get("armor") != null:
+                stats.armor = clampf(stats.armor + float(trait_effects.get("armor_bonus", 0.0)), 0.0, 0.75)
+            if stats.get("damage_bonus_pct") != null:
+                stats.damage_bonus_pct += float(trait_effects.get("damage_bonus_pct", 0.0))
+            if stats.get("crit_chance") != null:
+                stats.crit_chance = clampf(stats.crit_chance + float(trait_effects.get("crit_chance_bonus", 0.0)), 0.0, 0.95)
+            if stats.get("crit_multiplier") != null:
+                stats.crit_multiplier = maxf(1.1, stats.crit_multiplier + float(trait_effects.get("crit_multiplier_bonus", 0.0)))
+            if stats.get("frostbite_resistance") != null:
+                stats.frostbite_resistance = clampf(stats.frostbite_resistance + float(trait_effects.get("frostbite_resistance_bonus", 0.0)), 0.0, 0.75)
+            if stats.get("void_resistance") != null:
+                stats.void_resistance = clampf(stats.void_resistance + float(trait_effects.get("void_resistance_bonus", 0.0)), 0.0, 0.75)
+
+        if weapon != null:
+            if weapon.get("base_damage") != null:
+                weapon.base_damage += float(trait_effects.get("weapon_damage_flat", 0.0))
+            if weapon.get("attack_interval") != null:
+                weapon.attack_interval = maxf(0.12, weapon.attack_interval * maxf(0.1, float(trait_effects.get("attack_interval_mult", 1.0))))
+
+    if health != null and health.get("current_hp") != null and health.get("max_hp") != null:
+        EventBus.health_changed.emit(float(health.current_hp), float(health.max_hp))
+    if stats != null and stats.get("current_stamina") != null and stats.get("stamina_max") != null:
+        EventBus.stamina_changed.emit(float(stats.current_stamina), float(stats.stamina_max))
+
+
+func _is_character_row_unlocked_runtime(row: Dictionary) -> bool:
+    var unlock_type: String = str(row.get("unlock_type", "default"))
+    var unlock_value: String = str(row.get("unlock_value", ""))
+    match unlock_type:
+        "default":
+            return true
+        "achievement":
+            return SaveManager.get_unlocked_achievements().has(unlock_value)
+        "ending":
+            return SaveManager.get_unlocked_endings().has(unlock_value)
+        "meta_runs":
+            return int(SaveManager.get_meta_data().get("total_runs", 0)) >= int(unlock_value)
+        _:
+            return true
+
+
 func _resolve_room_type(index: int) -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty():
+        var room_type: String = str(room_plan.get("room_type", ROOM_TYPE_COMBAT))
+        match room_type:
+            ROOM_TYPE_COMBAT, ROOM_TYPE_ELITE, ROOM_TYPE_BOSS, ROOM_TYPE_EVENT, ROOM_TYPE_SHOP, ROOM_TYPE_TREASURE, ROOM_TYPE_SAFE_CAMP:
+                return room_type
+
     if index == 4 or index == 8 or index == 12 or index == 15:
         return ROOM_TYPE_BOSS
     if index > 1 and index % 5 == 0:
@@ -686,6 +1834,12 @@ func _resolve_room_type(index: int) -> String:
 
 
 func _get_boss_id_for_room(index: int) -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty():
+        var boss_id: String = str(room_plan.get("boss_id", "")).strip_edges()
+        if boss_id != "":
+            return boss_id
+
     match index:
         4:
             return "boss_rock_colossus"
@@ -733,24 +1887,51 @@ func _build_shop_offers() -> Array[Dictionary]:
     var offers: Array[Dictionary] = []
     var config: Dictionary = ConfigManager.get_config("shop_items", {})
     var slots: int = int(config.get("slots", 4))
-    var pools: Dictionary = config.get("pools", {})
-    var quality_weights: Dictionary = config.get("quality_weights", {})
+    var pools: Dictionary = _shop_pools
+    var quality_weights: Dictionary = _shop_quality_weights
+    var category_weights: Dictionary = _shop_category_weights
+    var economy_factor: float = _compute_shop_economy_factor()
+    _shop_last_economy_factor = economy_factor
 
     for _i in range(slots):
-        var category: String = _pick_shop_category(pools)
+        var category: String = _pick_shop_category(pools, category_weights)
         var item_id: String = _pick_shop_item_id(pools, category)
         var quality: String = _roll_quality(quality_weights)
-        var offer: Dictionary = _build_shop_offer(item_id, category, quality)
+        var offer: Dictionary = _build_shop_offer(item_id, category, quality, economy_factor)
         offers.append(offer)
 
     return offers
 
 
-func _pick_shop_category(pools: Dictionary) -> String:
+func _pick_shop_category(pools: Dictionary, category_weights: Dictionary) -> String:
     var keys: Array = pools.keys()
     if keys.is_empty():
         return "consumable"
-    return str(keys[randi_range(0, keys.size() - 1)])
+
+    var total: float = 0.0
+    var weighted: Dictionary = {}
+    for key_var in keys:
+        var key: String = str(key_var)
+        var rows_var: Variant = pools.get(key, [])
+        if not (rows_var is Array) or (rows_var as Array).is_empty():
+            continue
+        var weight: float = maxf(0.0, float(category_weights.get(key, 1.0)))
+        if weight <= 0.0:
+            continue
+        weighted[key] = weight
+        total += weight
+
+    if total <= 0.0 or weighted.is_empty():
+        return str(keys[randi_range(0, keys.size() - 1)])
+
+    var roll: float = randf() * total
+    var cursor: float = 0.0
+    for key in weighted.keys():
+        cursor += float(weighted.get(key, 0.0))
+        if roll <= cursor:
+            return str(key)
+
+    return str(weighted.keys()[weighted.keys().size() - 1])
 
 
 func _pick_shop_item_id(pools: Dictionary, category: String) -> String:
@@ -783,7 +1964,7 @@ func _roll_quality(quality_weights: Dictionary) -> String:
     return "common"
 
 
-func _build_shop_offer(item_id: String, category: String, quality: String) -> Dictionary:
+func _build_shop_offer(item_id: String, category: String, quality: String, economy_factor: float = 1.0) -> Dictionary:
     var quality_mult: float = _get_quality_price_mult(quality)
     var base_price: int = 20
 
@@ -796,7 +1977,7 @@ func _build_shop_offer(item_id: String, category: String, quality: String) -> Di
             base_price = 46
 
     var floor_mult: float = 1.0 + float(maxi(0, _room_index - 1)) * 0.08
-    var price: int = int(round(base_price * quality_mult * floor_mult))
+    var price: int = int(round(base_price * quality_mult * floor_mult * economy_factor * _shop_chapter_price_mult * _shop_route_price_mult))
     var info: Dictionary = _get_shop_item_info(item_id)
 
     return {
@@ -832,10 +2013,24 @@ func _get_shop_item_info(item_id: String) -> Dictionary:
             return {"title": "Might Sigil", "desc": "+15% damage"}
         "pas_armor":
             return {"title": "Armor Plate", "desc": "+8% armor (cap 75%)"}
+        "pas_focus":
+            return {"title": "Focus Sigil", "desc": "-8% weapon interval"}
+        "pas_precision":
+            return {"title": "Precision Lens", "desc": "+5% crit chance"}
+        "pas_force":
+            return {"title": "Force Relic", "desc": "+16% crit multiplier"}
         "wpn_magic_missile":
             return {"title": "Missile Core", "desc": "+4 weapon damage"}
         "wpn_holy_cross":
             return {"title": "Holy Crest", "desc": "+5.5 damage, +3% crit"}
+        "wpn_arcane_comet":
+            return {"title": "Arcane Comet", "desc": "+5 damage, spread pattern boost"}
+        "wpn_holy_judgment":
+            return {"title": "Holy Judgment", "desc": "+6.5 damage and +1 projectile hit"}
+        "wpn_shadow_tempest":
+            return {"title": "Shadow Tempest", "desc": "Faster attacks and wider volley"}
+        "wpn_solar_supernova":
+            return {"title": "Solar Supernova", "desc": "+8 damage and +2 projectile hits"}
         _:
             return {"title": item_id, "desc": "Unknown effect"}
 
@@ -874,8 +2069,45 @@ func _try_restock_shop() -> void:
 
     _gold -= _shop_restock_cost
     EventBus.gold_changed.emit(_gold)
+    _shop_restock_count += 1
     _shop_offers = _build_shop_offers()
     _shop_message = "Restocked for %d gold" % _shop_restock_cost
+    _recompute_restock_cost()
+    _update_shop_text()
+
+
+func _try_exchange_ore_for_gold() -> void:
+    if not _shop_ore_exchange_enabled:
+        _shop_message = "Ore exchange unavailable"
+        _update_shop_text()
+        return
+
+    if _shop_ore_exchange_count >= _shop_ore_exchange_max_trades:
+        _shop_message = "Ore exchange cap reached"
+        _update_shop_text()
+        return
+
+    if _ore < _shop_ore_exchange_ore_cost:
+        _shop_message = "Need %d ore for exchange" % _shop_ore_exchange_ore_cost
+        _update_shop_text()
+        return
+
+    _ore -= _shop_ore_exchange_ore_cost
+    var gold_gain: int = _shop_ore_exchange_gold_gain + _shop_route_exchange_gold_add
+    gold_gain = maxi(1, gold_gain)
+    if randf() <= _shop_ore_exchange_bonus_chance:
+        gold_gain += _shop_ore_exchange_bonus_gold
+    _gold += gold_gain
+    _shop_ore_exchange_count += 1
+    EventBus.ore_changed.emit(_ore)
+    EventBus.gold_changed.emit(_gold)
+
+    _shop_message = "Exchanged %d ore -> +%d gold (%d/%d)" % [
+        _shop_ore_exchange_ore_cost,
+        gold_gain,
+        _shop_ore_exchange_count,
+        _shop_ore_exchange_max_trades
+    ]
     _update_shop_text()
 
 
@@ -897,6 +2129,15 @@ func _apply_shop_item_effect(item_id: String) -> void:
         "pas_armor":
             if stats != null and stats.get("armor") != null:
                 stats.armor = minf(0.75, stats.armor + 0.08)
+        "pas_focus":
+            if weapon != null and weapon.get("attack_interval") != null:
+                weapon.attack_interval = maxf(0.12, weapon.attack_interval * 0.92)
+        "pas_precision":
+            if stats != null and stats.get("crit_chance") != null:
+                stats.crit_chance = minf(0.95, stats.crit_chance + 0.05)
+        "pas_force":
+            if stats != null and stats.get("crit_multiplier") != null:
+                stats.crit_multiplier += 0.16
         "wpn_magic_missile":
             if weapon != null and weapon.get("base_damage") != null:
                 weapon.base_damage += 4.0
@@ -905,6 +2146,52 @@ func _apply_shop_item_effect(item_id: String) -> void:
                 weapon.base_damage += 5.5
             if stats != null and stats.get("crit_chance") != null:
                 stats.crit_chance = minf(0.95, stats.crit_chance + 0.03)
+        "wpn_arcane_comet":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 5.0
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_count") != null:
+                    weapon.projectile_count = clampi(maxi(int(weapon.projectile_count), 3), 1, 7)
+                if weapon.get("spread_angle_deg") != null:
+                    weapon.spread_angle_deg = clampf(maxf(float(weapon.spread_angle_deg), 14.0), 0.0, 45.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "arcane_comet"
+        "wpn_holy_judgment":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 6.5
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "holy_judgment"
+            if stats != null and stats.get("crit_chance") != null:
+                stats.crit_chance = minf(0.95, stats.crit_chance + 0.02)
+        "wpn_shadow_tempest":
+            if weapon != null:
+                if weapon.get("attack_interval") != null:
+                    weapon.attack_interval = maxf(0.1, weapon.attack_interval * 0.9)
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_count") != null:
+                    weapon.projectile_count = clampi(int(weapon.projectile_count) + 1, 1, 7)
+                if weapon.get("spread_jitter_deg") != null:
+                    weapon.spread_jitter_deg = clampf(float(weapon.spread_jitter_deg) + 2.0, 0.0, 15.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "shadow_tempest"
+        "wpn_solar_supernova":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 8.0
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 2, 1, 12)
+                if weapon.get("spread_angle_deg") != null:
+                    weapon.spread_angle_deg = clampf(float(weapon.spread_angle_deg) + 6.0, 0.0, 45.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "solar_supernova"
 
 
 func _update_shop_text() -> void:
@@ -924,12 +2211,252 @@ func _update_shop_text() -> void:
             sold_tag
         ])
 
-    lines.append("R: Restock (%dG) | E: Next Room" % _shop_restock_cost)
+    lines.append("R: Restock (%dG)" % _shop_restock_cost)
+    if _shop_ore_exchange_enabled:
+        lines.append("T: Exchange %d ore -> %dG (%d/%d)" % [
+            _shop_ore_exchange_ore_cost,
+            _shop_ore_exchange_gold_gain,
+            _shop_ore_exchange_count,
+            _shop_ore_exchange_max_trades
+        ])
+
+    if _shop_last_economy_factor < 0.995:
+        lines.append("Economy Assist: -%d%% prices" % int(round((1.0 - _shop_last_economy_factor) * 100.0)))
+    elif _shop_last_economy_factor > 1.005:
+        lines.append("Economy Pressure: +%d%% prices" % int(round((_shop_last_economy_factor - 1.0) * 100.0)))
+    else:
+        lines.append("Economy: standard pricing")
+
+    lines.append("Chapter profile: %s (price x%.2f, restock %dG)" % [
+        _shop_chapter_id,
+        _shop_chapter_price_mult,
+        _shop_restock_base_cost
+    ])
+    lines.append("Route style: %s (price x%.2f, exchange %+dG)" % [
+        _get_route_style_label(),
+        _shop_route_price_mult,
+        _shop_route_exchange_gold_add
+    ])
+    lines.append("Shop bias: %s" % _get_shop_bias_text())
+
     lines.append("Chapter hazards ahead: %s" % get_active_hazards_text())
+    lines.append(_get_next_route_hint_text())
+    lines.append("Active chapter effects: %s" % _get_active_chapter_effects_text())
     if _shop_message != "":
         lines.append(_shop_message)
 
     _room_status_label.text = "\n".join(PackedStringArray(lines))
+
+
+func _load_shop_economy_config() -> void:
+    var shop_config: Dictionary = ConfigManager.get_config("shop_items", {})
+    var quality_var: Variant = shop_config.get("quality_weights", {})
+    if quality_var is Dictionary:
+        _shop_base_quality_weights = (quality_var as Dictionary).duplicate(true)
+    else:
+        _shop_base_quality_weights = {
+            "common": 65.0,
+            "rare": 25.0,
+            "epic": 8.0,
+            "legendary": 2.0
+        }
+
+    var category_var: Variant = shop_config.get("category_weights", {})
+    if category_var is Dictionary:
+        _shop_base_category_weights = (category_var as Dictionary).duplicate(true)
+    else:
+        _shop_base_category_weights = {
+            "consumable": 1.0,
+            "passive": 1.0,
+            "weapon": 1.0
+        }
+
+    var pools_var: Variant = shop_config.get("pools", {})
+    if pools_var is Dictionary:
+        _shop_base_pools = (pools_var as Dictionary).duplicate(true)
+    else:
+        _shop_base_pools = {
+            "consumable": ["hp_potion", "stamina_tonic"],
+            "passive": ["pas_might", "pas_armor"],
+            "weapon": ["wpn_magic_missile", "wpn_holy_cross"]
+        }
+
+    _shop_base_restock_cost = maxi(4, int(shop_config.get("restock_cost", 20)))
+    _shop_base_restock_growth = clampf(float(shop_config.get("restock_growth", 0.35)), 0.0, 1.2)
+    _shop_base_restock_cap = maxi(_shop_base_restock_cost, int(shop_config.get("restock_cost_cap", 180)))
+
+    var catchup_var: Variant = shop_config.get("catchup_discount", {})
+    if catchup_var is Dictionary:
+        var catchup: Dictionary = catchup_var
+        _shop_base_catchup_target_per_room = maxf(6.0, float(catchup.get("target_gold_per_room", 26.0)))
+        _shop_base_catchup_max_discount = clampf(float(catchup.get("max_discount", 0.35)), 0.0, 0.75)
+        _shop_base_catchup_high_gold_markup = clampf(float(catchup.get("high_gold_markup", 0.15)), 0.0, 0.45)
+        _shop_base_catchup_high_gold_threshold_mult = maxf(1.0, float(catchup.get("high_gold_threshold_mult", 1.8)))
+
+    var exchange_var: Variant = shop_config.get("ore_exchange", {})
+    if exchange_var is Dictionary:
+        var exchange: Dictionary = exchange_var
+        _shop_base_ore_exchange_enabled = bool(exchange.get("enabled", true))
+        _shop_base_ore_exchange_ore_cost = maxi(1, int(exchange.get("ore_per_trade", 2)))
+        _shop_base_ore_exchange_gold_gain = maxi(1, int(exchange.get("gold_per_trade", 14)))
+        _shop_base_ore_exchange_max_trades = maxi(1, int(exchange.get("max_trades_per_shop", 3)))
+        _shop_base_ore_exchange_bonus_chance = clampf(float(exchange.get("bonus_trade_chance", 0.15)), 0.0, 1.0)
+        _shop_base_ore_exchange_bonus_gold = maxi(0, int(exchange.get("bonus_gold", 4)))
+
+    var chapter_overrides_var: Variant = shop_config.get("chapter_overrides", {})
+    if chapter_overrides_var is Dictionary:
+        _shop_chapter_overrides = (chapter_overrides_var as Dictionary).duplicate(true)
+    else:
+        _shop_chapter_overrides = {}
+
+    var route_overrides_var: Variant = shop_config.get("route_style_overrides", {})
+    if route_overrides_var is Dictionary:
+        _shop_route_overrides = (route_overrides_var as Dictionary).duplicate(true)
+    else:
+        _shop_route_overrides = {}
+
+    _apply_shop_chapter_profile("chapter_1")
+
+
+func _apply_shop_chapter_profile(chapter_id: String) -> void:
+    _shop_chapter_id = chapter_id
+    _shop_chapter_price_mult = 1.0
+    _shop_quality_weights = _shop_base_quality_weights.duplicate(true)
+    _shop_category_weights = _shop_base_category_weights.duplicate(true)
+    _shop_pools = _shop_base_pools.duplicate(true)
+
+    _shop_restock_base_cost = _shop_base_restock_cost
+    _shop_restock_growth = _shop_base_restock_growth
+    _shop_restock_cap = _shop_base_restock_cap
+
+    _shop_catchup_target_per_room = _shop_base_catchup_target_per_room
+    _shop_catchup_max_discount = _shop_base_catchup_max_discount
+    _shop_catchup_high_gold_markup = _shop_base_catchup_high_gold_markup
+    _shop_catchup_high_gold_threshold_mult = _shop_base_catchup_high_gold_threshold_mult
+
+    _shop_ore_exchange_enabled = _shop_base_ore_exchange_enabled
+    _shop_ore_exchange_ore_cost = _shop_base_ore_exchange_ore_cost
+    _shop_ore_exchange_gold_gain = _shop_base_ore_exchange_gold_gain
+    _shop_ore_exchange_max_trades = _shop_base_ore_exchange_max_trades
+    _shop_ore_exchange_bonus_chance = _shop_base_ore_exchange_bonus_chance
+    _shop_ore_exchange_bonus_gold = _shop_base_ore_exchange_bonus_gold
+
+    var profile_var: Variant = _shop_chapter_overrides.get(chapter_id, {})
+    if profile_var is Dictionary:
+        var profile: Dictionary = profile_var
+        _shop_chapter_price_mult = clampf(float(profile.get("price_mult", 1.0)), 0.6, 1.6)
+
+        var restock_cost_mult: float = clampf(float(profile.get("restock_cost_mult", 1.0)), 0.6, 1.9)
+        var restock_growth_add: float = clampf(float(profile.get("restock_growth_add", 0.0)), -0.5, 0.8)
+        var catchup_target_mult: float = clampf(float(profile.get("target_gold_mult", 1.0)), 0.5, 2.0)
+        var max_discount_add: float = clampf(float(profile.get("max_discount_add", 0.0)), -0.4, 0.4)
+        var high_markup_add: float = clampf(float(profile.get("high_markup_add", 0.0)), -0.3, 0.3)
+        var exchange_gold_add: int = int(profile.get("ore_exchange_gold_add", 0))
+        var exchange_trade_add: int = int(profile.get("ore_exchange_max_trades_add", 0))
+        var exchange_bonus_chance_add: float = clampf(float(profile.get("ore_exchange_bonus_chance_add", 0.0)), -0.6, 0.6)
+        var exchange_bonus_gold_add: int = int(profile.get("ore_exchange_bonus_gold_add", 0))
+
+        var quality_mult_var: Variant = profile.get("quality_weight_mult", {})
+        if quality_mult_var is Dictionary:
+            var quality_mult: Dictionary = quality_mult_var
+            for key in _shop_quality_weights.keys():
+                var base_weight: float = maxf(0.0, float(_shop_quality_weights.get(key, 0.0)))
+                var mult: float = clampf(float(quality_mult.get(key, 1.0)), 0.0, 3.5)
+                _shop_quality_weights[key] = base_weight * mult
+
+        var category_mult_var: Variant = profile.get("category_weight_mult", {})
+        if category_mult_var is Dictionary:
+            var category_mult: Dictionary = category_mult_var
+            for key in _shop_category_weights.keys():
+                var base_weight: float = maxf(0.0, float(_shop_category_weights.get(key, 0.0)))
+                var mult: float = clampf(float(category_mult.get(key, 1.0)), 0.0, 3.0)
+                _shop_category_weights[key] = base_weight * mult
+
+        var pool_override_var: Variant = profile.get("pool_overrides", {})
+        if pool_override_var is Dictionary:
+            var pool_overrides: Dictionary = pool_override_var
+            for category_var in pool_overrides.keys():
+                var category: String = str(category_var)
+                var list_var: Variant = pool_overrides.get(category, [])
+                if list_var is Array and not (list_var as Array).is_empty():
+                    _shop_pools[category] = (list_var as Array).duplicate(true)
+
+        _shop_restock_base_cost = maxi(4, int(round(float(_shop_base_restock_cost) * restock_cost_mult)))
+        _shop_restock_growth = clampf(_shop_base_restock_growth + restock_growth_add, 0.0, 1.2)
+        _shop_restock_cap = maxi(_shop_restock_base_cost, int(round(float(_shop_base_restock_cap) * restock_cost_mult)))
+
+        _shop_catchup_target_per_room = maxf(6.0, _shop_base_catchup_target_per_room * catchup_target_mult)
+        _shop_catchup_max_discount = clampf(_shop_base_catchup_max_discount + max_discount_add, 0.0, 0.75)
+        _shop_catchup_high_gold_markup = clampf(_shop_base_catchup_high_gold_markup + high_markup_add, 0.0, 0.45)
+
+        _shop_ore_exchange_gold_gain = maxi(1, _shop_base_ore_exchange_gold_gain + exchange_gold_add)
+        _shop_ore_exchange_max_trades = maxi(1, _shop_base_ore_exchange_max_trades + exchange_trade_add)
+        _shop_ore_exchange_bonus_chance = clampf(_shop_base_ore_exchange_bonus_chance + exchange_bonus_chance_add, 0.0, 1.0)
+        _shop_ore_exchange_bonus_gold = maxi(0, _shop_base_ore_exchange_bonus_gold + exchange_bonus_gold_add)
+
+    _apply_shop_route_profile(_current_route_style)
+
+    var quality_total: float = 0.0
+    for key in _shop_quality_weights.keys():
+        quality_total += maxf(0.0, float(_shop_quality_weights.get(key, 0.0)))
+    if quality_total <= 0.0:
+        _shop_quality_weights = _shop_base_quality_weights.duplicate(true)
+
+    var category_total: float = 0.0
+    for key in _shop_category_weights.keys():
+        category_total += maxf(0.0, float(_shop_category_weights.get(key, 0.0)))
+    if category_total <= 0.0:
+        _shop_category_weights = _shop_base_category_weights.duplicate(true)
+
+    _shop_restock_cost = _shop_restock_base_cost
+
+
+func _get_shop_bias_text() -> String:
+    var top_quality: String = "common"
+    var top_quality_weight: float = -1.0
+    for key_var in _shop_quality_weights.keys():
+        var key: String = str(key_var)
+        var weight: float = float(_shop_quality_weights.get(key, 0.0))
+        if weight > top_quality_weight:
+            top_quality_weight = weight
+            top_quality = key
+
+    var top_category: String = "consumable"
+    var top_category_weight: float = -1.0
+    for key_var in _shop_category_weights.keys():
+        var key: String = str(key_var)
+        var weight: float = float(_shop_category_weights.get(key, 0.0))
+        if weight > top_category_weight:
+            top_category_weight = weight
+            top_category = key
+
+    return "%s-heavy, %s quality focus" % [top_category, top_quality]
+
+
+func _compute_shop_economy_factor() -> float:
+    var target_gold: float = _shop_catchup_target_per_room * _shop_route_target_mult * float(maxi(1, _room_index))
+    if target_gold <= 0.0:
+        return 1.0
+
+    var max_discount: float = clampf(_shop_catchup_max_discount + _shop_route_max_discount_add, 0.0, 0.75)
+    var high_markup: float = clampf(_shop_catchup_high_gold_markup + _shop_route_high_markup_add, 0.0, 0.45)
+
+    if float(_gold) < target_gold:
+        var deficit_ratio: float = clampf((target_gold - float(_gold)) / target_gold, 0.0, 1.0)
+        return clampf(1.0 - max_discount * deficit_ratio, 0.55, 1.35)
+
+    var high_gold_threshold: float = target_gold * _shop_catchup_high_gold_threshold_mult
+    if float(_gold) <= high_gold_threshold:
+        return 1.0
+
+    var over_ratio: float = clampf((float(_gold) - high_gold_threshold) / maxf(1.0, high_gold_threshold), 0.0, 1.0)
+    return clampf(1.0 + high_markup * over_ratio, 0.70, 1.50)
+
+
+func _recompute_restock_cost() -> void:
+    var growth_factor: float = pow(1.0 + _shop_restock_growth, float(_shop_restock_count))
+    var grown_cost: int = int(round(float(_shop_restock_base_cost) * growth_factor))
+    _shop_restock_cost = mini(_shop_restock_cap, maxi(_shop_restock_base_cost, grown_cost))
 
 
 func _try_forge_damage() -> void:
@@ -984,11 +2511,29 @@ func _try_route_choice(choice_id: String) -> void:
     _camp_route_chosen = true
     EventBus.route_changed.emit(_alignment)
 
-    var chapter_id: String = "chapter_%d" % (1 + int((_room_index - 1) / 4))
+    var chapter_id: String = _get_chapter_id_for_room(_room_index)
     EventBus.narrative_choice.emit(chapter_id, "safe_camp_route", choice_id)
 
     _camp_message = "Route shifted: %s (%+.0f)" % [choice_id.to_upper(), delta]
     _update_camp_text()
+
+
+func _open_memory_altar() -> void:
+    if _current_room_type != ROOM_TYPE_SAFE_CAMP or _room_active:
+        return
+    if _memory_altar_panel == null or not _memory_altar_panel.has_method("show_archive"):
+        return
+
+    var unlocked_fragments: Array[String] = SaveManager.get_unlocked_fragments()
+    _memory_altar_pending = true
+    _memory_altar_panel.show_archive(unlocked_fragments, 0)
+    _room_status_label.text = "Memory Altar opened (%d fragments). Review with 1/2, close with E/Esc" % unlocked_fragments.size()
+
+
+func _on_memory_altar_closed() -> void:
+    _memory_altar_pending = false
+    if _current_room_type == ROOM_TYPE_SAFE_CAMP and not _room_active:
+        _update_camp_text()
 
 
 func _update_camp_text() -> void:
@@ -999,11 +2544,14 @@ func _update_camp_text() -> void:
         _alignment,
         _get_route_tier()
     ])
+    lines.append("Branch style: %s" % _get_route_style_label())
     lines.append("Purification: Frostbite %.0f%% | Void %.0f%%" % [_frostbite, _void_corruption])
     lines.append("F: Forge Damage (3 ore) | G: Forge Speed (5 ore)")
+    lines.append("T: Memory Altar (review unlocked fragments)")
     lines.append("Q: Choose Holy Route | V: Choose Void Route")
     lines.append("Chapter hazards ahead: %s" % get_active_hazards_text())
-    lines.append("E: Next Room")
+    lines.append("Active chapter effects: %s" % _get_active_chapter_effects_text())
+    lines.append(_get_next_route_hint_text())
     if _camp_message != "":
         lines.append(_camp_message)
 
@@ -1019,11 +2567,14 @@ func _get_route_tier() -> String:
 
 
 func _get_hazard_intensity() -> float:
+    var base_intensity: float = 0.0
     if _current_room_type == ROOM_TYPE_BOSS:
-        return 1.35
-    if _current_room_type == ROOM_TYPE_COMBAT:
-        return 1.0
-    return 0.0
+        base_intensity = 1.35
+    elif _current_room_type == ROOM_TYPE_ELITE:
+        base_intensity = 1.15
+    elif _current_room_type == ROOM_TYPE_COMBAT:
+        base_intensity = 1.0
+    return base_intensity * _chapter_effect_hazard_mult * _route_hazard_mult
 
 
 func _get_resistance(stats: Node, property_name: String) -> float:
@@ -1065,15 +2616,21 @@ func _update_environment_visuals(delta: float) -> void:
 
 
 func _resolve_hazard_tint_color() -> Color:
+    var hazard_color: Color
     if _active_hazards.has("void_corruption") or _active_hazards.has("void_rift"):
-        return Color(0.40, 0.20, 0.62, 0.0)
-    if _active_hazards.has("frostbite") or _active_hazards.has("ice_slide"):
-        return Color(0.48, 0.66, 0.84, 0.0)
-    if _active_hazards.has("lava_pool"):
-        return Color(0.70, 0.28, 0.20, 0.0)
-    if _active_hazards.has("spore_cloud"):
-        return Color(0.38, 0.60, 0.32, 0.0)
-    return Color(0.18, 0.34, 0.50, 0.0)
+        hazard_color = Color(0.40, 0.20, 0.62, 1.0)
+    elif _active_hazards.has("frostbite") or _active_hazards.has("ice_slide"):
+        hazard_color = Color(0.48, 0.66, 0.84, 1.0)
+    elif _active_hazards.has("lava_pool"):
+        hazard_color = Color(0.70, 0.28, 0.20, 1.0)
+    elif _active_hazards.has("spore_cloud"):
+        hazard_color = Color(0.38, 0.60, 0.32, 1.0)
+    else:
+        hazard_color = Color(0.18, 0.34, 0.50, 1.0)
+
+    var blended: Color = hazard_color.lerp(_route_theme_tint, _route_theme_blend)
+    blended.a = 0.0
+    return blended
 
 
 func _trigger_hazard_flash(flash_color: Color) -> void:
@@ -1083,7 +2640,7 @@ func _trigger_hazard_flash(flash_color: Color) -> void:
 
 
 func _get_chapter_environment_row(index: int) -> Dictionary:
-    var chapter_id: String = "chapter_%d" % (1 + int((index - 1) / 4))
+    var chapter_id: String = _get_chapter_id_for_room(index)
     var config: Dictionary = ConfigManager.get_config("environment_config", {})
     var chapters: Dictionary = config.get("chapters", {})
     return chapters.get(chapter_id, {})
@@ -1092,7 +2649,7 @@ func _get_chapter_environment_row(index: int) -> Dictionary:
 func _process_environment_hazards(delta: float) -> void:
     _hazard_wave += delta
 
-    var is_hazard_room: bool = _room_active and (_current_room_type == ROOM_TYPE_COMBAT or _current_room_type == ROOM_TYPE_BOSS)
+    var is_hazard_room: bool = _room_active and (_current_room_type == ROOM_TYPE_COMBAT or _current_room_type == ROOM_TYPE_ELITE or _current_room_type == ROOM_TYPE_BOSS)
     var intensity: float = _get_hazard_intensity()
 
     if not is_hazard_room:
@@ -1166,6 +2723,8 @@ func _apply_environment_speed_modifier(include_room_hazards: bool) -> void:
     elif _frostbite >= 50.0:
         multiplier *= 0.78
 
+    multiplier *= _chapter_effect_move_speed_mult
+
     move_component.set_environment_speed_multiplier(multiplier)
 
 
@@ -1198,7 +2757,13 @@ func _get_hazards_for_room(index: int) -> Array[String]:
 
 func _clear_active_enemies() -> void:
     for node: Node in get_tree().get_nodes_in_group("enemy"):
-        if node != null and is_instance_valid(node):
+        if node == null or not is_instance_valid(node):
+            continue
+        if ObjectPool != null and node.get_parent() == ObjectPool:
+            continue
+        if ObjectPool != null:
+            ObjectPool.release("enemy_basic", node)
+        else:
             node.queue_free()
 
 
@@ -1318,25 +2883,29 @@ func _map_item_to_pickup(item_id: String) -> Dictionary:
         "xp_gem_large":
             return {"type": "xp", "amount": 28}
         "gold_small":
-            return {"type": "gold", "amount": 8}
+            return {"type": "gold", "amount": _scale_drop_amount(8, _route_gold_drop_mult)}
         "gold_medium":
-            return {"type": "gold", "amount": 20}
+            return {"type": "gold", "amount": _scale_drop_amount(20, _route_gold_drop_mult)}
         "ore_small":
-            return {"type": "ore", "amount": 1}
+            return {"type": "ore", "amount": _scale_drop_amount(1, _route_ore_drop_mult)}
         "ore_medium":
-            return {"type": "ore", "amount": 2}
+            return {"type": "ore", "amount": _scale_drop_amount(2, _route_ore_drop_mult)}
         "ore_large":
-            return {"type": "ore", "amount": 4}
+            return {"type": "ore", "amount": _scale_drop_amount(4, _route_ore_drop_mult)}
         "hp_orb":
             return {"type": "hp", "amount": 10}
         "chest_common":
-            return {"type": "gold", "amount": 24}
+            return {"type": "gold", "amount": _scale_drop_amount(24, _route_gold_drop_mult)}
         "chest_rare":
-            return {"type": "gold", "amount": 40}
+            return {"type": "gold", "amount": _scale_drop_amount(40, _route_gold_drop_mult)}
         "accessory_drop":
             return {"type": "accessory", "amount": 1}
         _:
             return {}
+
+
+func _scale_drop_amount(base_amount: int, multiplier: float) -> int:
+    return maxi(1, int(round(float(base_amount) * maxf(0.0, multiplier))))
 
 
 func _on_pickup_collected(pickup_type: String, amount: int, pickup_id: String) -> void:
