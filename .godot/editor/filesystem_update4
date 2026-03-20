@@ -1,6 +1,0 @@
-res://addons/gdUnit4/src/core/GdUnitFileAccess.gd
-res://scripts/autoload/game_manager.gd
-res://scripts/game/enemy.gd
-res://scripts/systems/enemy_spawner.gd
-res://scripts/ui/main_menu.gd
-res://test/unit/test_character_weapon_profiles.gd
