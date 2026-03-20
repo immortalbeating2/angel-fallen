@@ -3,22 +3,78 @@
     "chapter_1": {
       "theme": "ruined_chapel",
       "tile_palette": ["#4E5A64", "#72808A", "#A6B1B7"],
-      "hazards": ["water_flow", "spore_cloud"]
+      "hazards": ["water_flow", "spore_cloud"],
+      "hazard_anim_interval": 0.18,
+      "ambient_fx_interval": 0.26,
+      "visual_profile": {
+        "detail_tint": "#D4DEE6",
+        "detail_alpha": 0.68,
+        "detail_pulse_speed": 1.8,
+        "detail_pulse_amplitude": 0.05,
+        "hazard_alpha_mult": 0.95,
+        "ambient_alpha_mult": 1.05,
+        "ambient_wave_speed": 2.0,
+        "ambient_wave_amplitude": 0.04,
+        "ambient_scroll_speed_x": 2.4,
+        "ambient_scroll_speed_y": -1.2
+      }
     },
     "chapter_2": {
       "theme": "molten_forge",
       "tile_palette": ["#5A2E20", "#8C3E26", "#D96A2B"],
-      "hazards": ["lava_pool", "conveyor"]
+      "hazards": ["lava_pool", "conveyor"],
+      "hazard_anim_interval": 0.14,
+      "ambient_fx_interval": 0.2,
+      "visual_profile": {
+        "detail_tint": "#F2B37C",
+        "detail_alpha": 0.74,
+        "detail_pulse_speed": 2.3,
+        "detail_pulse_amplitude": 0.07,
+        "hazard_alpha_mult": 1.16,
+        "ambient_alpha_mult": 1.12,
+        "ambient_wave_speed": 2.8,
+        "ambient_wave_amplitude": 0.06,
+        "ambient_scroll_speed_x": 3.0,
+        "ambient_scroll_speed_y": -0.8
+      }
     },
     "chapter_3": {
       "theme": "frozen_sanctum",
       "tile_palette": ["#A6C8D8", "#DDEAF1", "#7CA5BD"],
-      "hazards": ["ice_slide", "frostbite"]
+      "hazards": ["ice_slide", "frostbite"],
+      "hazard_anim_interval": 0.2,
+      "ambient_fx_interval": 0.3,
+      "visual_profile": {
+        "detail_tint": "#C8EDFF",
+        "detail_alpha": 0.62,
+        "detail_pulse_speed": 1.4,
+        "detail_pulse_amplitude": 0.04,
+        "hazard_alpha_mult": 0.88,
+        "ambient_alpha_mult": 0.92,
+        "ambient_wave_speed": 1.6,
+        "ambient_wave_amplitude": 0.03,
+        "ambient_scroll_speed_x": 1.6,
+        "ambient_scroll_speed_y": -1.6
+      }
     },
     "chapter_4": {
       "theme": "void_abyss",
       "tile_palette": ["#1E1B2E", "#3A2C5A", "#6A4EA1"],
-      "hazards": ["void_rift", "void_corruption"]
+      "hazards": ["void_rift", "void_corruption"],
+      "hazard_anim_interval": 0.12,
+      "ambient_fx_interval": 0.18,
+      "visual_profile": {
+        "detail_tint": "#D3B2FF",
+        "detail_alpha": 0.78,
+        "detail_pulse_speed": 2.7,
+        "detail_pulse_amplitude": 0.09,
+        "hazard_alpha_mult": 1.24,
+        "ambient_alpha_mult": 1.2,
+        "ambient_wave_speed": 3.2,
+        "ambient_wave_amplitude": 0.07,
+        "ambient_scroll_speed_x": 3.4,
+        "ambient_scroll_speed_y": -2.0
+      }
     }
   }
 }

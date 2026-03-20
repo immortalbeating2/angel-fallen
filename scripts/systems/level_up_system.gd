@@ -147,7 +147,7 @@ func _collect_available_evolution_options() -> Array[Dictionary]:
     if _weapon == null:
         return options
 
-    var current_weapon_id: String = str(_weapon.get("current_weapon_id", "")).strip_edges()
+    var current_weapon_id: String = str(_weapon.get("current_weapon_id")).strip_edges()
     for recipe in _evolution_recipes:
         if not _can_trigger_evolution(recipe, current_weapon_id):
             continue

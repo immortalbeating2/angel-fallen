@@ -79,6 +79,66 @@
         "projectile_hits": 3,
         "projectile_style": "solar_supernova"
       }
+    },
+    {
+      "id": "evo_seraph_lance",
+      "weapon_id": "wpn_sacred_lance",
+      "passive_id": "pas_focus",
+      "required_passive_level": 2,
+      "result_weapon_id": "wpn_seraph_lance",
+      "title": "Seraph Lance",
+      "desc": "Refine sacred thrusts into faster multi-hit lances with brighter impact.",
+      "evolution_profile": {
+        "damage_mult": 1.33,
+        "flat_damage_bonus": 4.0,
+        "interval_mult": 0.87,
+        "weapon_mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0.0,
+        "spread_jitter_deg": 0.0,
+        "projectile_hits": 5,
+        "projectile_style": "seraph_lance"
+      }
+    },
+    {
+      "id": "evo_abyssal_chain",
+      "weapon_id": "wpn_void_chain",
+      "passive_id": "pas_force",
+      "required_passive_level": 2,
+      "result_weapon_id": "wpn_abyssal_chain",
+      "title": "Abyssal Chain",
+      "desc": "Empower chained bolts into wider void arcs that strike repeatedly.",
+      "evolution_profile": {
+        "damage_mult": 1.26,
+        "flat_damage_bonus": 3.2,
+        "interval_mult": 0.84,
+        "weapon_mode": "spread",
+        "projectile_count": 4,
+        "spread_angle_deg": 22.0,
+        "spread_jitter_deg": 4.5,
+        "projectile_hits": 3,
+        "projectile_style": "abyssal_chain"
+      }
+    },
+    {
+      "id": "evo_glacial_nova",
+      "weapon_id": "wpn_frost_orb",
+      "passive_id": "pas_precision",
+      "required_passive_level": 3,
+      "result_weapon_id": "wpn_glacial_nova",
+      "title": "Glacial Nova",
+      "desc": "Collapse frost orbs into piercing novas with controlled spread.",
+      "evolution_profile": {
+        "damage_mult": 1.31,
+        "flat_damage_bonus": 3.8,
+        "interval_mult": 0.89,
+        "weapon_mode": "spread",
+        "projectile_count": 3,
+        "spread_angle_deg": 18.0,
+        "spread_jitter_deg": 2.0,
+        "projectile_hits": 4,
+        "projectile_style": "glacial_nova"
+      }
     }
   ]
 }

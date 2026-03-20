@@ -193,6 +193,70 @@
       "crit_multiplier": 1.66,
       "base_damage": 13.6,
       "attack_interval": 0.47
+    },
+    {
+      "id": "char_templar",
+      "name": "Templar",
+      "description": "A disciplined vanguard with steady spear thrusts and reinforced defenses.",
+      "unlock_type": "meta_runs",
+      "unlock_value": "12",
+      "unlock_desc": "Unlock after completing 12 runs",
+      "trait_id": "trait_oathbound",
+      "trait_name": "Oathbound",
+      "trait_desc": "Start with bonus armor and weapon damage.",
+      "trait_effects": {
+        "armor_bonus": 0.07,
+        "weapon_damage_flat": 1.6
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_sacred_lance",
+        "mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0,
+        "spread_jitter_deg": 0,
+        "projectile_hits": 3,
+        "projectile_style": "templar_lance"
+      },
+      "max_hp": 132,
+      "move_speed": 176,
+      "stamina_max": 122,
+      "armor": 0.13,
+      "crit_chance": 0.07,
+      "crit_multiplier": 1.62,
+      "base_damage": 13.0,
+      "attack_interval": 0.46
+    },
+    {
+      "id": "char_occultist",
+      "name": "Occultist",
+      "description": "A forbidden scholar who bends chain projectiles through void resonance.",
+      "unlock_type": "ending",
+      "unlock_value": "nar_ending_fall",
+      "unlock_desc": "Unlock by obtaining Fall ending",
+      "trait_id": "trait_void_resonance",
+      "trait_name": "Void Resonance",
+      "trait_desc": "Gain void resistance and higher critical chance at run start.",
+      "trait_effects": {
+        "void_resistance_bonus": 0.14,
+        "crit_chance_bonus": 0.05
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_void_chain",
+        "mode": "spread",
+        "projectile_count": 2,
+        "spread_angle_deg": 14,
+        "spread_jitter_deg": 3.5,
+        "projectile_hits": 2,
+        "projectile_style": "occult_chain"
+      },
+      "max_hp": 98,
+      "move_speed": 190,
+      "stamina_max": 108,
+      "armor": 0.05,
+      "crit_chance": 0.16,
+      "crit_multiplier": 1.8,
+      "base_damage": 12.1,
+      "attack_interval": 0.4
     }
   ]
 }

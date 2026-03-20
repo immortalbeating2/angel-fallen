@@ -4,7 +4,11 @@ extends Node2D
 @onready var _room_status_label: Label = $HUD/MarginContainer/PanelContainer/VBoxContainer/RoomStatusValue
 @onready var _room_kill_label: Label = $HUD/MarginContainer/PanelContainer/VBoxContainer/RoomKillValue
 @onready var _background: ColorRect = $Background
-@onready var _hazard_tint: ColorRect = $HazardTint
+@onready var _ground_tilemap: TileMap = $GroundTileMap
+@onready var _ground_detail_tilemap: TileMap = $GroundDetailTileMap
+@onready var _door_tilemap: TileMap = $DoorTileMap
+@onready var _hazard_tilemap: TileMap = $HazardTileMap
+@onready var _ambient_fx_tilemap: TileMap = $AmbientFxTileMap
 @onready var _hazard_flash: ColorRect = $HazardFlash
 @onready var _spawner: Node2D = $EnemySpawner
 @onready var _map_generator: Node = $MapGenerator
@@ -130,6 +134,18 @@ var _route_theme_blend: float = 0.0
 var _route_boss_style_profile: Dictionary = {}
 var _route_style_profiles: Dictionary = {}
 var _route_style_timeline: Array[Dictionary] = []
+var _treasure_challenge_enabled: bool = false
+var _treasure_challenge_combat_mode: String = "elite"
+var _treasure_required_kills_base: int = 4
+var _treasure_required_kills_per_room: int = 1
+var _treasure_gold_reward_base: int = 32
+var _treasure_gold_reward_per_room: int = 2
+var _treasure_ore_reward_base: int = 1
+var _treasure_ore_reward_step_rooms: int = 5
+var _treasure_accessory_chance_base: float = 0.28
+var _treasure_accessory_chance_vanguard: float = 0.34
+var _treasure_accessory_chance_raider: float = 0.24
+var _treasure_rewards_deployed: bool = false
 
 const ROOM_TYPE_COMBAT: String = "combat"
 const ROOM_TYPE_BOSS: String = "boss"
@@ -138,6 +154,66 @@ const ROOM_TYPE_SHOP: String = "shop"
 const ROOM_TYPE_TREASURE: String = "treasure"
 const ROOM_TYPE_SAFE_CAMP: String = "safe_camp"
 const ROOM_TYPE_ELITE: String = "elite"
+const TILE_SOURCE_ID: int = 0
+const TILE_GRID_WIDTH: int = 40
+const TILE_GRID_HEIGHT: int = 23
+const GROUND_DETAIL_TILE_VARIANTS: int = 4
+const HAZARD_TILE_SOURCE_ID: int = 0
+const HAZARD_TILE_VARIANTS: int = 3
+const AMBIENT_FX_TILE_SOURCE_ID: int = 0
+const AMBIENT_FX_TILE_VARIANTS: int = 4
+const GROUND_TILESET_PATHS: Dictionary = {
+    "chapter_1": "res://resources/tilesets/game_world_ground_ch1.tres",
+    "chapter_2": "res://resources/tilesets/game_world_ground_ch2.tres",
+    "chapter_3": "res://resources/tilesets/game_world_ground_ch3.tres",
+    "chapter_4": "res://resources/tilesets/game_world_ground_ch4.tres"
+}
+const GROUND_DETAIL_TILESET_PATHS: Dictionary = {
+    "chapter_1": "res://resources/tilesets/game_world_ground_detail_ch1.tres",
+    "chapter_2": "res://resources/tilesets/game_world_ground_detail_ch2.tres",
+    "chapter_3": "res://resources/tilesets/game_world_ground_detail_ch3.tres",
+    "chapter_4": "res://resources/tilesets/game_world_ground_detail_ch4.tres"
+}
+const DOOR_TILESET_PATHS: Dictionary = {
+    "chapter_1": "res://resources/tilesets/game_world_doors_ch1.tres",
+    "chapter_2": "res://resources/tilesets/game_world_doors_ch2.tres",
+    "chapter_3": "res://resources/tilesets/game_world_doors_ch3.tres",
+    "chapter_4": "res://resources/tilesets/game_world_doors_ch4.tres"
+}
+const HAZARD_TILESET_PATHS: Dictionary = {
+    "chapter_1": "res://resources/tilesets/game_world_hazard_overlay_ch1.tres",
+    "chapter_2": "res://resources/tilesets/game_world_hazard_overlay_ch2.tres",
+    "chapter_3": "res://resources/tilesets/game_world_hazard_overlay_ch3.tres",
+    "chapter_4": "res://resources/tilesets/game_world_hazard_overlay_ch4.tres"
+}
+const AMBIENT_FX_TILESET_PATHS: Dictionary = {
+    "chapter_1": "res://resources/tilesets/game_world_ambient_fx_ch1.tres",
+    "chapter_2": "res://resources/tilesets/game_world_ambient_fx_ch2.tres",
+    "chapter_3": "res://resources/tilesets/game_world_ambient_fx_ch3.tres",
+    "chapter_4": "res://resources/tilesets/game_world_ambient_fx_ch4.tres"
+}
+
+var _ground_tilesets: Dictionary = {}
+var _ground_detail_tilesets: Dictionary = {}
+var _door_tilesets: Dictionary = {}
+var _hazard_tilesets: Dictionary = {}
+var _ambient_fx_tilesets: Dictionary = {}
+var _hazard_anim_cells: Array[Dictionary] = []
+var _hazard_anim_timer: float = 0.0
+var _hazard_anim_frame: int = 0
+var _ambient_fx_anim_cells: Array[Dictionary] = []
+var _ambient_fx_anim_timer: float = 0.0
+var _ambient_fx_anim_frame: int = 0
+var _ambient_fx_scroll_offset: Vector2 = Vector2.ZERO
+var _visual_profile_anim_time: float = 0.0
+
+
+func _is_combat_progress_room(room_type: String) -> bool:
+    if room_type == ROOM_TYPE_COMBAT or room_type == ROOM_TYPE_ELITE or room_type == ROOM_TYPE_BOSS:
+        return true
+    if room_type == ROOM_TYPE_TREASURE and _treasure_challenge_enabled:
+        return true
+    return false
 
 
 func _ready() -> void:
@@ -149,6 +225,7 @@ func _ready() -> void:
         ObjectPool.register_scene("pickup_basic", pickup_scene, 32)
 
     _load_shop_economy_config()
+    _load_treasure_challenge_config()
     _build_run_plan()
     _run_kills = 0
     _run_rooms_cleared = 0
@@ -180,6 +257,7 @@ func _ready() -> void:
     _route_style_timeline.clear()
     _load_route_style_profiles()
     _room_index = _get_run_start_room()
+    _initialize_tile_layers()
 
     GameManager.set_state(GameManager.GameState.PLAYING)
     EventBus.enemy_killed.connect(_on_enemy_killed)
@@ -220,7 +298,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-    if _room_active and (_current_room_type == ROOM_TYPE_COMBAT or _current_room_type == ROOM_TYPE_ELITE or _current_room_type == ROOM_TYPE_BOSS) and _spawner != null and _spawner.has_method("get_room_time"):
+    if _room_active and _is_combat_progress_room(_current_room_type) and _spawner != null and _spawner.has_method("get_room_time"):
         _room_timer_label.text = "%.1f s" % _spawner.get_room_time()
     elif not _room_active:
         _room_timer_label.text = "-"
@@ -585,8 +663,13 @@ func _start_room() -> void:
         GameManager.set_run_context(_room_index, _current_room_type, _get_chapter_id_for_room(_room_index))
     _ensure_room_history(_room_index, _current_room_type)
     _active_hazards = _get_hazards_for_room(_room_index)
+    _ambient_fx_scroll_offset = Vector2.ZERO
+    _visual_profile_anim_time = 0.0
+    _render_hazard_tiles()
+    _render_ambient_fx_tiles()
     _advance_chapter_effects_for_room()
     _apply_room_theme(_room_index)
+    _treasure_rewards_deployed = false
 
     _kills_in_room = 0
     _required_kills = 0
@@ -721,6 +804,23 @@ func _enter_shop_room() -> void:
 
 
 func _enter_treasure_room() -> void:
+    if _treasure_challenge_enabled:
+        _required_kills = maxi(1, _treasure_required_kills_base + _room_index * _treasure_required_kills_per_room)
+        _room_active = true
+        _set_doors_locked(true)
+        _room_timer_label.text = "0.0 s"
+        _room_status_label.text = "Treasure Room %d: Clear elite cache (%d) | Hazards: %s | Effects: %s | Style: %s" % [
+            _room_index,
+            _required_kills,
+            get_active_hazards_text(),
+            _get_active_chapter_effects_text(),
+            _get_route_style_label()
+        ]
+
+        if _spawner != null and _spawner.has_method("start_room_combat"):
+            _spawner.start_room_combat(_room_index, _treasure_challenge_combat_mode)
+        return
+
     _room_active = false
     _set_doors_locked(false)
     if _spawner != null and _spawner.has_method("stop_room_combat"):
@@ -728,26 +828,36 @@ func _enter_treasure_room() -> void:
 
     _room_timer_label.text = "-"
     _prepare_next_room_candidates()
+    _deploy_treasure_rewards("Treasure cache opened")
 
+
+func _deploy_treasure_rewards(status_prefix: String) -> void:
+    if _treasure_rewards_deployed:
+        return
+
+    _treasure_rewards_deployed = true
     var player_pos: Vector2 = _player.global_position if _player != null else global_position
-    var gold_reward: int = _scale_drop_amount(32 + _room_index * 2, _route_gold_drop_mult)
-    var ore_reward: int = _scale_drop_amount(1 + int((_room_index + 1) / 5), _route_ore_drop_mult)
+    var gold_reward: int = _scale_drop_amount(_treasure_gold_reward_base + _room_index * _treasure_gold_reward_per_room, _route_gold_drop_mult)
+    var ore_step_rooms: int = maxi(1, _treasure_ore_reward_step_rooms)
+    var ore_reward: int = _scale_drop_amount(_treasure_ore_reward_base + int((_room_index + 1) / ore_step_rooms), _route_ore_drop_mult)
     _spawn_direct_pickup("gold", gold_reward, "treasure_gold", player_pos + Vector2(-18.0, -8.0))
     _spawn_direct_pickup("ore", ore_reward, "treasure_ore", player_pos + Vector2(18.0, -10.0))
 
-    var accessory_chance: float = 0.28
+    var accessory_chance: float = _treasure_accessory_chance_base
     if _current_route_style == "vanguard":
-        accessory_chance = 0.34
+        accessory_chance = _treasure_accessory_chance_vanguard
     elif _current_route_style == "raider":
-        accessory_chance = 0.24
+        accessory_chance = _treasure_accessory_chance_raider
+    accessory_chance = clampf(accessory_chance, 0.0, 1.0)
 
     var accessory_note: String = ""
     if randf() <= accessory_chance:
         _spawn_direct_pickup("accessory", 1, "accessory_drop", player_pos + Vector2(0.0, 10.0))
         accessory_note = " + accessory cache"
 
-    _room_status_label.text = "Treasure Room %d: Loot deployed (Gold +%d, Ore +%d%s) | Style: %s\n%s" % [
-        _room_index,
+    _prepare_next_room_candidates()
+    _room_status_label.text = "%s: Loot deployed (Gold +%d, Ore +%d%s) | Style: %s\n%s" % [
+        status_prefix,
         gold_reward,
         ore_reward,
         accessory_note,
@@ -811,7 +921,7 @@ func _on_enemy_killed(_enemy_id: String, _position: Vector2) -> void:
     if not _room_active:
         return
 
-    if _current_room_type != ROOM_TYPE_COMBAT and _current_room_type != ROOM_TYPE_ELITE and _current_room_type != ROOM_TYPE_BOSS:
+    if not _is_combat_progress_room(_current_room_type):
         return
 
     _kills_in_room += 1
@@ -821,7 +931,7 @@ func _on_enemy_killed(_enemy_id: String, _position: Vector2) -> void:
 
 
 func _try_clear_room() -> void:
-    if _current_room_type != ROOM_TYPE_COMBAT and _current_room_type != ROOM_TYPE_ELITE and _current_room_type != ROOM_TYPE_BOSS:
+    if not _is_combat_progress_room(_current_room_type):
         return
 
     if _spawner != null and _spawner.has_method("get_alive_count"):
@@ -837,6 +947,8 @@ func _try_clear_room() -> void:
     EventBus.room_cleared.emit("room_%d" % _room_index)
     _set_doors_locked(false)
     var next_rooms: Array[int] = _prepare_next_room_candidates()
+    if _current_room_type == ROOM_TYPE_TREASURE:
+        _deploy_treasure_rewards("Treasure cache secured")
     if _current_room_type == ROOM_TYPE_BOSS:
         if next_rooms.is_empty():
             _finish_run("victory")
@@ -844,6 +956,10 @@ func _try_clear_room() -> void:
         var chapter: int = _get_chapter_index_for_room(_room_index)
         EventBus.memory_fragment_found.emit("memory_ch%d_boss" % chapter)
         _begin_chapter_transition(chapter)
+    elif _current_room_type == ROOM_TYPE_TREASURE:
+        if next_rooms.is_empty():
+            _finish_run("victory")
+            return
     else:
         if next_rooms.is_empty():
             _finish_run("victory")
@@ -1882,6 +1998,8 @@ func _set_doors_locked(locked: bool) -> void:
         _left_door.position.x = 170.0
         _right_door.position.x = 1110.0
 
+    _render_door_tiles(locked)
+
 
 func _build_shop_offers() -> Array[Dictionary]:
     var offers: Array[Dictionary] = []
@@ -2019,6 +2137,12 @@ func _get_shop_item_info(item_id: String) -> Dictionary:
             return {"title": "Precision Lens", "desc": "+5% crit chance"}
         "pas_force":
             return {"title": "Force Relic", "desc": "+16% crit multiplier"}
+        "pas_fortune":
+            return {"title": "Fortune Sigil", "desc": "+22 gold and better route readiness"}
+        "pas_resolve":
+            return {"title": "Resolve Plate", "desc": "+5% armor and +12 stamina max"}
+        "pas_momentum":
+            return {"title": "Momentum Circuit", "desc": "+14 move speed and faster weapon cycle"}
         "wpn_magic_missile":
             return {"title": "Missile Core", "desc": "+4 weapon damage"}
         "wpn_holy_cross":
@@ -2031,6 +2155,12 @@ func _get_shop_item_info(item_id: String) -> Dictionary:
             return {"title": "Shadow Tempest", "desc": "Faster attacks and wider volley"}
         "wpn_solar_supernova":
             return {"title": "Solar Supernova", "desc": "+8 damage and +2 projectile hits"}
+        "wpn_sacred_lance":
+            return {"title": "Sacred Lance", "desc": "+6 damage, +1 hit, focused single lance"}
+        "wpn_void_chain":
+            return {"title": "Void Chain", "desc": "+5 damage, chained spread volley"}
+        "wpn_frost_orb":
+            return {"title": "Frost Orb", "desc": "+4.5 damage, +1 hit, faster cadence"}
         _:
             return {"title": item_id, "desc": "Unknown effect"}
 
@@ -2138,6 +2268,21 @@ func _apply_shop_item_effect(item_id: String) -> void:
         "pas_force":
             if stats != null and stats.get("crit_multiplier") != null:
                 stats.crit_multiplier += 0.16
+        "pas_fortune":
+            _gold += 22
+            EventBus.gold_changed.emit(_gold)
+        "pas_resolve":
+            if stats != null:
+                if stats.get("armor") != null:
+                    stats.armor = minf(0.75, float(stats.armor) + 0.05)
+                if stats.get("stamina_max") != null and stats.get("current_stamina") != null:
+                    stats.stamina_max += 12.0
+                    stats.current_stamina = minf(stats.stamina_max, stats.current_stamina + 12.0)
+        "pas_momentum":
+            if stats != null and stats.get("base_move_speed") != null:
+                stats.base_move_speed += 14.0
+            if weapon != null and weapon.get("attack_interval") != null:
+                weapon.attack_interval = maxf(0.08, float(weapon.attack_interval) * 0.95)
         "wpn_magic_missile":
             if weapon != null and weapon.get("base_damage") != null:
                 weapon.base_damage += 4.0
@@ -2192,6 +2337,38 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.spread_angle_deg = clampf(float(weapon.spread_angle_deg) + 6.0, 0.0, 45.0)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "solar_supernova"
+        "wpn_sacred_lance":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 6.0
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "single"
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "sacred_lance"
+        "wpn_void_chain":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 5.0
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_count") != null:
+                    weapon.projectile_count = clampi(maxi(int(weapon.projectile_count), 2) + 1, 1, 8)
+                if weapon.get("spread_jitter_deg") != null:
+                    weapon.spread_jitter_deg = clampf(float(weapon.spread_jitter_deg) + 3.0, 0.0, 20.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "void_chain"
+        "wpn_frost_orb":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 4.5
+                if weapon.get("attack_interval") != null:
+                    weapon.attack_interval = maxf(0.08, float(weapon.attack_interval) * 0.94)
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "frost_orb"
 
 
 func _update_shop_text() -> void:
@@ -2246,6 +2423,41 @@ func _update_shop_text() -> void:
         lines.append(_shop_message)
 
     _room_status_label.text = "\n".join(PackedStringArray(lines))
+
+
+func _load_treasure_challenge_config() -> void:
+    _treasure_challenge_enabled = false
+    _treasure_challenge_combat_mode = "elite"
+    _treasure_required_kills_base = 4
+    _treasure_required_kills_per_room = 1
+    _treasure_gold_reward_base = 32
+    _treasure_gold_reward_per_room = 2
+    _treasure_ore_reward_base = 1
+    _treasure_ore_reward_step_rooms = 5
+    _treasure_accessory_chance_base = 0.28
+    _treasure_accessory_chance_vanguard = 0.34
+    _treasure_accessory_chance_raider = 0.24
+
+    var map_config: Dictionary = ConfigManager.get_config("map_generation", {})
+    var treasure_var: Variant = map_config.get("treasure_challenge", {})
+    if not (treasure_var is Dictionary):
+        return
+
+    var treasure_cfg: Dictionary = treasure_var
+    _treasure_challenge_enabled = bool(treasure_cfg.get("enabled", false))
+    var combat_mode: String = str(treasure_cfg.get("combat_mode", "elite")).strip_edges()
+    if combat_mode != "elite" and combat_mode != "normal":
+        combat_mode = "elite"
+    _treasure_challenge_combat_mode = combat_mode
+    _treasure_required_kills_base = maxi(1, int(treasure_cfg.get("required_kills_base", 4)))
+    _treasure_required_kills_per_room = maxi(0, int(treasure_cfg.get("required_kills_per_room", 1)))
+    _treasure_gold_reward_base = maxi(1, int(treasure_cfg.get("gold_reward_base", 32)))
+    _treasure_gold_reward_per_room = maxi(0, int(treasure_cfg.get("gold_reward_per_room", 2)))
+    _treasure_ore_reward_base = maxi(1, int(treasure_cfg.get("ore_reward_base", 1)))
+    _treasure_ore_reward_step_rooms = maxi(1, int(treasure_cfg.get("ore_reward_step_rooms", 5)))
+    _treasure_accessory_chance_base = clampf(float(treasure_cfg.get("accessory_chance_base", 0.28)), 0.0, 1.0)
+    _treasure_accessory_chance_vanguard = clampf(float(treasure_cfg.get("accessory_chance_vanguard", 0.34)), 0.0, 1.0)
+    _treasure_accessory_chance_raider = clampf(float(treasure_cfg.get("accessory_chance_raider", 0.24)), 0.0, 1.0)
 
 
 func _load_shop_economy_config() -> void:
@@ -2574,6 +2786,8 @@ func _get_hazard_intensity() -> float:
         base_intensity = 1.15
     elif _current_room_type == ROOM_TYPE_COMBAT:
         base_intensity = 1.0
+    elif _current_room_type == ROOM_TYPE_TREASURE and _treasure_challenge_enabled:
+        base_intensity = 1.05
     return base_intensity * _chapter_effect_hazard_mult * _route_hazard_mult
 
 
@@ -2588,28 +2802,407 @@ func _apply_room_theme(index: int) -> void:
     var palette_var: Variant = chapter_row.get("tile_palette", [])
     if not (palette_var is Array):
         _target_background_color = Color(0.10, 0.09, 0.13, 1.0)
+        _render_ground_tiles_for_room(index)
+        _render_ground_detail_tiles_for_room(index)
         return
 
     var palette: Array = palette_var
     if palette.is_empty():
         _target_background_color = Color(0.10, 0.09, 0.13, 1.0)
+        _render_ground_tiles_for_room(index)
+        _render_ground_detail_tiles_for_room(index)
         return
 
     _target_background_color = Color.html(str(palette[0]))
+    _render_ground_tiles_for_room(index)
+    _render_ground_detail_tiles_for_room(index)
+
+
+func _initialize_tile_layers() -> void:
+    _load_tileset_resources()
+
+    if _ground_tilemap != null:
+        var ground_tileset: TileSet = _get_ground_tileset_for_room(_room_index)
+        if ground_tileset != null:
+            _ground_tilemap.tile_set = ground_tileset
+    if _ground_detail_tilemap != null:
+        var ground_detail_tileset: TileSet = _get_ground_detail_tileset_for_room(_room_index)
+        if ground_detail_tileset != null:
+            _ground_detail_tilemap.tile_set = ground_detail_tileset
+    if _door_tilemap != null:
+        var door_tileset: TileSet = _get_door_tileset_for_room(_room_index)
+        if door_tileset != null:
+            _door_tilemap.tile_set = door_tileset
+    if _hazard_tilemap != null:
+        var hazard_tileset: TileSet = _get_hazard_tileset_for_room(_room_index)
+        if hazard_tileset != null:
+            _hazard_tilemap.tile_set = hazard_tileset
+        _hazard_tilemap.modulate = Color(0.18, 0.34, 0.50, 0.0)
+    if _ambient_fx_tilemap != null:
+        var ambient_tileset: TileSet = _get_ambient_fx_tileset_for_room(_room_index)
+        if ambient_tileset != null:
+            _ambient_fx_tilemap.tile_set = ambient_tileset
+        _ambient_fx_tilemap.modulate = Color(0.82, 0.88, 0.95, 0.0)
+        _ambient_fx_tilemap.position = Vector2.ZERO
+    _ambient_fx_scroll_offset = Vector2.ZERO
+    _visual_profile_anim_time = 0.0
+    _render_ground_tiles_for_room(_room_index)
+    _render_ground_detail_tiles_for_room(_room_index)
+    _render_door_tiles(false)
+    _render_hazard_tiles()
+    _render_ambient_fx_tiles()
+
+
+func _load_tileset_resources() -> void:
+    if _ground_tilesets.is_empty():
+        for chapter_id_var: Variant in GROUND_TILESET_PATHS.keys():
+            var chapter_id: String = str(chapter_id_var)
+            var path: String = str(GROUND_TILESET_PATHS.get(chapter_id, ""))
+            var tileset: TileSet = load(path)
+            if tileset != null:
+                _ground_tilesets[chapter_id] = tileset
+
+    if _ground_detail_tilesets.is_empty():
+        for chapter_id_var: Variant in GROUND_DETAIL_TILESET_PATHS.keys():
+            var chapter_id: String = str(chapter_id_var)
+            var path: String = str(GROUND_DETAIL_TILESET_PATHS.get(chapter_id, ""))
+            var tileset: TileSet = load(path)
+            if tileset != null:
+                _ground_detail_tilesets[chapter_id] = tileset
+
+    if _door_tilesets.is_empty():
+        for chapter_id_var: Variant in DOOR_TILESET_PATHS.keys():
+            var chapter_id: String = str(chapter_id_var)
+            var path: String = str(DOOR_TILESET_PATHS.get(chapter_id, ""))
+            var tileset: TileSet = load(path)
+            if tileset != null:
+                _door_tilesets[chapter_id] = tileset
+
+    if _hazard_tilesets.is_empty():
+        for chapter_id_var: Variant in HAZARD_TILESET_PATHS.keys():
+            var chapter_id: String = str(chapter_id_var)
+            var path: String = str(HAZARD_TILESET_PATHS.get(chapter_id, ""))
+            var tileset: TileSet = load(path)
+            if tileset != null:
+                _hazard_tilesets[chapter_id] = tileset
+
+    if _ambient_fx_tilesets.is_empty():
+        for chapter_id_var: Variant in AMBIENT_FX_TILESET_PATHS.keys():
+            var chapter_id: String = str(chapter_id_var)
+            var path: String = str(AMBIENT_FX_TILESET_PATHS.get(chapter_id, ""))
+            var tileset: TileSet = load(path)
+            if tileset != null:
+                _ambient_fx_tilesets[chapter_id] = tileset
+
+
+func _get_ground_tileset_for_room(index: int) -> TileSet:
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var chapter_tileset: TileSet = _ground_tilesets.get(chapter_id, null) as TileSet
+    if chapter_tileset != null:
+        return chapter_tileset
+
+    return _ground_tilesets.get("chapter_1", null) as TileSet
+
+
+func _get_door_tileset_for_room(index: int) -> TileSet:
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var chapter_tileset: TileSet = _door_tilesets.get(chapter_id, null) as TileSet
+    if chapter_tileset != null:
+        return chapter_tileset
+
+    return _door_tilesets.get("chapter_1", null) as TileSet
+
+
+func _get_ground_detail_tileset_for_room(index: int) -> TileSet:
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var chapter_tileset: TileSet = _ground_detail_tilesets.get(chapter_id, null) as TileSet
+    if chapter_tileset != null:
+        return chapter_tileset
+
+    return _ground_detail_tilesets.get("chapter_1", null) as TileSet
+
+
+func _get_hazard_tileset_for_room(index: int) -> TileSet:
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var chapter_tileset: TileSet = _hazard_tilesets.get(chapter_id, null) as TileSet
+    if chapter_tileset != null:
+        return chapter_tileset
+
+    return _hazard_tilesets.get("chapter_1", null) as TileSet
+
+
+func _get_ambient_fx_tileset_for_room(index: int) -> TileSet:
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var chapter_tileset: TileSet = _ambient_fx_tilesets.get(chapter_id, null) as TileSet
+    if chapter_tileset != null:
+        return chapter_tileset
+
+    return _ambient_fx_tilesets.get("chapter_1", null) as TileSet
+
+
+func _render_ground_tiles_for_room(index: int) -> void:
+    if _ground_tilemap == null:
+        return
+
+    var ground_tileset: TileSet = _get_ground_tileset_for_room(index)
+    if ground_tileset != null:
+        _ground_tilemap.tile_set = ground_tileset
+    if _ground_tilemap.tile_set == null:
+        return
+
+    _ground_tilemap.clear()
+
+    for y: int in range(TILE_GRID_HEIGHT):
+        for x: int in range(TILE_GRID_WIDTH):
+            var atlas_x: int = int((x + y + index) % 3)
+            _ground_tilemap.set_cell(0, Vector2i(x, y), TILE_SOURCE_ID, Vector2i(atlas_x, 0), 0)
+
+
+func _render_ground_detail_tiles_for_room(index: int) -> void:
+    if _ground_detail_tilemap == null:
+        return
+
+    var detail_tileset: TileSet = _get_ground_detail_tileset_for_room(index)
+    if detail_tileset != null:
+        _ground_detail_tilemap.tile_set = detail_tileset
+    if _ground_detail_tilemap.tile_set == null:
+        return
+
+    _ground_detail_tilemap.clear()
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var density: int = 13
+    if chapter_id == "chapter_2":
+        density = 11
+    elif chapter_id == "chapter_3":
+        density = 15
+    elif chapter_id == "chapter_4":
+        density = 10
+
+    var seed: int = index * 113 + chapter_id.hash()
+    for y: int in range(TILE_GRID_HEIGHT):
+        for x: int in range(TILE_GRID_WIDTH):
+            if posmod(x * 11 + y * 7 + seed, density) != 0:
+                continue
+            var atlas_x: int = int(posmod(x * 5 + y * 3 + seed, GROUND_DETAIL_TILE_VARIANTS))
+            _ground_detail_tilemap.set_cell(0, Vector2i(x, y), TILE_SOURCE_ID, Vector2i(atlas_x, 0), 0)
+
+
+func _render_door_tiles(locked: bool) -> void:
+    if _door_tilemap == null:
+        return
+
+    var door_tileset: TileSet = _get_door_tileset_for_room(_room_index)
+    if door_tileset != null:
+        _door_tilemap.tile_set = door_tileset
+    if _door_tilemap.tile_set == null:
+        return
+
+    _door_tilemap.clear()
+    var atlas_x: int = 1 if locked else 0
+    var left_col: int = 12 if locked else 4
+    var right_col: int = 26 if locked else 34
+
+    for y: int in range(8, 15):
+        for width: int in range(2):
+            _door_tilemap.set_cell(0, Vector2i(left_col + width, y), TILE_SOURCE_ID, Vector2i(atlas_x, 0), 0)
+            _door_tilemap.set_cell(0, Vector2i(right_col + width, y), TILE_SOURCE_ID, Vector2i(atlas_x, 0), 0)
+
+
+func _render_hazard_tiles() -> void:
+    if _hazard_tilemap == null:
+        return
+
+    var hazard_tileset: TileSet = _get_hazard_tileset_for_room(_room_index)
+    if hazard_tileset != null:
+        _hazard_tilemap.tile_set = hazard_tileset
+    if _hazard_tilemap.tile_set == null:
+        return
+
+    _hazard_tilemap.clear()
+    _hazard_anim_cells.clear()
+    _hazard_anim_timer = 0.0
+    _hazard_anim_frame = 0
+    if _active_hazards.is_empty():
+        return
+
+    var hazard_signature: String = "|".join(_active_hazards)
+    var seed: int = hazard_signature.hash() + _room_index * 97
+    for y: int in range(TILE_GRID_HEIGHT):
+        for x: int in range(TILE_GRID_WIDTH):
+            if posmod(x * 3 + y * 5 + seed, 4) == 0:
+                continue
+            var phase: int = int(posmod(x * 17 + y * 31 + seed, HAZARD_TILE_VARIANTS))
+            var cell_pos: Vector2i = Vector2i(x, y)
+            _hazard_tilemap.set_cell(0, cell_pos, HAZARD_TILE_SOURCE_ID, Vector2i(phase, 0), 0)
+            _hazard_anim_cells.append({"pos": cell_pos, "phase": phase})
+
+
+func _render_ambient_fx_tiles() -> void:
+    if _ambient_fx_tilemap == null:
+        return
+
+    var ambient_tileset: TileSet = _get_ambient_fx_tileset_for_room(_room_index)
+    if ambient_tileset != null:
+        _ambient_fx_tilemap.tile_set = ambient_tileset
+    if _ambient_fx_tilemap.tile_set == null:
+        return
+
+    _ambient_fx_tilemap.clear()
+    _ambient_fx_anim_cells.clear()
+    _ambient_fx_anim_timer = 0.0
+    _ambient_fx_anim_frame = 0
+
+    var chapter_id: String = _get_chapter_id_for_room(_room_index)
+    var density: int = 19
+    if chapter_id == "chapter_2":
+        density = 17
+    elif chapter_id == "chapter_3":
+        density = 22
+    elif chapter_id == "chapter_4":
+        density = 16
+
+    var room_seed: int = _room_index * 149 + chapter_id.hash()
+    for y: int in range(TILE_GRID_HEIGHT):
+        for x: int in range(TILE_GRID_WIDTH):
+            if posmod(x * 7 + y * 13 + room_seed, density) != 0:
+                continue
+            var phase: int = int(posmod(x * 19 + y * 11 + room_seed, AMBIENT_FX_TILE_VARIANTS))
+            var cell_pos: Vector2i = Vector2i(x, y)
+            _ambient_fx_tilemap.set_cell(0, cell_pos, AMBIENT_FX_TILE_SOURCE_ID, Vector2i(phase, 0), 0)
+            _ambient_fx_anim_cells.append({"pos": cell_pos, "phase": phase})
+
+
+func _update_hazard_tile_animation(delta: float) -> void:
+    if _hazard_tilemap == null or _hazard_tilemap.tile_set == null:
+        return
+    if _hazard_anim_cells.is_empty() or _active_hazards.is_empty():
+        return
+
+    var interval: float = _get_hazard_anim_interval(_room_index)
+    if interval <= 0.0:
+        return
+
+    _hazard_anim_timer += delta
+    if _hazard_anim_timer < interval:
+        return
+
+    var steps: int = maxi(1, int(floor(_hazard_anim_timer / interval)))
+    _hazard_anim_timer = fposmod(_hazard_anim_timer, interval)
+    _hazard_anim_frame = int(posmod(_hazard_anim_frame + steps, HAZARD_TILE_VARIANTS))
+
+    for row_var: Variant in _hazard_anim_cells:
+        if not (row_var is Dictionary):
+            continue
+        var row: Dictionary = row_var
+        var pos_var: Variant = row.get("pos", Vector2i.ZERO)
+        if not (pos_var is Vector2i):
+            continue
+        var cell_pos: Vector2i = pos_var
+        var phase: int = int(row.get("phase", 0))
+        var atlas_x: int = int(posmod(phase + _hazard_anim_frame, HAZARD_TILE_VARIANTS))
+        _hazard_tilemap.set_cell(0, cell_pos, HAZARD_TILE_SOURCE_ID, Vector2i(atlas_x, 0), 0)
+
+
+func _update_ambient_fx_animation(delta: float) -> void:
+    if _ambient_fx_tilemap == null or _ambient_fx_tilemap.tile_set == null:
+        return
+    if _ambient_fx_anim_cells.is_empty():
+        return
+
+    var interval: float = _get_ambient_fx_interval(_room_index)
+    if interval <= 0.0:
+        return
+
+    _ambient_fx_anim_timer += delta
+    if _ambient_fx_anim_timer < interval:
+        return
+
+    var steps: int = maxi(1, int(floor(_ambient_fx_anim_timer / interval)))
+    _ambient_fx_anim_timer = fposmod(_ambient_fx_anim_timer, interval)
+    _ambient_fx_anim_frame = int(posmod(_ambient_fx_anim_frame + steps, AMBIENT_FX_TILE_VARIANTS))
+
+    for row_var: Variant in _ambient_fx_anim_cells:
+        if not (row_var is Dictionary):
+            continue
+        var row: Dictionary = row_var
+        var pos_var: Variant = row.get("pos", Vector2i.ZERO)
+        if not (pos_var is Vector2i):
+            continue
+        var cell_pos: Vector2i = pos_var
+        var phase: int = int(row.get("phase", 0))
+        var atlas_x: int = int(posmod(phase + _ambient_fx_anim_frame, AMBIENT_FX_TILE_VARIANTS))
+        _ambient_fx_tilemap.set_cell(0, cell_pos, AMBIENT_FX_TILE_SOURCE_ID, Vector2i(atlas_x, 0), 0)
 
 
 func _update_environment_visuals(delta: float) -> void:
     if _background != null:
         _background.color = _background.color.lerp(_target_background_color, clampf(delta * 2.4, 0.0, 1.0))
 
-    if _hazard_tint != null:
+    _visual_profile_anim_time += delta
+
+    _update_hazard_tile_animation(delta)
+    _update_ambient_fx_animation(delta)
+
+    var visual_profile: Dictionary = _get_chapter_visual_profile(_room_index)
+    var detail_tint: Color = _get_visual_profile_color(visual_profile, "detail_tint", "#D4DEE6")
+    var detail_alpha_mult: float = _get_visual_profile_value(visual_profile, "detail_alpha", 0.65, 0.20, 1.00)
+    var detail_pulse_speed: float = _get_visual_profile_value(visual_profile, "detail_pulse_speed", 0.0, 0.0, 6.0)
+    var detail_pulse_amplitude: float = _get_visual_profile_value(visual_profile, "detail_pulse_amplitude", 0.0, 0.0, 0.25)
+    var hazard_alpha_mult: float = _get_visual_profile_value(visual_profile, "hazard_alpha_mult", 1.0, 0.40, 1.60)
+    var ambient_alpha_mult: float = _get_visual_profile_value(visual_profile, "ambient_alpha_mult", 1.0, 0.40, 1.60)
+    var ambient_wave_speed: float = _get_visual_profile_value(visual_profile, "ambient_wave_speed", 0.0, 0.0, 6.0)
+    var ambient_wave_amplitude: float = _get_visual_profile_value(visual_profile, "ambient_wave_amplitude", 0.0, 0.0, 0.25)
+    var ambient_scroll_x: float = _get_visual_profile_value(visual_profile, "ambient_scroll_speed_x", 0.0, -8.0, 8.0)
+    var ambient_scroll_y: float = _get_visual_profile_value(visual_profile, "ambient_scroll_speed_y", 0.0, -8.0, 8.0)
+    var anim_factors: Dictionary = _get_visual_profile_anim_factors(
+        detail_pulse_speed,
+        detail_pulse_amplitude,
+        ambient_wave_speed,
+        ambient_wave_amplitude,
+        _visual_profile_anim_time
+    )
+    var detail_pulse: float = float(anim_factors.get("detail_pulse", 0.0))
+    var ambient_wave: float = float(anim_factors.get("ambient_wave", 0.0))
+
+    if _ground_detail_tilemap != null:
+        var detail_color: Color = detail_tint.lerp(_route_theme_tint, _route_theme_blend * 0.20)
+        var detail_alpha: float = 0.08
+        if _room_active and _is_combat_progress_room(_current_room_type):
+            detail_alpha = 0.12 + 0.03 * _get_hazard_intensity()
+        detail_alpha = clampf(detail_alpha + detail_pulse, 0.02, 0.95)
+        detail_color.a = clampf(detail_alpha * detail_alpha_mult, 0.0, 0.90)
+        _ground_detail_tilemap.modulate = _ground_detail_tilemap.modulate.lerp(detail_color, clampf(delta * 2.2, 0.0, 1.0))
+
+    if _hazard_tilemap != null:
         var tint_color: Color = _resolve_hazard_tint_color()
         var intensity: float = _get_hazard_intensity()
         var target_alpha: float = 0.0
-        if _room_active and intensity > 0.0:
-            target_alpha = 0.06 + 0.05 * intensity
+        if _room_active and intensity > 0.0 and not _active_hazards.is_empty():
+            target_alpha = (0.08 + 0.10 * intensity) * hazard_alpha_mult
         tint_color.a = target_alpha
-        _hazard_tint.color = _hazard_tint.color.lerp(tint_color, clampf(delta * 2.8, 0.0, 1.0))
+        _hazard_tilemap.modulate = _hazard_tilemap.modulate.lerp(tint_color, clampf(delta * 3.0, 0.0, 1.0))
+
+    if _ambient_fx_tilemap != null:
+        var chapter_id: String = _get_chapter_id_for_room(_room_index)
+        var ambient_color: Color = Color(0.82, 0.88, 0.95, 1.0)
+        if chapter_id == "chapter_2":
+            ambient_color = Color(0.94, 0.62, 0.38, 1.0)
+        elif chapter_id == "chapter_3":
+            ambient_color = Color(0.70, 0.90, 1.0, 1.0)
+        elif chapter_id == "chapter_4":
+            ambient_color = Color(0.90, 0.56, 0.98, 1.0)
+
+        ambient_color = ambient_color.lerp(_route_theme_tint, _route_theme_blend * 0.35)
+        var ambient_alpha: float = 0.0
+        if _room_active and _is_combat_progress_room(_current_room_type):
+            ambient_alpha = (0.05 + 0.02 * _get_hazard_intensity()) * ambient_alpha_mult
+            ambient_alpha = maxf(0.0, ambient_alpha + ambient_wave)
+        ambient_color.a = ambient_alpha
+        _ambient_fx_tilemap.modulate = _ambient_fx_tilemap.modulate.lerp(ambient_color, clampf(delta * 2.6, 0.0, 1.0))
+
+        _ambient_fx_scroll_offset.x = wrapf(_ambient_fx_scroll_offset.x + ambient_scroll_x * delta, -24.0, 24.0)
+        _ambient_fx_scroll_offset.y = wrapf(_ambient_fx_scroll_offset.y + ambient_scroll_y * delta, -24.0, 24.0)
+        _ambient_fx_tilemap.position = _ambient_fx_scroll_offset
 
     if _hazard_flash != null:
         _hazard_flash.color.a = maxf(0.0, _hazard_flash.color.a - 1.35 * delta)
@@ -2646,10 +3239,61 @@ func _get_chapter_environment_row(index: int) -> Dictionary:
     return chapters.get(chapter_id, {})
 
 
+func _get_hazard_anim_interval(index: int) -> float:
+    var chapter_row: Dictionary = _get_chapter_environment_row(index)
+    return clampf(float(chapter_row.get("hazard_anim_interval", 0.16)), 0.08, 0.40)
+
+
+func _get_ambient_fx_interval(index: int) -> float:
+    var chapter_row: Dictionary = _get_chapter_environment_row(index)
+    return clampf(float(chapter_row.get("ambient_fx_interval", 0.24)), 0.12, 0.60)
+
+
+func _get_chapter_visual_profile(index: int) -> Dictionary:
+    var chapter_row: Dictionary = _get_chapter_environment_row(index)
+    var profile_var: Variant = chapter_row.get("visual_profile", {})
+    if profile_var is Dictionary:
+        return profile_var
+    return {}
+
+
+func _get_visual_profile_value(profile: Dictionary, key: String, default_value: float, min_value: float, max_value: float) -> float:
+    return clampf(float(profile.get(key, default_value)), min_value, max_value)
+
+
+func _get_visual_profile_color(profile: Dictionary, key: String, default_hex: String) -> Color:
+    var raw: String = str(profile.get(key, default_hex))
+    var is_hex: bool = raw.begins_with("#") and (raw.length() == 7 or raw.length() == 9)
+    if not is_hex:
+        raw = default_hex
+    return Color.html(raw)
+
+
+func _get_visual_profile_anim_factors(
+    detail_pulse_speed: float,
+    detail_pulse_amplitude: float,
+    ambient_wave_speed: float,
+    ambient_wave_amplitude: float,
+    time_value: float
+) -> Dictionary:
+    var detail_pulse: float = 0.0
+    if detail_pulse_speed > 0.0 and detail_pulse_amplitude > 0.0:
+        detail_pulse = sin(time_value * detail_pulse_speed + float(_room_index) * 0.37) * detail_pulse_amplitude
+
+    var ambient_wave: float = 0.0
+    if ambient_wave_speed > 0.0 and ambient_wave_amplitude > 0.0:
+        ambient_wave = sin(time_value * ambient_wave_speed + float(_room_index) * 0.21 + 1.2) * ambient_wave_amplitude
+
+    return {
+        "detail_pulse": detail_pulse,
+        "ambient_wave": ambient_wave
+    }
+
+
 func _process_environment_hazards(delta: float) -> void:
     _hazard_wave += delta
 
-    var is_hazard_room: bool = _room_active and (_current_room_type == ROOM_TYPE_COMBAT or _current_room_type == ROOM_TYPE_ELITE or _current_room_type == ROOM_TYPE_BOSS)
+    var is_hazard_room: bool = _room_active and _is_combat_progress_room(_current_room_type)
     var intensity: float = _get_hazard_intensity()
 
     if not is_hazard_room:

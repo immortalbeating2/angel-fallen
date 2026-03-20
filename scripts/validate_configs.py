@@ -17,6 +17,7 @@ REQUIRED_FILES = {
     "narrative_content.json",
     "achievements.json",
     "meta_upgrades.json",
+    "quality_baseline_targets.json",
 }
 
 
@@ -28,6 +29,20 @@ def _to_float(value: Any) -> float | None:
     if _is_number(value):
         return float(value)
     return None
+
+
+def _is_hex_color(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    if len(value) not in (7, 9):
+        return False
+    if not value.startswith("#"):
+        return False
+    try:
+        int(value[1:], 16)
+        return True
+    except ValueError:
+        return False
 
 
 def _add_error(errors: list[str], message: str) -> None:
@@ -219,6 +234,7 @@ def _validate_map_generation(data: dict[str, Any], errors: list[str]) -> None:
     fixed_rooms = data.get("fixed_rooms")
     base_weights = data.get("base_room_weights")
     chapter_mult = data.get("chapter_room_weight_mult")
+    treasure_challenge = data.get("treasure_challenge")
     constraints = data.get("constraints")
 
     if not isinstance(room_count, int) or room_count < 8:
@@ -325,6 +341,49 @@ def _validate_map_generation(data: dict[str, Any], errors: list[str]) -> None:
                 value = _to_float(row.get(key))
                 if value is None or value < 0.0 or value > 3.0:
                     _add_error(errors, f"map_generation.json chapter_room_weight_mult.{chapter_id}.{key} must be within [0, 3]")
+
+    if treasure_challenge is not None:
+        if not isinstance(treasure_challenge, dict):
+            _add_error(errors, "map_generation.json treasure_challenge must be object")
+        else:
+            enabled = treasure_challenge.get("enabled")
+            combat_mode = treasure_challenge.get("combat_mode")
+            required_kills_base = treasure_challenge.get("required_kills_base")
+            required_kills_per_room = treasure_challenge.get("required_kills_per_room")
+            gold_reward_base = treasure_challenge.get("gold_reward_base")
+            gold_reward_per_room = treasure_challenge.get("gold_reward_per_room")
+            ore_reward_base = treasure_challenge.get("ore_reward_base")
+            ore_reward_step_rooms = treasure_challenge.get("ore_reward_step_rooms")
+            accessory_chance_base = treasure_challenge.get("accessory_chance_base")
+            accessory_chance_vanguard = treasure_challenge.get("accessory_chance_vanguard")
+            accessory_chance_raider = treasure_challenge.get("accessory_chance_raider")
+
+            if not isinstance(enabled, bool):
+                _add_error(errors, "map_generation.json treasure_challenge.enabled must be bool")
+            if not isinstance(combat_mode, str) or combat_mode not in {"elite", "normal"}:
+                _add_error(errors, "map_generation.json treasure_challenge.combat_mode must be 'elite' or 'normal'")
+            if not isinstance(required_kills_base, int) or required_kills_base < 1 or required_kills_base > 20:
+                _add_error(errors, "map_generation.json treasure_challenge.required_kills_base must be int within [1, 20]")
+            if not isinstance(required_kills_per_room, int) or required_kills_per_room < 0 or required_kills_per_room > 4:
+                _add_error(errors, "map_generation.json treasure_challenge.required_kills_per_room must be int within [0, 4]")
+            if not isinstance(gold_reward_base, int) or gold_reward_base < 1 or gold_reward_base > 120:
+                _add_error(errors, "map_generation.json treasure_challenge.gold_reward_base must be int within [1, 120]")
+            if not isinstance(gold_reward_per_room, int) or gold_reward_per_room < 0 or gold_reward_per_room > 12:
+                _add_error(errors, "map_generation.json treasure_challenge.gold_reward_per_room must be int within [0, 12]")
+            if not isinstance(ore_reward_base, int) or ore_reward_base < 1 or ore_reward_base > 8:
+                _add_error(errors, "map_generation.json treasure_challenge.ore_reward_base must be int within [1, 8]")
+            if not isinstance(ore_reward_step_rooms, int) or ore_reward_step_rooms < 1 or ore_reward_step_rooms > 12:
+                _add_error(errors, "map_generation.json treasure_challenge.ore_reward_step_rooms must be int within [1, 12]")
+
+            base_chance_f = _to_float(accessory_chance_base)
+            vanguard_chance_f = _to_float(accessory_chance_vanguard)
+            raider_chance_f = _to_float(accessory_chance_raider)
+            if base_chance_f is None or base_chance_f < 0.0 or base_chance_f > 1.0:
+                _add_error(errors, "map_generation.json treasure_challenge.accessory_chance_base must be within [0, 1]")
+            if vanguard_chance_f is None or vanguard_chance_f < 0.0 or vanguard_chance_f > 1.0:
+                _add_error(errors, "map_generation.json treasure_challenge.accessory_chance_vanguard must be within [0, 1]")
+            if raider_chance_f is None or raider_chance_f < 0.0 or raider_chance_f > 1.0:
+                _add_error(errors, "map_generation.json treasure_challenge.accessory_chance_raider must be within [0, 1]")
 
     if constraints is not None:
         if not isinstance(constraints, dict):
@@ -741,6 +800,57 @@ def _validate_environment_config(data: dict[str, Any], errors: list[str]) -> Non
         hazards = row.get("hazards")
         if not isinstance(hazards, list) or not hazards:
             _add_error(errors, f"environment_config.json {chapter_key}.hazards must be non-empty array")
+        hazard_anim_interval = _to_float(row.get("hazard_anim_interval", 0.16))
+        if hazard_anim_interval is None or hazard_anim_interval < 0.08 or hazard_anim_interval > 0.40:
+            _add_error(errors, f"environment_config.json {chapter_key}.hazard_anim_interval must be within [0.08, 0.40]")
+        ambient_fx_interval = _to_float(row.get("ambient_fx_interval", 0.24))
+        if ambient_fx_interval is None or ambient_fx_interval < 0.12 or ambient_fx_interval > 0.60:
+            _add_error(errors, f"environment_config.json {chapter_key}.ambient_fx_interval must be within [0.12, 0.60]")
+
+        visual_profile = row.get("visual_profile", {})
+        if not isinstance(visual_profile, dict):
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile must be object")
+            continue
+
+        detail_tint = visual_profile.get("detail_tint", "#FFFFFF")
+        if not _is_hex_color(detail_tint):
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_tint must be hex color string")
+
+        detail_alpha = _to_float(visual_profile.get("detail_alpha", 0.65))
+        if detail_alpha is None or detail_alpha < 0.20 or detail_alpha > 1.00:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_alpha must be within [0.20, 1.00]")
+
+        detail_pulse_speed = _to_float(visual_profile.get("detail_pulse_speed", 0.0))
+        if detail_pulse_speed is None or detail_pulse_speed < 0.0 or detail_pulse_speed > 6.0:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_pulse_speed must be within [0.0, 6.0]")
+
+        detail_pulse_amplitude = _to_float(visual_profile.get("detail_pulse_amplitude", 0.0))
+        if detail_pulse_amplitude is None or detail_pulse_amplitude < 0.0 or detail_pulse_amplitude > 0.25:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_pulse_amplitude must be within [0.0, 0.25]")
+
+        hazard_alpha_mult = _to_float(visual_profile.get("hazard_alpha_mult", 1.0))
+        if hazard_alpha_mult is None or hazard_alpha_mult < 0.40 or hazard_alpha_mult > 1.60:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.hazard_alpha_mult must be within [0.40, 1.60]")
+
+        ambient_alpha_mult = _to_float(visual_profile.get("ambient_alpha_mult", 1.0))
+        if ambient_alpha_mult is None or ambient_alpha_mult < 0.40 or ambient_alpha_mult > 1.60:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_alpha_mult must be within [0.40, 1.60]")
+
+        ambient_wave_speed = _to_float(visual_profile.get("ambient_wave_speed", 0.0))
+        if ambient_wave_speed is None or ambient_wave_speed < 0.0 or ambient_wave_speed > 6.0:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_wave_speed must be within [0.0, 6.0]")
+
+        ambient_wave_amplitude = _to_float(visual_profile.get("ambient_wave_amplitude", 0.0))
+        if ambient_wave_amplitude is None or ambient_wave_amplitude < 0.0 or ambient_wave_amplitude > 0.25:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_wave_amplitude must be within [0.0, 0.25]")
+
+        ambient_scroll_speed_x = _to_float(visual_profile.get("ambient_scroll_speed_x", 0.0))
+        if ambient_scroll_speed_x is None or ambient_scroll_speed_x < -8.0 or ambient_scroll_speed_x > 8.0:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_scroll_speed_x must be within [-8.0, 8.0]")
+
+        ambient_scroll_speed_y = _to_float(visual_profile.get("ambient_scroll_speed_y", 0.0))
+        if ambient_scroll_speed_y is None or ambient_scroll_speed_y < -8.0 or ambient_scroll_speed_y > 8.0:
+            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_scroll_speed_y must be within [-8.0, 8.0]")
 
 
 def _validate_boss_phases(data: dict[str, Any], errors: list[str]) -> None:
@@ -1057,6 +1167,145 @@ def _validate_evolutions(data: dict[str, Any], errors: list[str]) -> None:
             _add_error(errors, f"evolutions.json evolutions[{i}].evolution_profile.projectile_style must be non-empty string")
 
 
+def _validate_quality_baseline_targets(data: dict[str, Any], errors: list[str]) -> None:
+    scenarios = data.get("scenarios")
+    targets = data.get("targets")
+    compatibility = data.get("compatibility_matrix")
+    required_scenarios = {
+        "menu_idle",
+        "game_world_idle",
+        "game_world_elite_pressure_medium",
+        "game_world_elite_pressure_high",
+        "game_world_elite_pressure_extreme",
+    }
+
+    if not isinstance(scenarios, dict) or not scenarios:
+        _add_error(errors, "quality_baseline_targets.json scenarios must be non-empty object")
+    else:
+        for scenario_id in required_scenarios:
+            row = scenarios.get(scenario_id)
+            if not isinstance(row, dict):
+                _add_error(errors, f"quality_baseline_targets.json scenarios missing '{scenario_id}'")
+                continue
+
+            scene = row.get("scene")
+            warmup_frames = row.get("warmup_frames")
+            sample_frames = row.get("sample_frames")
+            setup = row.get("setup", "none")
+
+            if not isinstance(scene, str) or not scene.startswith("res://"):
+                _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.scene must start with 'res://'")
+            if not isinstance(warmup_frames, int) or warmup_frames < 0 or warmup_frames > 300:
+                _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.warmup_frames must be int within [0, 300]")
+            if not isinstance(sample_frames, int) or sample_frames < 60 or sample_frames > 1800:
+                _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.sample_frames must be int within [60, 1800]")
+            if not isinstance(setup, str) or setup not in {"none", "elite_pressure_medium", "elite_pressure_high", "elite_pressure_extreme"}:
+                _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.setup must be one of none/elite_pressure_medium/elite_pressure_high/elite_pressure_extreme")
+
+    if not isinstance(targets, dict) or not targets:
+        _add_error(errors, "quality_baseline_targets.json targets must be non-empty object")
+    else:
+        frame_time = targets.get("frame_time_ms")
+        memory = targets.get("memory_mb")
+        node_pressure = targets.get("node_pressure")
+        alert_grading = targets.get("alert_grading")
+
+        if not isinstance(frame_time, dict) or not frame_time:
+            _add_error(errors, "quality_baseline_targets.json targets.frame_time_ms must be non-empty object")
+        else:
+            for scenario_id in required_scenarios:
+                row = frame_time.get(scenario_id)
+                if not isinstance(row, dict):
+                    _add_error(errors, f"quality_baseline_targets.json targets.frame_time_ms missing '{scenario_id}'")
+                    continue
+                avg_max = _to_float(row.get("avg_max"))
+                p95_max = _to_float(row.get("p95_max"))
+                if avg_max is None or avg_max <= 0.0 or avg_max > 120.0:
+                    _add_error(errors, f"quality_baseline_targets.json targets.frame_time_ms.{scenario_id}.avg_max must be within (0, 120]")
+                if p95_max is None or p95_max <= 0.0 or p95_max > 200.0:
+                    _add_error(errors, f"quality_baseline_targets.json targets.frame_time_ms.{scenario_id}.p95_max must be within (0, 200]")
+                if avg_max is not None and p95_max is not None and p95_max < avg_max:
+                    _add_error(errors, f"quality_baseline_targets.json targets.frame_time_ms.{scenario_id}.p95_max cannot be lower than avg_max")
+
+        if not isinstance(memory, dict) or not memory:
+            _add_error(errors, "quality_baseline_targets.json targets.memory_mb must be non-empty object")
+        else:
+            for scenario_id in required_scenarios:
+                row = memory.get(scenario_id)
+                if not isinstance(row, dict):
+                    _add_error(errors, f"quality_baseline_targets.json targets.memory_mb missing '{scenario_id}'")
+                    continue
+                peak_max = _to_float(row.get("peak_max"))
+                if peak_max is None or peak_max < 64.0 or peak_max > 4096.0:
+                    _add_error(errors, f"quality_baseline_targets.json targets.memory_mb.{scenario_id}.peak_max must be within [64, 4096]")
+
+        if not isinstance(node_pressure, dict) or not node_pressure:
+            _add_error(errors, "quality_baseline_targets.json targets.node_pressure must be non-empty object")
+        else:
+            for key in ("enemy_peak_warning", "projectile_peak_warning", "pickup_peak_warning"):
+                value = node_pressure.get(key)
+                if not isinstance(value, int) or value < 1:
+                    _add_error(errors, f"quality_baseline_targets.json targets.node_pressure.{key} must be int >= 1")
+
+        if not isinstance(alert_grading, dict) or not alert_grading:
+            _add_error(errors, "quality_baseline_targets.json targets.alert_grading must be non-empty object")
+        else:
+            frame_warning = _to_float(alert_grading.get("frame_time_ratio_warning"))
+            frame_critical = _to_float(alert_grading.get("frame_time_ratio_critical"))
+            memory_warning = _to_float(alert_grading.get("memory_ratio_warning"))
+            memory_critical = _to_float(alert_grading.get("memory_ratio_critical"))
+            pressure_warning = _to_float(alert_grading.get("node_pressure_ratio_warning"))
+            pressure_critical = _to_float(alert_grading.get("node_pressure_ratio_critical"))
+
+            if frame_warning is None or frame_warning < 1.0 or frame_warning > 2.0:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.frame_time_ratio_warning must be within [1.0, 2.0]")
+            if frame_critical is None or frame_critical < 1.0 or frame_critical > 3.0:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.frame_time_ratio_critical must be within [1.0, 3.0]")
+            if memory_warning is None or memory_warning < 1.0 or memory_warning > 2.0:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.memory_ratio_warning must be within [1.0, 2.0]")
+            if memory_critical is None or memory_critical < 1.0 or memory_critical > 3.0:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.memory_ratio_critical must be within [1.0, 3.0]")
+            if pressure_warning is None or pressure_warning < 1.0 or pressure_warning > 2.0:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.node_pressure_ratio_warning must be within [1.0, 2.0]")
+            if pressure_critical is None or pressure_critical < 1.0 or pressure_critical > 3.0:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.node_pressure_ratio_critical must be within [1.0, 3.0]")
+
+            if frame_warning is not None and frame_critical is not None and frame_critical < frame_warning:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.frame_time_ratio_critical cannot be lower than frame_time_ratio_warning")
+            if memory_warning is not None and memory_critical is not None and memory_critical < memory_warning:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.memory_ratio_critical cannot be lower than memory_ratio_warning")
+            if pressure_warning is not None and pressure_critical is not None and pressure_critical < pressure_warning:
+                _add_error(errors, "quality_baseline_targets.json targets.alert_grading.node_pressure_ratio_critical cannot be lower than node_pressure_ratio_warning")
+
+    if not isinstance(compatibility, dict) or not compatibility:
+        _add_error(errors, "quality_baseline_targets.json compatibility_matrix must be non-empty object")
+    else:
+        platforms = compatibility.get("platforms")
+        resolutions = compatibility.get("resolutions")
+        required_actions = compatibility.get("required_actions")
+
+        if not isinstance(platforms, list) or not platforms:
+            _add_error(errors, "quality_baseline_targets.json compatibility_matrix.platforms must be non-empty array")
+        else:
+            for idx, row in enumerate(platforms):
+                if not isinstance(row, str) or not row.strip():
+                    _add_error(errors, f"quality_baseline_targets.json compatibility_matrix.platforms[{idx}] must be non-empty string")
+
+        if not isinstance(resolutions, list) or not resolutions:
+            _add_error(errors, "quality_baseline_targets.json compatibility_matrix.resolutions must be non-empty array")
+        else:
+            for idx, row in enumerate(resolutions):
+                if not isinstance(row, str) or "x" not in row:
+                    _add_error(errors, f"quality_baseline_targets.json compatibility_matrix.resolutions[{idx}] must be WxH string")
+
+        if not isinstance(required_actions, list) or not required_actions:
+            _add_error(errors, "quality_baseline_targets.json compatibility_matrix.required_actions must be non-empty array")
+        else:
+            for idx, row in enumerate(required_actions):
+                if not isinstance(row, str) or not row.strip():
+                    _add_error(errors, f"quality_baseline_targets.json compatibility_matrix.required_actions[{idx}] must be non-empty string")
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     balance_dir = root / "data" / "balance"
@@ -1103,6 +1352,8 @@ def main() -> int:
         _validate_meta_upgrades(parsed_by_name["meta_upgrades.json"], errors)
     if "evolutions.json" in parsed_by_name:
         _validate_evolutions(parsed_by_name["evolutions.json"], errors)
+    if "quality_baseline_targets.json" in parsed_by_name:
+        _validate_quality_baseline_targets(parsed_by_name["quality_baseline_targets.json"], errors)
 
     if warnings:
         for message in warnings:

@@ -1,0 +1,112 @@
+{
+  "scenarios": {
+    "menu_idle": {
+      "scene": "res://scenes/main_menu/main_menu.tscn",
+      "warmup_frames": 30,
+      "sample_frames": 180,
+      "setup": "none"
+    },
+    "game_world_idle": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "warmup_frames": 40,
+      "sample_frames": 240,
+      "setup": "none"
+    },
+    "game_world_elite_pressure_medium": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "warmup_frames": 50,
+      "sample_frames": 300,
+      "setup": "elite_pressure_medium"
+    },
+    "game_world_elite_pressure_high": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "warmup_frames": 50,
+      "sample_frames": 320,
+      "setup": "elite_pressure_high"
+    },
+    "game_world_elite_pressure_extreme": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "warmup_frames": 60,
+      "sample_frames": 360,
+      "setup": "elite_pressure_extreme"
+    }
+  },
+  "targets": {
+    "frame_time_ms": {
+      "menu_idle": {
+        "avg_max": 20.0,
+        "p95_max": 28.0
+      },
+      "game_world_idle": {
+        "avg_max": 22.0,
+        "p95_max": 30.0
+      },
+      "game_world_elite_pressure_medium": {
+        "avg_max": 25.0,
+        "p95_max": 35.0
+      },
+      "game_world_elite_pressure_high": {
+        "avg_max": 28.0,
+        "p95_max": 39.0
+      },
+      "game_world_elite_pressure_extreme": {
+        "avg_max": 32.0,
+        "p95_max": 45.0
+      }
+    },
+    "memory_mb": {
+      "menu_idle": {
+        "peak_max": 300.0
+      },
+      "game_world_idle": {
+        "peak_max": 420.0
+      },
+      "game_world_elite_pressure_medium": {
+        "peak_max": 512.0
+      },
+      "game_world_elite_pressure_high": {
+        "peak_max": 560.0
+      },
+      "game_world_elite_pressure_extreme": {
+        "peak_max": 620.0
+      }
+    },
+    "node_pressure": {
+      "enemy_peak_warning": 500,
+      "projectile_peak_warning": 220,
+      "pickup_peak_warning": 150
+    },
+    "alert_grading": {
+      "frame_time_ratio_warning": 1.0,
+      "frame_time_ratio_critical": 1.2,
+      "memory_ratio_warning": 1.0,
+      "memory_ratio_critical": 1.15,
+      "node_pressure_ratio_warning": 1.0,
+      "node_pressure_ratio_critical": 1.25
+    }
+  },
+  "compatibility_matrix": {
+    "platforms": [
+      "windows_10",
+      "windows_11",
+      "ubuntu_22_04",
+      "macos_14"
+    ],
+    "resolutions": [
+      "1280x720",
+      "1920x1080",
+      "2560x1440",
+      "3440x1440",
+      "3840x2160"
+    ],
+    "required_actions": [
+      "move_up",
+      "move_down",
+      "move_left",
+      "move_right",
+      "sprint",
+      "interact",
+      "pause"
+    ]
+  }
+}

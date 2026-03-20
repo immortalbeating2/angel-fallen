@@ -88,6 +88,19 @@
       "elite": 1.55
     }
   },
+  "treasure_challenge": {
+    "enabled": true,
+    "combat_mode": "elite",
+    "required_kills_base": 4,
+    "required_kills_per_room": 1,
+    "gold_reward_base": 32,
+    "gold_reward_per_room": 2,
+    "ore_reward_base": 1,
+    "ore_reward_step_rooms": 5,
+    "accessory_chance_base": 0.28,
+    "accessory_chance_vanguard": 0.34,
+    "accessory_chance_raider": 0.24
+  },
   "constraints": {
     "max_consecutive_same_type": 2,
     "max_room_type_per_chapter": {

@@ -561,6 +561,30 @@
     "memory_ch4_boss": {
       "title": "Fragment IV: Broken Crown",
       "text": "At the edge of oblivion, you learned that mercy and ruin share one throne."
+    },
+    "memory_ch1_route_vanguard": {
+      "title": "Fragment V: Vanguard Oath",
+      "text": "You chose the shield wall first, teaching survivors to endure before they could strike."
+    },
+    "memory_ch1_route_raider": {
+      "title": "Fragment VI: Raider Ember",
+      "text": "You marched ahead of the line, seizing relic fuel before despair could claim the camp."
+    },
+    "memory_ch2_route_vanguard": {
+      "title": "Fragment VII: Forge Vigil",
+      "text": "At the furnace gates, your watch never broke; every blade was tempered under your vow."
+    },
+    "memory_ch2_route_raider": {
+      "title": "Fragment VIII: Ash Requisition",
+      "text": "You stripped the foundry bare in one night and armed the weak with stolen fire."
+    },
+    "memory_ch3_route_vanguard": {
+      "title": "Fragment IX: Cathedral Bulwark",
+      "text": "In frozen halls, your stance held the corridor while the last pilgrims escaped."
+    },
+    "memory_ch3_route_raider": {
+      "title": "Fragment X: Whisper Bargain",
+      "text": "You listened to the ice and took its price, trading warmth for power that never sleeps."
     }
   },
   "endings": {
