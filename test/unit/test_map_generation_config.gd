@@ -47,6 +47,23 @@ func test_map_generation_schema_has_required_sections() -> void:
 		var row: Dictionary = chapter_mult.get(chapter_id, {})
 		assert_true(row.has("treasure"), "%s should define treasure multiplier" % chapter_id)
 
+	var treasure_challenge: Dictionary = cfg.get("treasure_challenge", {})
+	assert_typeof(treasure_challenge, TYPE_DICTIONARY, "treasure_challenge should be Dictionary")
+	assert_false(treasure_challenge.is_empty(), "treasure_challenge should not be empty")
+	assert_typeof(treasure_challenge.get("enabled", null), TYPE_BOOL, "treasure_challenge.enabled should be bool")
+	assert_true(treasure_challenge.has("combat_mode"), "treasure_challenge should define combat_mode")
+	assert_true(["elite", "normal"].has(str(treasure_challenge.get("combat_mode", ""))), "treasure_challenge.combat_mode should be elite or normal")
+	assert_gte(int(treasure_challenge.get("required_kills_base", 0)), 1, "treasure_challenge.required_kills_base should be >= 1")
+	assert_gte(int(treasure_challenge.get("required_kills_per_room", -1)), 0, "treasure_challenge.required_kills_per_room should be >= 0")
+	assert_gte(int(treasure_challenge.get("gold_reward_base", 0)), 1, "treasure_challenge.gold_reward_base should be >= 1")
+	assert_gte(int(treasure_challenge.get("gold_reward_per_room", -1)), 0, "treasure_challenge.gold_reward_per_room should be >= 0")
+	assert_gte(int(treasure_challenge.get("ore_reward_base", 0)), 1, "treasure_challenge.ore_reward_base should be >= 1")
+	assert_gte(int(treasure_challenge.get("ore_reward_step_rooms", 0)), 1, "treasure_challenge.ore_reward_step_rooms should be >= 1")
+	for key in ["accessory_chance_base", "accessory_chance_vanguard", "accessory_chance_raider"]:
+		var chance: float = float(treasure_challenge.get(key, -1.0))
+		assert_gte(chance, 0.0, "treasure_challenge.%s should be >= 0" % key)
+		assert_lte(chance, 1.0, "treasure_challenge.%s should be <= 1" % key)
+
 
 func test_map_generation_chapters_cover_full_room_range() -> void:
 	var cfg := _load_map_config()

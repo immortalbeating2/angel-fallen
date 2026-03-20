@@ -48,4 +48,7 @@ jobs:
         run: godot --headless --path . --quit
 
       - name: Run GUT tests
-        run: godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://test/unit -ginclude_subdirs -gexit
+        run: godot --headless --path . -s addons/gut/gut_cmdln.gd -gdir=res://test -ginclude_subdirs -gexit
+
+      - name: Run quality baseline snapshot
+        run: godot --headless --path . -s res://scripts/tools/run_quality_baseline.gd
