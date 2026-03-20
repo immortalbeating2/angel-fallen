@@ -29,7 +29,7 @@
 | 叙事记忆碎片体系 | 部分实现 | `data/balance/narrative_index.json`, `data/balance/narrative_content.json` | 索引与系统已接通，实际碎片内容量偏少。 |
 | 角色/武器/被动/商店内容深度 | 部分实现 | `data/balance/characters.json`, `data/balance/shop_items.json`, `scripts/game/game_world.gd`, `test/unit/test_content_depth_targets.gd` | 已扩容至角色 8、商店 passive 8 / weapon 9，且新增条目已有消费逻辑与阈值护栏，仍需继续向全量目标推进。 |
 | 大规模资源目录（以 `.tres` 为主） | 尚未体现（全量口径） | `resources/` | 当前除 narrative 外，未形成文档所述全量资源目录族。 |
-| 主玩法场景 TileMap 化呈现 | 已确认（阶段 D） | `scenes/game/game_world.tscn`, `scripts/game/game_world.gd`, `assets/sprites/tiles/*.png`, `resources/tilesets/*.tres`, `data/balance/environment_config.json`, `test/unit/test_visual_tilemap_layers.gd` | 已完成地表/地表细节/门区块/危害/环境特效五层 TileMap 化，并从运行时程序化 tileset 切换为资源化 tileset；门/危害/环境特效层支持章节差异化 tileset 动态切换，危害与特效具备章节化动画节奏驱动，且 `visual_profile` 已支持细节层 tint/alpha + pulse 与特效层滚动 + wave 的参数化控制。 |
+| 主玩法场景 TileMap 化呈现 | 已确认（阶段 D） | `scenes/game/game_world.tscn`, `scripts/game/game_world.gd`, `assets/sprites/tiles/*.png`, `assets/sprites/tiles/atlas_manifest.json`, `resources/tilesets/*.tres`, `data/balance/environment_config.json`, `test/unit/test_visual_tilemap_layers.gd` | 已完成地表/地表细节/门区块/危害/环境特效五层 TileMap 化，并从运行时程序化 tileset 切换为资源化 tileset；门/危害/环境特效层支持章节差异化 tileset 动态切换，危害与特效具备章节化动画节奏驱动，`visual_profile` 已支持细节层 tint/alpha+pulse 与特效层滚动+wave 参数化控制，且 handdrawn atlas 管线与 manifest 护栏已落地。 |
 | 测试计划中的集成/性能/兼容矩阵 | 部分实现 | `test/unit/*.gd`, `test/integration/test_core_flow_regression.gd`, `data/balance/quality_baseline_targets.json`, `scripts/tools/run_quality_baseline.gd`, `test/unit/test_quality_baseline_targets.gd`, `spec-design/test-plan.md` | 已补关键流程集成回归，性能基线已扩展为 `elite_pressure_medium/high/extreme` 分层采样并支持告警分级；更大规模性能压测与跨平台实机矩阵仍未落地。 |
 
 ## 风险分级
@@ -111,3 +111,9 @@
 - 2026-03-20 已完成下一周期 D11：`visual_profile` 新增 `detail_pulse_speed/detail_pulse_amplitude/ambient_wave_speed/ambient_wave_amplitude` 四个动态参数。
 - `game_world` 已接入章节脉冲因子驱动（细节层 alpha pulse + 特效层 alpha wave），并新增 `_get_visual_profile_anim_factors(...)` 统一动态因子计算。
 - `validate_configs.py` 已新增新字段范围校验，`test_visual_tilemap_layers` 已新增脉冲因子随时间变化断言，表现层证据由“章节参数化”提升到“章节动态节奏参数化可回归控制”。
+
+## 执行记录（D12）
+
+- 2026-03-20 已完成下一周期 D12：`generate_visual_tiles.py` 升级为 handdrawn 风格 atlas 生成（地表材质颗粒/裂纹、门区块层次、危害与特效层涡流光晕细节）。
+- 新增 `assets/sprites/tiles/atlas_manifest.json`（`style=handdrawn_v1`）并接入 `check_resources.py` 解析校验，确保 atlas 管线可追踪且不回退。
+- `test_visual_tilemap_layers` 已新增 manifest 回归断言，表现层证据由“参数化动态控制”进一步提升到“资源风格化产物 + 护栏闭环”。

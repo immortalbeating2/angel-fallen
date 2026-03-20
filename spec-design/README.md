@@ -56,3 +56,4 @@
 | 0.4.8 | 2026-03-20 | 下一周期 D9 完成：新增章节环境特效层与 ambient fx atlas/tileset，并补充章节切换与动画回归护栏 |
 | 0.4.9 | 2026-03-20 | 下一周期 D10 完成：新增章节 visual_profile 参数化（tint/alpha/scroll）并接入运行时与回归护栏 |
 | 0.4.10 | 2026-03-20 | 下一周期 D11 完成：新增章节 visual_profile 脉冲参数（detail pulse + ambient wave）并接入运行时与回归护栏 |
+| 0.4.11 | 2026-03-20 | 下一周期 D12 完成：手绘风格 atlas 管线落地（含 manifest 护栏）并增强材质细节表达 |

@@ -342,3 +342,38 @@ func test_visual_profile_pulse_and_wave_factors_change_with_time() -> void:
 	var ambient_late: float = float(factors_late.get("ambient_wave", 0.0))
 	assert_ne(detail_early, detail_late, "Detail pulse factor should vary over time")
 	assert_ne(ambient_early, ambient_late, "Ambient wave factor should vary over time")
+
+
+func test_tile_atlas_manifest_declares_handdrawn_profile() -> void:
+	var manifest_text: String = FileAccess.get_file_as_string("res://assets/sprites/tiles/atlas_manifest.json")
+	assert_true(not manifest_text.is_empty(), "atlas_manifest.json should be readable")
+	if manifest_text.is_empty():
+		return
+
+	var parsed: Variant = JSON.parse_string(manifest_text)
+	assert_true(parsed is Dictionary, "atlas_manifest.json should parse to dictionary")
+	if not (parsed is Dictionary):
+		return
+
+	var manifest: Dictionary = parsed
+	assert_eq(str(manifest.get("style", "")), "handdrawn_v1", "Atlas manifest style should be handdrawn_v1")
+
+	var atlases_var: Variant = manifest.get("atlases", [])
+	assert_true(atlases_var is Array, "Atlas manifest should contain atlases array")
+	if not (atlases_var is Array):
+		return
+
+	var atlases: Array = atlases_var
+	assert_gte(atlases.size(), 10, "Atlas manifest should list all generated atlases")
+
+	var files: Dictionary = {}
+	for row_var: Variant in atlases:
+		if row_var is Dictionary:
+			var row: Dictionary = row_var
+			files[str(row.get("file", ""))] = true
+
+	assert_true(files.has("ground_ch1.png"), "Atlas manifest should include chapter ground atlas")
+	assert_true(files.has("ground_detail_ch4.png"), "Atlas manifest should include chapter ground-detail atlas")
+	assert_true(files.has("doors_ch2.png"), "Atlas manifest should include chapter door atlas")
+	assert_true(files.has("hazard_overlay_ch3.png"), "Atlas manifest should include chapter hazard atlas")
+	assert_true(files.has("ambient_fx_ch4.png"), "Atlas manifest should include chapter ambient atlas")

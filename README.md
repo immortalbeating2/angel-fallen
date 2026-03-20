@@ -24,6 +24,7 @@ Current playable prototype includes:
 - Hazard overlay now supports chapter-specific animation cadence (`hazard_anim_interval`) with atlas variant cycling
 - Main gameplay scene now includes a chapter-specific ambient FX TileMap layer with atlas-cycled glow glyphs (`ambient_fx_interval` driven)
 - Chapter visual profiles now drive detail tint/alpha pulse and ambient FX scroll/wave cadence (`visual_profile` in `environment_config.json`)
+- Tile atlases are now generated in a handdrawn profile (`handdrawn_v1`) with an `atlas_manifest.json` snapshot for pipeline traceability
 - Meta progression save with run summary rewards
 - Route-based victory ending unlock and achievement tracking
 - Run result panel with ending/achievement unlock summary
@@ -182,6 +183,7 @@ Validation now includes semantic checks (not only JSON syntax), including:
 - environment hazard animation schema (`environment_config.json chapter_*.hazard_anim_interval`: bounded animation cadence)
 - environment ambient fx animation schema (`environment_config.json chapter_*.ambient_fx_interval`: bounded animation cadence)
 - chapter visual profile schema (`environment_config.json chapter_*.visual_profile`: tint/alpha/scroll/pulse/wave ranges)
+- tile atlas manifest schema (`assets/sprites/tiles/atlas_manifest.json`: style + atlas entries)
 
 Smoke tests:
 - `test/unit/test_character_weapon_profiles.gd` validates character weapon profile schema and projectile setup handshake
@@ -193,5 +195,5 @@ Smoke tests:
 - `test/unit/test_evolutions_config.gd` validates evolution recipe schema and evolution_profile bounds
 - `test/unit/test_enemy_pooling.gd` validates enemy pool lifecycle reset and death-release behavior
 - `test/unit/test_quality_baseline_targets.gd` validates quality baseline scenario/threshold schema and required InputMap actions
-- `test/unit/test_visual_tilemap_layers.gd` validates game_world TileMap visual layers, chapter-specific resource tileset switching (including ground-detail + ambient-fx layers), hazard overlay state reaction, hazard/ambient atlas animation ticking, and chapter visual-profile tint/scroll plus pulse/wave feedback
+- `test/unit/test_visual_tilemap_layers.gd` validates game_world TileMap visual layers, chapter-specific resource tileset switching (including ground-detail + ambient-fx layers), hazard overlay state reaction, hazard/ambient atlas animation ticking, chapter visual-profile tint/scroll plus pulse/wave feedback, and handdrawn atlas manifest guardrails
 - `test/integration/test_core_flow_regression.gd` validates character-start->progress->settlement persistence, level-up evolution path, baseline/new-cycle shop purchase closure, and stat feedback

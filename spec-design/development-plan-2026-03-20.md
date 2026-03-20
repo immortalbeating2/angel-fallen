@@ -329,6 +329,28 @@
   - Godot headless 启动通过
 - 结论：P2 从“章节视觉参数化”推进到“章节化动态节奏可回归控制”，下一步可继续推进正式手绘 atlas 替换与材质细节增强。
 
+### D12：手绘 atlas 替换与材质细节增强（已完成）
+
+- 已完成文件：
+  - `scripts/tools/generate_visual_tiles.py`
+  - `scripts/check_resources.py`
+  - `test/unit/test_visual_tilemap_layers.gd`
+  - `assets/sprites/tiles/*.png`
+  - `assets/sprites/tiles/atlas_manifest.json`
+  - `resources/tilesets/*.tres`
+- 已落地：
+  - atlas 生成脚本升级为 handdrawn 风格纹理：地表加入颗粒噪声/裂纹/纵向材质梯度，门区块加入面板层次与符纹细节，危害与环境特效层加入涡流/光晕与漂移细节。
+  - 新增 `atlas_manifest.json`（`style=handdrawn_v1`）作为资源生成快照，记录各层 atlas 文件与变体数量。
+  - 资源结构校验新增 manifest 解析与最小条目约束，防止 atlas 管线回退。
+  - `test_visual_tilemap_layers` 新增 manifest 回归断言，保证手绘 atlas 标识与核心资源清单可回归验证。
+- 验收结果：
+  - `python scripts/validate_configs.py` 通过（14 JSON）
+  - `python scripts/check_resources.py` 通过
+  - quality baseline snapshot 脚本通过（alerts 0）
+  - GUT 全量通过
+  - Godot headless 启动通过
+- 结论：P2 已从“章节化参数驱动”推进到“资源级手绘 atlas 管线 + manifest 护栏”，下一步可继续做正式手绘资源迭代与材质/特效精修。
+
 ## 后续执行原则
 
 - 优先保证“可回归、可验证”的增量，不做大规模不可回溯重构。

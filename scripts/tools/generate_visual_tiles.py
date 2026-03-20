@@ -8,6 +8,8 @@ This script uses only the Python standard library and writes deterministic
 from __future__ import annotations
 
 import os
+import json
+import math
 import struct
 import zlib
 from pathlib import Path
@@ -53,6 +55,18 @@ def tint(channel: int, amount: int) -> int:
     return max(0, min(255, channel + amount))
 
 
+def hash_u32(x: int, y: int, seed: int) -> int:
+    value = (x * 374761393 + y * 668265263 + seed * 69069) & 0xFFFFFFFF
+    value ^= value >> 13
+    value = (value * 1274126177) & 0xFFFFFFFF
+    value ^= value >> 16
+    return value & 0xFFFFFFFF
+
+
+def noise_signed(x: int, y: int, seed: int) -> float:
+    return (hash_u32(x, y, seed) / 2147483647.5) - 1.0
+
+
 def build_ground_atlas(palette_hex: Iterable[str]) -> bytes:
     palette = [hex_to_rgba(x) for x in palette_hex]
     width = TILE_SIZE * 3
@@ -65,7 +79,12 @@ def build_ground_atlas(palette_hex: Iterable[str]) -> bytes:
             for x in range(TILE_SIZE):
                 idx = ((y * width) + (start_x + x)) * 4
                 light = ((x // 4) + (y // 4)) % 2 == 0
-                delta = 14 if light else -10
+                vertical = int((0.5 - (y / float(TILE_SIZE - 1))) * 12)
+                grain = int(noise_signed(x + tile_index * 41, y, 17 + tile_index * 3) * 10)
+                crack = ((x * 7 + y * 11 + tile_index * 13) % 29 == 0) or ((x - y + tile_index * 3) % 37 == 0)
+                delta = (12 if light else -8) + vertical + grain
+                if crack:
+                    delta -= 14
                 if x in (0, TILE_SIZE - 1) or y in (0, TILE_SIZE - 1):
                     delta -= 18
                 pixels[idx + 0] = tint(base[0], delta)
@@ -90,39 +109,44 @@ def build_ground_detail_atlas(detail_hex: str, accent_hex: str, motif: str) -> b
                 idx = ((y * width) + (start_x + x)) * 4
                 alpha = 0
                 color = detail
+                grain = int(abs(noise_signed(x + tile_index * 31, y, 91)) * 22)
 
                 if motif == "chapel":
                     marked = (x in (15, 16) or y in (15, 16)) and abs(x - 16) + abs(y - 16) < 11 + tile_index
                     sparkle = (x + y + tile_index) % 11 == 0
                     if marked:
-                        alpha = 74
+                        alpha = 62 + grain
                     elif sparkle:
-                        alpha = 44
+                        alpha = 36 + grain // 2
                         color = accent
                 elif motif == "forge":
                     marked = ((x + y + tile_index) % (5 + tile_index % 2) == 0) or (y > 20 and x % 6 < 2)
                     ember = (x * 3 + y * 5 + tile_index) % 17 == 0
                     if marked:
-                        alpha = 68
+                        alpha = 56 + grain
                     elif ember:
-                        alpha = 56
+                        alpha = 46 + grain // 2
                         color = accent
                 elif motif == "sanctum":
                     marked = abs(x - 16) == abs(y - 16) or (x + tile_index) % 9 == 0
                     frost = (x + y * 2 + tile_index) % 13 == 0
                     if marked:
-                        alpha = 62
+                        alpha = 54 + grain
                     elif frost:
-                        alpha = 46
+                        alpha = 38 + grain // 2
                         color = accent
                 else:
                     marked = ((x * 2 - y + tile_index) % 7 == 0) or ((x + y) % 9 == tile_index)
                     void_glow = (x * 5 + y * 3 + tile_index) % 19 == 0
                     if marked:
-                        alpha = 72
+                        alpha = 60 + grain
                     elif void_glow:
-                        alpha = 54
+                        alpha = 44 + grain // 2
                         color = accent
+
+                brush = (x - 16) * (x - 16) + (y - 16) * (y - 16)
+                if brush < 160 and alpha > 0:
+                    alpha = min(255, alpha + (160 - brush) // 8)
 
                 pixels[idx + 0] = color[0]
                 pixels[idx + 1] = color[1]
@@ -144,7 +168,17 @@ def build_door_atlas(unlocked_hex: str, locked_hex: str) -> bytes:
             for x in range(TILE_SIZE):
                 idx = ((y * width) + (start_x + x)) * 4
                 stripe = (x + y) % 6 == 0
-                delta = 16 if stripe else -6
+                panel = abs(x - 16) < 10 and abs(y - 16) < 10
+                rivet = (x in (6, 25) and y in (6, 25))
+                rune = tile_index == 1 and ((x - 16) * (x - 16) + (y - 16) * (y - 16) in range(32, 40))
+                grain = int(noise_signed(x + tile_index * 57, y, 151) * 8)
+                delta = (14 if stripe else -5) + grain
+                if panel:
+                    delta += 8
+                if rivet:
+                    delta += 18
+                if rune:
+                    delta += 26
                 if x in (0, TILE_SIZE - 1) or y in (0, TILE_SIZE - 1):
                     delta -= 22
                 pixels[idx + 0] = tint(base[0], delta)
@@ -167,12 +201,14 @@ def build_hazard_atlas(pattern_steps: list[int], edge_alpha: int) -> bytes:
             for x in range(TILE_SIZE):
                 idx = ((y * width) + (start_x + x)) * 4
                 edge = x in (0, TILE_SIZE - 1) or y in (0, TILE_SIZE - 1)
-                marked = ((x + y) % step == 0) or ((x - y) % (step + 1) == 0)
+                swirl = int(abs(math.sin((x + tile_index * 5) * 0.34) + math.cos((y - tile_index * 3) * 0.27)) * 10)
+                marked = ((x + y + swirl) % step == 0) or ((x - y + swirl) % (step + 1) == 0)
+                grain = int(abs(noise_signed(x + tile_index * 19, y, 211)) * 14)
                 alpha = 0
                 if edge:
-                    alpha = edge_alpha
+                    alpha = min(255, edge_alpha + grain)
                 elif marked:
-                    alpha = max(36, edge_alpha - 20)
+                    alpha = max(42, edge_alpha - 18 + grain)
                 pixels[idx + 0] = base_rgb[0]
                 pixels[idx + 1] = base_rgb[1]
                 pixels[idx + 2] = base_rgb[2]
@@ -201,13 +237,15 @@ def build_ambient_fx_atlas(glow_hex: str, accent_hex: str, pulse_step: int) -> b
                 major = ring % step == 0
                 minor = (x * 3 + y * 5 + tile_index) % (step + 2) == 0
                 spark = (x + y * 2 + tile_index * 3) % (step + 5) == 0
+                halo = max(0, 120 - ((x - 16) * (x - 16) + (y - 16) * (y - 16))) // 6
+                drift = int(abs(math.sin((x + tile_index * 2) * 0.22) + math.cos((y - tile_index) * 0.18)) * 8)
 
                 if major:
-                    alpha = 74
+                    alpha = 56 + halo + drift
                 elif minor:
-                    alpha = 52
+                    alpha = 36 + halo // 2 + drift
                 elif spark:
-                    alpha = 64
+                    alpha = 46 + halo // 2 + drift
                     color = accent
 
                 pixels[idx + 0] = color[0]
@@ -216,6 +254,17 @@ def build_ambient_fx_atlas(glow_hex: str, accent_hex: str, pulse_step: int) -> b
                 pixels[idx + 3] = alpha
 
     return bytes(pixels)
+
+
+def write_atlas_manifest(entries: list[dict[str, object]]) -> None:
+    manifest = {
+        "style": "handdrawn_v1",
+        "tile_size": TILE_SIZE,
+        "atlas_count": len(entries),
+        "atlases": entries,
+    }
+    manifest_path = OUT_DIR / "atlas_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def main() -> None:
@@ -251,10 +300,12 @@ def main() -> None:
         "ground_detail_ch3.png": ("#E8F6FF", "#A8E1FF", "sanctum"),
         "ground_detail_ch4.png": ("#8F7BCE", "#FF8AE1", "void"),
     }
+    manifest_entries: list[dict[str, object]] = []
 
     for filename, palette in chapter_palettes.items():
         atlas = build_ground_atlas(palette)
         write_png(OUT_DIR / filename, TILE_SIZE * 3, TILE_SIZE, atlas)
+        manifest_entries.append({"file": filename, "layer": "ground", "variants": 3, "profile": "chapter"})
 
     for filename, detail_profile in chapter_ground_details.items():
         write_png(
@@ -263,20 +314,27 @@ def main() -> None:
             TILE_SIZE,
             build_ground_detail_atlas(detail_profile[0], detail_profile[1], detail_profile[2]),
         )
+        manifest_entries.append({"file": filename, "layer": "ground_detail", "variants": 4, "profile": str(detail_profile[2])})
 
     for filename, colors in chapter_doors.items():
         write_png(OUT_DIR / filename, TILE_SIZE * 2, TILE_SIZE, build_door_atlas(colors[0], colors[1]))
+        manifest_entries.append({"file": filename, "layer": "doors", "variants": 2, "profile": "chapter"})
 
     for filename, hazard_profile in chapter_hazards.items():
         pattern_steps = hazard_profile[0]
         edge_alpha = hazard_profile[1]
         write_png(OUT_DIR / filename, TILE_SIZE * 3, TILE_SIZE, build_hazard_atlas(pattern_steps, edge_alpha))
+        manifest_entries.append({"file": filename, "layer": "hazard", "variants": 3, "profile": "chapter"})
 
     for filename, fx_profile in chapter_ambient_fx.items():
         write_png(OUT_DIR / filename, TILE_SIZE * 4, TILE_SIZE, build_ambient_fx_atlas(fx_profile[0], fx_profile[1], int(fx_profile[2])))
+        manifest_entries.append({"file": filename, "layer": "ambient_fx", "variants": 4, "profile": "chapter"})
 
     write_png(OUT_DIR / "doors.png", TILE_SIZE * 2, TILE_SIZE, build_door_atlas("#39B75C", "#D84A4A"))
     write_png(OUT_DIR / "hazard_overlay.png", TILE_SIZE * 3, TILE_SIZE, build_hazard_atlas([5, 4, 3], 66))
+    manifest_entries.append({"file": "doors.png", "layer": "doors", "variants": 2, "profile": "compat"})
+    manifest_entries.append({"file": "hazard_overlay.png", "layer": "hazard", "variants": 3, "profile": "compat"})
+    write_atlas_manifest(manifest_entries)
     print(f"Generated tile atlases in: {OUT_DIR}")
 
 

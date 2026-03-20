@@ -75,6 +75,7 @@ def main() -> int:
         root / "assets" / "sprites" / "tiles" / "ambient_fx_ch4.png",
         root / "assets" / "sprites" / "tiles" / "doors.png",
         root / "assets" / "sprites" / "tiles" / "hazard_overlay.png",
+        root / "assets" / "sprites" / "tiles" / "atlas_manifest.json",
         root / "resources" / "tilesets" / "game_world_ground_ch1.tres",
         root / "resources" / "tilesets" / "game_world_ground_ch2.tres",
         root / "resources" / "tilesets" / "game_world_ground_ch3.tres",
@@ -110,6 +111,22 @@ def main() -> int:
         if not file_path.exists():
             print(f"Missing required file: {file_path}")
             return 1
+
+    manifest_path = root / "assets" / "sprites" / "tiles" / "atlas_manifest.json"
+    try:
+        atlas_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"Cannot parse atlas_manifest.json: {exc}")
+        return 1
+
+    if atlas_manifest.get("style") != "handdrawn_v1":
+        print("atlas_manifest.json style must be 'handdrawn_v1'")
+        return 1
+
+    atlas_entries = atlas_manifest.get("atlases", [])
+    if not isinstance(atlas_entries, list) or len(atlas_entries) < 10:
+        print("atlas_manifest.json atlases must be a non-empty array with at least 10 entries")
+        return 1
 
     narrative_index_path = root / "data" / "balance" / "narrative_index.json"
     try:

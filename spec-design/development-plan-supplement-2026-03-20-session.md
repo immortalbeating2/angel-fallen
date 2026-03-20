@@ -208,7 +208,13 @@
   - `validate_configs.py` 已补齐新字段范围校验（speed `[0.0, 6.0]`，amplitude `[0.0, 0.25]`）。
   - `test/unit/test_visual_tilemap_layers.gd` 已新增脉冲因子随时间变化断言，防止参数接入回退。
   - 校验：`validate_configs`、`check_resources`、baseline snapshot、全量 GUT 与 headless 启动均通过。
-- 下一步：进入 P2 后续项（正式手绘 atlas 替换与材质/特效表现进一步细化）。
+- D12（手绘 atlas 替换与材质细节增强）已完成：
+  - `generate_visual_tiles.py` 升级 handdrawn 风格纹理生成（地表颗粒/裂纹、门区块层次、危害与特效层涡流光晕细节）。
+  - 新增 `assets/sprites/tiles/atlas_manifest.json`（`style=handdrawn_v1`）作为 atlas 资源快照。
+  - `scripts/check_resources.py` 已新增 manifest 解析与条目下限校验。
+  - `test/unit/test_visual_tilemap_layers.gd` 已新增 manifest 回归断言，保证手绘 atlas 管线不回退。
+  - 校验：`validate_configs`、`check_resources`、baseline snapshot、全量 GUT 与 headless 启动均通过。
+- 下一步：进入 P2 后续项（正式手绘资源迭代与材质/特效精修）。
 
 ## 执行约束
 

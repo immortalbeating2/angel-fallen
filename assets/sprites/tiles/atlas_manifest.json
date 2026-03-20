@@ -1,0 +1,139 @@
+{
+  "style": "handdrawn_v1",
+  "tile_size": 32,
+  "atlas_count": 22,
+  "atlases": [
+    {
+      "file": "ground_ch1.png",
+      "layer": "ground",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "ground_ch2.png",
+      "layer": "ground",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "ground_ch3.png",
+      "layer": "ground",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "ground_ch4.png",
+      "layer": "ground",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "ground_detail_ch1.png",
+      "layer": "ground_detail",
+      "variants": 4,
+      "profile": "chapel"
+    },
+    {
+      "file": "ground_detail_ch2.png",
+      "layer": "ground_detail",
+      "variants": 4,
+      "profile": "forge"
+    },
+    {
+      "file": "ground_detail_ch3.png",
+      "layer": "ground_detail",
+      "variants": 4,
+      "profile": "sanctum"
+    },
+    {
+      "file": "ground_detail_ch4.png",
+      "layer": "ground_detail",
+      "variants": 4,
+      "profile": "void"
+    },
+    {
+      "file": "doors_ch1.png",
+      "layer": "doors",
+      "variants": 2,
+      "profile": "chapter"
+    },
+    {
+      "file": "doors_ch2.png",
+      "layer": "doors",
+      "variants": 2,
+      "profile": "chapter"
+    },
+    {
+      "file": "doors_ch3.png",
+      "layer": "doors",
+      "variants": 2,
+      "profile": "chapter"
+    },
+    {
+      "file": "doors_ch4.png",
+      "layer": "doors",
+      "variants": 2,
+      "profile": "chapter"
+    },
+    {
+      "file": "hazard_overlay_ch1.png",
+      "layer": "hazard",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "hazard_overlay_ch2.png",
+      "layer": "hazard",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "hazard_overlay_ch3.png",
+      "layer": "hazard",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "hazard_overlay_ch4.png",
+      "layer": "hazard",
+      "variants": 3,
+      "profile": "chapter"
+    },
+    {
+      "file": "ambient_fx_ch1.png",
+      "layer": "ambient_fx",
+      "variants": 4,
+      "profile": "chapter"
+    },
+    {
+      "file": "ambient_fx_ch2.png",
+      "layer": "ambient_fx",
+      "variants": 4,
+      "profile": "chapter"
+    },
+    {
+      "file": "ambient_fx_ch3.png",
+      "layer": "ambient_fx",
+      "variants": 4,
+      "profile": "chapter"
+    },
+    {
+      "file": "ambient_fx_ch4.png",
+      "layer": "ambient_fx",
+      "variants": 4,
+      "profile": "chapter"
+    },
+    {
+      "file": "doors.png",
+      "layer": "doors",
+      "variants": 2,
+      "profile": "compat"
+    },
+    {
+      "file": "hazard_overlay.png",
+      "layer": "hazard",
+      "variants": 3,
+      "profile": "compat"
+    }
+  ]
+}
