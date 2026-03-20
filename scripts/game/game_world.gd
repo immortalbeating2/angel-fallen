@@ -2143,6 +2143,18 @@ func _get_shop_item_info(item_id: String) -> Dictionary:
             return {"title": "Resolve Plate", "desc": "+5% armor and +12 stamina max"}
         "pas_momentum":
             return {"title": "Momentum Circuit", "desc": "+14 move speed and faster weapon cycle"}
+        "pas_overcharge":
+            return {"title": "Overcharge Sigil", "desc": "+10% damage and +3% crit chance"}
+        "pas_bastion":
+            return {"title": "Bastion Crest", "desc": "+18 max HP and +4% armor"}
+        "pas_siphon":
+            return {"title": "Siphon Rune", "desc": "+8% damage and recover 14 stamina"}
+        "pas_zeal":
+            return {"title": "Zeal Sigil", "desc": "+9% damage and +12% crit multiplier"}
+        "pas_warding":
+            return {"title": "Warding Seal", "desc": "+14 max HP and +3% armor"}
+        "pas_harvest":
+            return {"title": "Harvest Glyph", "desc": "+18 gold and +8 stamina restore"}
         "wpn_magic_missile":
             return {"title": "Missile Core", "desc": "+4 weapon damage"}
         "wpn_holy_cross":
@@ -2161,6 +2173,18 @@ func _get_shop_item_info(item_id: String) -> Dictionary:
             return {"title": "Void Chain", "desc": "+5 damage, chained spread volley"}
         "wpn_frost_orb":
             return {"title": "Frost Orb", "desc": "+4.5 damage, +1 hit, faster cadence"}
+        "wpn_storm_bow":
+            return {"title": "Storm Bow", "desc": "+4.8 damage and wider arrow volley"}
+        "wpn_radiant_hammer":
+            return {"title": "Radiant Hammer", "desc": "+6.8 damage, +2 hits, focused impact"}
+        "wpn_blood_rite":
+            return {"title": "Blood Rite", "desc": "+5.8 damage and chained spread ritual"}
+        "wpn_vowblade":
+            return {"title": "Vowblade", "desc": "+6.2 damage, focused strike, +1 hit"}
+        "wpn_nether_shard":
+            return {"title": "Nether Shard", "desc": "+5.4 damage and unstable void spread"}
+        "wpn_astral_disc":
+            return {"title": "Astral Disc", "desc": "+5.0 damage, faster cycle, +1 hit"}
         _:
             return {"title": item_id, "desc": "Unknown effect"}
 
@@ -2283,6 +2307,39 @@ func _apply_shop_item_effect(item_id: String) -> void:
                 stats.base_move_speed += 14.0
             if weapon != null and weapon.get("attack_interval") != null:
                 weapon.attack_interval = maxf(0.08, float(weapon.attack_interval) * 0.95)
+        "pas_overcharge":
+            if stats != null:
+                if stats.get("damage_bonus_pct") != null:
+                    stats.damage_bonus_pct += 0.10
+                if stats.get("crit_chance") != null:
+                    stats.crit_chance = minf(0.95, float(stats.crit_chance) + 0.03)
+        "pas_bastion":
+            if health != null and health.get("max_hp") != null:
+                health.max_hp += 18.0
+            if stats != null and stats.get("armor") != null:
+                stats.armor = minf(0.75, float(stats.armor) + 0.04)
+        "pas_siphon":
+            if stats != null:
+                if stats.get("damage_bonus_pct") != null:
+                    stats.damage_bonus_pct += 0.08
+                if stats.get("stamina_max") != null and stats.get("current_stamina") != null:
+                    stats.current_stamina = minf(float(stats.stamina_max), float(stats.current_stamina) + 14.0)
+        "pas_zeal":
+            if stats != null:
+                if stats.get("damage_bonus_pct") != null:
+                    stats.damage_bonus_pct += 0.09
+                if stats.get("crit_multiplier") != null:
+                    stats.crit_multiplier += 0.12
+        "pas_warding":
+            if health != null and health.get("max_hp") != null:
+                health.max_hp += 14.0
+            if stats != null and stats.get("armor") != null:
+                stats.armor = minf(0.75, float(stats.armor) + 0.03)
+        "pas_harvest":
+            _gold += 18
+            EventBus.gold_changed.emit(_gold)
+            if stats != null and stats.get("stamina_max") != null and stats.get("current_stamina") != null:
+                stats.current_stamina = minf(float(stats.stamina_max), float(stats.current_stamina) + 8.0)
         "wpn_magic_missile":
             if weapon != null and weapon.get("base_damage") != null:
                 weapon.base_damage += 4.0
@@ -2369,6 +2426,72 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "frost_orb"
+        "wpn_storm_bow":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 4.8
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_count") != null:
+                    weapon.projectile_count = clampi(maxi(int(weapon.projectile_count), 3) + 1, 1, 8)
+                if weapon.get("spread_angle_deg") != null:
+                    weapon.spread_angle_deg = clampf(float(weapon.spread_angle_deg) + 5.0, 0.0, 45.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "storm_bow"
+        "wpn_radiant_hammer":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 6.8
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "single"
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 2, 1, 12)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "radiant_hammer"
+        "wpn_blood_rite":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 5.8
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_count") != null:
+                    weapon.projectile_count = clampi(maxi(int(weapon.projectile_count), 2) + 1, 1, 8)
+                if weapon.get("spread_jitter_deg") != null:
+                    weapon.spread_jitter_deg = clampf(float(weapon.spread_jitter_deg) + 2.0, 0.0, 20.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "blood_rite"
+        "wpn_vowblade":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 6.2
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "single"
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "vowblade"
+        "wpn_nether_shard":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 5.4
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_count") != null:
+                    weapon.projectile_count = clampi(maxi(int(weapon.projectile_count), 3) + 1, 1, 8)
+                if weapon.get("spread_jitter_deg") != null:
+                    weapon.spread_jitter_deg = clampf(float(weapon.spread_jitter_deg) + 2.5, 0.0, 20.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "nether_shard"
+        "wpn_astral_disc":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 5.0
+                if weapon.get("attack_interval") != null:
+                    weapon.attack_interval = maxf(0.08, float(weapon.attack_interval) * 0.93)
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "astral_disc"
 
 
 func _update_shop_text() -> void:

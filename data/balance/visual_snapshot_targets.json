@@ -1,0 +1,651 @@
+{
+  "channel": "chapter_snapshot_v12",
+  "snapshots": {
+    "chapter_1_world": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "setup": "chapter_1",
+      "width": 1280,
+      "height": 720,
+      "warmup_frames": 24,
+      "capture_frames": 8,
+      "opaque_ratio_min": 0.25,
+      "unique_colors_min": 24,
+      "luma_min": 0.05,
+      "luma_max": 0.95
+    },
+    "chapter_2_world": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "setup": "chapter_2",
+      "width": 1280,
+      "height": 720,
+      "warmup_frames": 24,
+      "capture_frames": 8,
+      "opaque_ratio_min": 0.25,
+      "unique_colors_min": 24,
+      "luma_min": 0.05,
+      "luma_max": 0.95
+    },
+    "chapter_3_world": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "setup": "chapter_3",
+      "width": 1280,
+      "height": 720,
+      "warmup_frames": 24,
+      "capture_frames": 8,
+      "opaque_ratio_min": 0.25,
+      "unique_colors_min": 24,
+      "luma_min": 0.05,
+      "luma_max": 0.95
+    },
+    "chapter_4_world": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "setup": "chapter_4",
+      "width": 1280,
+      "height": 720,
+      "warmup_frames": 24,
+      "capture_frames": 8,
+      "opaque_ratio_min": 0.25,
+      "unique_colors_min": 24,
+      "luma_min": 0.05,
+      "luma_max": 0.95
+    },
+    "main_menu_ui": {
+      "scene": "res://scenes/main_menu/main_menu.tscn",
+      "setup": "none",
+      "width": 1280,
+      "height": 720,
+      "warmup_frames": 16,
+      "capture_frames": 6,
+      "opaque_ratio_min": 0.15,
+      "unique_colors_min": 16,
+      "luma_min": 0.05,
+      "luma_max": 0.95
+    }
+  },
+  "precision": {
+    "sample_rounds": 3,
+    "max_opaque_ratio_stddev": 0.03,
+    "max_luma_stddev": 0.03,
+    "max_unique_color_stddev_ratio": 0.35
+  },
+  "backend_profiles": {
+    "default": {
+      "max_opaque_ratio_drop": 0.12,
+      "max_unique_color_drop_ratio": 0.45,
+      "max_luma_delta": 0.15,
+      "unique_colors_min_scale": 1.0,
+      "luma_range_padding": 0.0
+    },
+    "linux_headless": {
+      "max_opaque_ratio_drop": 0.12,
+      "max_unique_color_drop_ratio": 0.45,
+      "max_luma_delta": 0.15,
+      "unique_colors_min_scale": 1.0,
+      "luma_range_padding": 0.02
+    },
+    "windows_headless": {
+      "max_opaque_ratio_drop": 0.12,
+      "max_unique_color_drop_ratio": 0.45,
+      "max_luma_delta": 0.15,
+      "unique_colors_min_scale": 1.0,
+      "luma_range_padding": 0.02
+    }
+  },
+  "thresholds": {
+    "min_snapshots": 5,
+    "max_failures": 0,
+    "max_trend_regressions": 0,
+    "max_opaque_ratio_drop": 0.12,
+    "max_unique_color_drop_ratio": 0.45,
+    "max_luma_delta": 0.15
+  },
+  "baseline_alignment": {
+    "required_snapshot_ids": [
+      "chapter_1_world",
+      "chapter_2_world",
+      "chapter_3_world",
+      "chapter_4_world",
+      "main_menu_ui"
+    ],
+    "allowed_capture_modes": {
+      "default": [
+        "image",
+        "fallback_headless_display",
+        "fallback_headless",
+        "fallback_empty_image",
+        "fallback_save_error"
+      ],
+      "linux_headless": [
+        "fallback_headless_display",
+        "fallback_headless",
+        "fallback_empty_image",
+        "fallback_save_error"
+      ],
+      "windows_headless": [
+        "fallback_headless_display",
+        "fallback_headless",
+        "fallback_empty_image",
+        "fallback_save_error"
+      ]
+    }
+  },
+  "diff_whitelist": {
+    "linux_headless": {
+      "main_menu_ui": {
+        "max_unique_color_drop_ratio": 0.55,
+        "max_luma_delta": 0.18,
+        "reason": "headless_ui_quantization_variance"
+      },
+      "chapter_4_world": {
+        "max_luma_delta": 0.18,
+        "reason": "void_palette_luma_shift_in_headless"
+      }
+    },
+    "windows_headless": {
+      "main_menu_ui": {
+        "max_unique_color_drop_ratio": 0.5,
+        "max_luma_delta": 0.18,
+        "reason": "headless_ui_quantization_variance"
+      }
+    }
+  },
+  "whitelist_policy": {
+    "max_hits": 2,
+    "max_ratio": 0.4
+  },
+  "backend_attribution": {
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "max_unattributed_regressions": 0,
+    "max_backend_specific_regressions": 2
+  },
+  "whitelist_convergence": {
+    "stale_run_threshold": 3,
+    "tighten_margin_ratio": 0.25,
+    "max_suggestions": 6
+  },
+  "exception_lifecycle": {
+    "expire_idle_runs": 2,
+    "auto_reclaim_hit_streak": 4,
+    "max_expired_entries": 0,
+    "max_reclaim_candidates": 6
+  },
+  "strategy_orchestration": {
+    "default_strategy": "ci_rehearsal",
+    "strategies": {
+      "ci_rehearsal": {
+        "template": "rehearsal_relaxed"
+      },
+      "ci_trend_gate": {
+        "template": "trend_gate_strict"
+      },
+      "release_candidate": {
+        "template": "release_candidate"
+      },
+      "release_blocking": {
+        "template": "release_blocking"
+      }
+    },
+    "templates": {
+      "rehearsal_relaxed": {
+        "thresholds": {
+          "max_failures": 2,
+          "max_trend_regressions": 2,
+          "max_opaque_ratio_drop": 0.14,
+          "max_unique_color_drop_ratio": 0.5,
+          "max_luma_delta": 0.18
+        },
+        "whitelist_policy": {
+          "max_hits": 4,
+          "max_ratio": 0.6
+        },
+        "backend_attribution": {
+          "max_unattributed_regressions": 1,
+          "max_backend_specific_regressions": 3
+        },
+        "whitelist_convergence": {
+          "max_suggestions": 8
+        },
+        "exception_lifecycle": {
+          "max_expired_entries": 1,
+          "max_reclaim_candidates": 8
+        },
+        "cross_version_baseline": {
+          "max_violations": 3
+        },
+        "report_layers": {
+          "world": {
+            "max_layer_warnings": 4,
+            "min_pass_ratio": 0.75
+          },
+          "ui": {
+            "max_layer_warnings": 2,
+            "min_pass_ratio": 0.75
+          }
+        }
+      },
+      "trend_gate_strict": {
+        "thresholds": {
+          "max_failures": 0,
+          "max_trend_regressions": 0,
+          "max_opaque_ratio_drop": 0.12,
+          "max_unique_color_drop_ratio": 0.45,
+          "max_luma_delta": 0.15
+        },
+        "whitelist_policy": {
+          "max_hits": 2,
+          "max_ratio": 0.4
+        },
+        "backend_attribution": {
+          "max_unattributed_regressions": 0,
+          "max_backend_specific_regressions": 2
+        },
+        "whitelist_convergence": {
+          "max_suggestions": 6
+        },
+        "exception_lifecycle": {
+          "max_expired_entries": 0,
+          "max_reclaim_candidates": 6
+        },
+        "cross_version_baseline": {
+          "max_violations": 0
+        },
+        "report_layers": {
+          "world": {
+            "max_layer_warnings": 2,
+            "min_pass_ratio": 1.0
+          },
+          "ui": {
+            "max_layer_warnings": 1,
+            "min_pass_ratio": 1.0
+          }
+        }
+      },
+      "release_candidate": {
+        "thresholds": {
+          "max_failures": 0,
+          "max_trend_regressions": 0,
+          "max_opaque_ratio_drop": 0.1,
+          "max_unique_color_drop_ratio": 0.4,
+          "max_luma_delta": 0.12
+        },
+        "whitelist_policy": {
+          "max_hits": 1,
+          "max_ratio": 0.2
+        },
+        "backend_attribution": {
+          "max_unattributed_regressions": 0,
+          "max_backend_specific_regressions": 1
+        },
+        "whitelist_convergence": {
+          "max_suggestions": 4
+        },
+        "exception_lifecycle": {
+          "max_expired_entries": 0,
+          "max_reclaim_candidates": 4
+        },
+        "cross_version_baseline": {
+          "max_violations": 0
+        },
+        "report_layers": {
+          "world": {
+            "max_layer_warnings": 1,
+            "min_pass_ratio": 1.0
+          },
+          "ui": {
+            "max_layer_warnings": 0,
+            "min_pass_ratio": 1.0
+          }
+        }
+      },
+      "release_blocking": {
+        "thresholds": {
+          "max_failures": 0,
+          "max_trend_regressions": 0,
+          "max_opaque_ratio_drop": 0.08,
+          "max_unique_color_drop_ratio": 0.35,
+          "max_luma_delta": 0.1
+        },
+        "whitelist_policy": {
+          "max_hits": 0,
+          "max_ratio": 0.0
+        },
+        "backend_attribution": {
+          "max_unattributed_regressions": 0,
+          "max_backend_specific_regressions": 0
+        },
+        "whitelist_convergence": {
+          "max_suggestions": 2
+        },
+        "exception_lifecycle": {
+          "max_expired_entries": 0,
+          "max_reclaim_candidates": 2
+        },
+        "cross_version_baseline": {
+          "max_violations": 0
+        },
+        "report_layers": {
+          "world": {
+            "max_layer_warnings": 0,
+            "min_pass_ratio": 1.0
+          },
+          "ui": {
+            "max_layer_warnings": 0,
+            "min_pass_ratio": 1.0
+          }
+        }
+      }
+    }
+  },
+  "release_gate_templates": {
+    "required_strategies": [
+      "ci_rehearsal",
+      "ci_trend_gate",
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_strategy_bindings": {
+      "ci_rehearsal": "rehearsal_relaxed",
+      "ci_trend_gate": "trend_gate_strict",
+      "release_candidate": "release_candidate",
+      "release_blocking": "release_blocking"
+    },
+    "ci_mode_bindings": {
+      "rehearsal": "ci_rehearsal",
+      "trend_gate": "ci_trend_gate",
+      "release_candidate": "release_candidate",
+      "release_blocking": "release_blocking"
+    },
+    "release_checklist": {
+      "required_reports": [
+        "user://quality_baseline_latest.json",
+        "user://release_gate_latest.json",
+        "user://compatibility_rehearsal_latest.json",
+        "user://resource_acceptance_latest.json"
+      ],
+      "required_strategies_for_publish": [
+        "release_candidate",
+        "release_blocking"
+      ],
+      "require_zero_warnings_for": [
+        "release_blocking"
+      ],
+      "max_checklist_failures": 0
+    }
+  },
+  "backend_matrix_governance": {
+    "required_backend_matrix": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "required_run_modes": [
+      "rehearsal",
+      "trend_gate",
+      "release_candidate",
+      "release_blocking"
+    ],
+    "max_missing_backend_matrix": 0,
+    "max_missing_run_mode_bindings": 0
+  },
+  "approval_workflow": {
+    "required_report_sections": [
+      "Snapshots",
+      "Trend",
+      "Whitelist",
+      "Backend Attribution",
+      "Release Manifest",
+      "Backend Matrix Governance",
+      "Approval Workflow",
+      "Approval Audit Trail",
+      "Approval History Archive",
+      "Approval Template",
+      "Release Candidate Tracking"
+    ],
+    "require_zero_blockers": true,
+    "require_zero_warnings_for_strategies": [
+      "release_blocking"
+    ],
+    "max_approval_failures": 0
+  },
+  "approval_audit_trail": {
+    "history_file": "user://visual_snapshot_approval_history.json",
+    "max_entries": 80,
+    "required_run_modes": [
+      "rehearsal",
+      "trend_gate",
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "require_unique_pipeline_id": true,
+    "max_missing_pipeline_id": 0,
+    "max_history_trace_failures": 0
+  },
+  "approval_history_archive": {
+    "archive_file": "user://visual_snapshot_approval_archive.json",
+    "max_entries": 240,
+    "aggregation_window": 80,
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "required_run_modes": [
+      "rehearsal",
+      "trend_gate",
+      "release_candidate",
+      "release_blocking"
+    ],
+    "max_missing_archive_backends": 1,
+    "max_missing_archive_run_modes": 0,
+    "max_backend_warning_delta": 2,
+    "max_backend_blocker_delta": 0,
+    "max_archive_trace_failures": 0
+  },
+  "approval_threshold_templates": {
+    "default_template": "standard",
+    "run_mode_templates": {
+      "rehearsal": "relaxed",
+      "trend_gate": "standard",
+      "release_candidate": "candidate",
+      "release_blocking": "blocking"
+    },
+    "templates": {
+      "relaxed": {
+        "approval_workflow": {
+          "max_approval_failures": 1
+        },
+        "approval_audit_trail": {
+          "max_history_trace_failures": 1
+        },
+        "approval_history_archive": {
+          "max_archive_trace_failures": 1,
+          "max_missing_archive_backends": 1,
+          "max_missing_archive_run_modes": 1
+        }
+      },
+      "standard": {
+        "approval_workflow": {
+          "max_approval_failures": 0
+        },
+        "approval_audit_trail": {
+          "max_history_trace_failures": 0
+        },
+        "approval_history_archive": {
+          "max_archive_trace_failures": 0,
+          "max_missing_archive_backends": 1,
+          "max_missing_archive_run_modes": 0
+        }
+      },
+      "candidate": {
+        "approval_workflow": {
+          "max_approval_failures": 0
+        },
+        "approval_audit_trail": {
+          "max_history_trace_failures": 0
+        },
+        "approval_history_archive": {
+          "max_archive_trace_failures": 0,
+          "max_missing_archive_backends": 0,
+          "max_missing_archive_run_modes": 0,
+          "max_backend_warning_delta": 1,
+          "max_backend_blocker_delta": 0
+        }
+      },
+      "blocking": {
+        "approval_workflow": {
+          "max_approval_failures": 0
+        },
+        "approval_audit_trail": {
+          "max_history_trace_failures": 0
+        },
+        "approval_history_archive": {
+          "max_archive_trace_failures": 0,
+          "max_missing_archive_backends": 0,
+          "max_missing_archive_run_modes": 0,
+          "max_backend_warning_delta": 0,
+          "max_backend_blocker_delta": 0
+        }
+      }
+    }
+  },
+  "release_candidate_tracking": {
+    "history_file": "user://visual_snapshot_approval_archive.json",
+    "window": 40,
+    "required_run_modes": [
+      "release_candidate"
+    ],
+    "required_strategies": [
+      "release_candidate"
+    ],
+    "min_runs": 1,
+    "max_avg_warnings": 1.0,
+    "max_total_blockers": 0,
+    "max_tracking_failures": 0
+  },
+  "report_layers": {
+    "world": {
+      "snapshot_ids": [
+        "chapter_1_world",
+        "chapter_2_world",
+        "chapter_3_world",
+        "chapter_4_world"
+      ],
+      "max_layer_blockers": 0,
+      "max_layer_warnings": 2,
+      "min_pass_ratio": 1.0
+    },
+    "ui": {
+      "snapshot_ids": [
+        "main_menu_ui"
+      ],
+      "max_layer_blockers": 0,
+      "max_layer_warnings": 1,
+      "min_pass_ratio": 1.0
+    }
+  },
+  "cross_version_baseline": {
+    "reference_channels": [
+      "chapter_snapshot_v1",
+      "chapter_snapshot_v2",
+      "chapter_snapshot_v3"
+    ],
+    "max_drift": {
+      "opaque_ratio": 0.35,
+      "unique_color_ratio": 1.0,
+      "avg_luma": 0.4
+    },
+    "max_violations": 0,
+    "snapshot_references": {
+      "chapter_1_world": {
+        "opaque_ratio": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        },
+        "unique_colors": {
+          "chapter_snapshot_v1": 198,
+          "chapter_snapshot_v2": 198,
+          "chapter_snapshot_v3": 198
+        },
+        "avg_luma": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        }
+      },
+      "chapter_2_world": {
+        "opaque_ratio": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        },
+        "unique_colors": {
+          "chapter_snapshot_v1": 198,
+          "chapter_snapshot_v2": 198,
+          "chapter_snapshot_v3": 198
+        },
+        "avg_luma": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        }
+      },
+      "chapter_3_world": {
+        "opaque_ratio": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        },
+        "unique_colors": {
+          "chapter_snapshot_v1": 198,
+          "chapter_snapshot_v2": 198,
+          "chapter_snapshot_v3": 198
+        },
+        "avg_luma": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        }
+      },
+      "chapter_4_world": {
+        "opaque_ratio": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        },
+        "unique_colors": {
+          "chapter_snapshot_v1": 198,
+          "chapter_snapshot_v2": 198,
+          "chapter_snapshot_v3": 198
+        },
+        "avg_luma": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        }
+      },
+      "main_menu_ui": {
+        "opaque_ratio": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        },
+        "unique_colors": {
+          "chapter_snapshot_v1": 101,
+          "chapter_snapshot_v2": 101,
+          "chapter_snapshot_v3": 101
+        },
+        "avg_luma": {
+          "chapter_snapshot_v1": 0.95,
+          "chapter_snapshot_v2": 0.95,
+          "chapter_snapshot_v3": 0.95
+        }
+      }
+    }
+  }
+}

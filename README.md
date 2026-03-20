@@ -25,6 +25,10 @@ Current playable prototype includes:
 - Main gameplay scene now includes a chapter-specific ambient FX TileMap layer with atlas-cycled glow glyphs (`ambient_fx_interval` driven)
 - Chapter visual profiles now drive detail tint/alpha pulse and ambient FX scroll/wave cadence (`visual_profile` in `environment_config.json`)
 - Tile atlases are now generated in a handdrawn profile (`handdrawn_v1`) with an `atlas_manifest.json` snapshot for pipeline traceability
+- Content-depth cycle D18 expanded roster/evolution/shop/memory coverage (characters 12, evolutions 13, shop passive 14, shop weapon 15, memory fragments 22)
+- Resource directory families now use a mixed ready/candidate catalog baseline (`stub_catalog_v8`) with material-profile mapping plus preview/acceptance metadata, and batch-6 `production_ready` IDs validated via ratio + cross-scene smoke + scene-visual checks (including `bool_true`) with acceptance-profile tier semantics and layered trend baselines
+- D36 visual snapshot regression chain now adds approval-threshold template orchestration and release-candidate tracking (`approval_threshold_templates` + `release_candidate_tracking`) on top of approval history archive aggregation (`approval_history_archive`), approval audit persistence (`approval_audit_trail`), backend matrix governance + approval workflow hard gates (`backend_matrix_governance` + `approval_workflow`), release template manifest governance (`release_gate_templates`), strategy orchestration (`strategy_orchestration`), exception lifecycle governance (`exception_lifecycle`), cross-backend regression attribution (`backend_attribution`), whitelist convergence automation (`whitelist_convergence`), required snapshot alignment, backend capture-mode governance, whitelist-governed diff tolerance, precision convergence, cross-version baseline drift controls, and layered report convergence gates
+- D30-1 adds a fast JSON syntax gate (`scripts/tools/check_json_syntax.py`) for all balance/catalog/atlas JSON files, enabling fail-fast parse diagnostics before semantic validators and heavier rehearsals
 - Meta progression save with run summary rewards
 - Route-based victory ending unlock and achievement tracking
 - Run result panel with ending/achievement unlock summary
@@ -77,15 +81,75 @@ Outputs:
 - `user://quality_baseline_latest.json`
 - `user://quality_baseline_latest.md`
 
-Baseline includes tiered pressure scenarios (`elite_pressure_medium/high/extreme`) and severity-graded alerts (`critical/warning/info`).
+Baseline includes tiered pressure scenarios (`elite_pressure_medium/high/extreme` + `boss_pressure_endurance`) and severity-graded alerts (`critical/warning/info`).
+
+## Run release gate rehearsal
+
+```bash
+godot --headless --path . -s res://scripts/tools/run_release_gate.gd
+```
+
+Outputs:
+- `user://release_gate_latest.json`
+- `user://release_gate_latest.md`
+
+Release gate rehearsal validates baseline alert limits, required scenario coverage, required InputMap action bindings, and CI platform markers.
+
+## Run compatibility rehearsal
+
+```bash
+godot --headless --path . -s res://scripts/tools/run_compatibility_rehearsal.gd
+```
+
+Outputs:
+- `user://compatibility_rehearsal_latest.json`
+- `user://compatibility_rehearsal_latest.md`
+
+Compatibility rehearsal validates profile-level scene smoke checks, required action bindings, CI platform markers, and release-threshold pass-rate constraints.
+
+## Run resource acceptance rehearsal
+
+```bash
+godot --headless --path . -s res://scripts/tools/run_resource_acceptance.gd
+```
+
+Outputs:
+- `user://resource_acceptance_latest.json`
+- `user://resource_acceptance_latest.md`
+- `user://resource_acceptance_previous.json` (auto-rotated for trend comparison)
+
+Resource acceptance rehearsal validates batch-6 production-ready resource IDs, per-category ready-count/ready-ratio thresholds, required preview/acceptance fields in catalog stubs, acceptance-profile tier semantics (`candidate`/`ready`), acceptance-scene matrix smoke checks, scene-visual node/property checks (including `bool_true`), layered trend baselines (`bucket_ready_ratio_min` + category/bucket ratio-drop limits), and `production_ready_ratio_by_category` consistency.
+
+## Run visual snapshot regression
+
+```bash
+godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.gd
+```
+
+Outputs:
+- `user://visual_snapshot_latest.json`
+- `user://visual_snapshot_latest.md`
+- `user://visual_snapshot_previous.json` (auto-rotated for trend comparison)
+
+Visual snapshot regression validates chapter/world+UI snapshot metric baselines (`opaque_ratio` / `unique_colors` / `avg_luma`), required baseline snapshot coverage + backend capture-mode alignment, multi-round precision convergence (`sample_rounds` + stddev bounds), backend-profiled tolerance (`default/linux_headless/windows_headless`), whitelist-governed diff tolerances (`diff_whitelist` + `whitelist_policy`), cross-version reference drift controls (`cross_version_baseline`), layer-level convergence gates (`report_layers`), cross-backend regression attribution limits (`backend_attribution`), whitelist convergence suggestions (`whitelist_convergence`), exception lifecycle governance (`exception_lifecycle`: expire idle entries + auto reclaim candidates), strategy-template orchestration (`strategy_orchestration`: `ci_rehearsal` / `ci_trend_gate` / release profiles), release template manifest governance (`release_gate_templates`: required strategy-template bindings + CI run_mode bindings + publish checklist), backend matrix governance (`backend_matrix_governance`: required backend matrix + run mode coverage), approval workflow constraints (`approval_workflow`: required report sections + strategy-level zero blocker/warning policy), approval audit trail persistence (`approval_audit_trail`: history persistence + run-mode/backend coverage + pipeline-id trace checks), approval history archive aggregation (`approval_history_archive`: rolling-window archive aggregation + cross-backend warning/blocker delta limits), approval-threshold template application (`approval_threshold_templates`: run-mode template overrides for workflow/audit/archive gates), release-candidate tracking (`release_candidate_tracking`: windowed candidate stability checks), and trend-drop limits.
+
+## Sync resource stub catalog
+
+```bash
+python scripts/tools/sync_resource_stubs.py
+```
+
+This regenerates:
+- `resources/resource_catalog.json`
+- mapped `.tres` stubs under `resources/{characters,weapons,passives,accessories,enemies,evolutions,meta_upgrades,forge_recipes}/`
 
 ## CI (GitHub Actions)
 
 Workflow file: `.github/workflows/ci.yml`
 
 CI jobs:
-- `validate-config-and-resources`: run `scripts/validate_configs.py` and `scripts/check_resources.py`
-- `godot-headless-and-gut`: run `godot --import`, headless startup check, GUT tests (unit + integration), and quality baseline snapshot script (`scripts/tools/run_quality_baseline.gd`)
+- `validate-config-and-resources`: run JSON syntax gate (`scripts/tools/check_json_syntax.py`) before `scripts/validate_configs.py` and `scripts/check_resources.py`
+- `godot-headless-and-gut`: run `godot --import`, headless startup check, GUT tests (unit + integration), quality baseline snapshot script (`scripts/tools/run_quality_baseline.gd`), release-gate rehearsal (`scripts/tools/run_release_gate.gd`), compatibility rehearsal (`scripts/tools/run_compatibility_rehearsal.gd`), resource-acceptance rehearsal with scene-visual checks (`scripts/tools/run_resource_acceptance.gd`), resource-acceptance trend+visual gate (second run), visual snapshot regression rehearsal (`scripts/tools/run_visual_snapshot_regression.gd` with `VISUAL_SNAPSHOT_BACKEND_TAG` + `VISUAL_SNAPSHOT_BACKEND_MATRIX` + `VISUAL_SNAPSHOT_STRATEGY=ci_rehearsal` + `VISUAL_SNAPSHOT_RUN_MODE=rehearsal` + `VISUAL_PIPELINE_ID`), visual snapshot trend gate (second run, `VISUAL_SNAPSHOT_STRATEGY=ci_trend_gate` + `VISUAL_SNAPSHOT_RUN_MODE=trend_gate` + `VISUAL_PIPELINE_ID`), and release template dry-runs (`VISUAL_SNAPSHOT_STRATEGY=release_candidate/release_blocking` + `VISUAL_PIPELINE_ID`) on `ubuntu-latest` + `windows-latest` matrix
 
 Trigger:
 - push (all branches)
@@ -156,11 +220,13 @@ Meta progression:
 ## Validate data
 
 ```bash
+python scripts/tools/check_json_syntax.py
 python scripts/validate_configs.py
 python scripts/check_resources.py
 ```
 
 Validation now includes semantic checks (not only JSON syntax), including:
+- fail-fast JSON syntax diagnostics (`scripts/tools/check_json_syntax.py`: file + line + column)
 - enemy scaling floor coverage (1-15) and room-time bracket ordering
 - enemy archetype weights, elite-wave interval sanity, and chapter archetype mapping integrity
 - shop economy schema checks (discount, restock growth/cap, ore exchange rules, category weights)
@@ -178,12 +244,17 @@ Validation now includes semantic checks (not only JSON syntax), including:
 - character weapon profile integrity (mode/count/spread/jitter/hits/style)
 - narrative event/transition structure and timed chapter-effect shape
 - narrative index segment uniqueness and resource path verification
-- quality baseline target schema (`quality_baseline_targets.json`: scenarios/frame-time thresholds/memory thresholds/compatibility matrix)
+- quality baseline target schema (`quality_baseline_targets.json`: scenarios including boss endurance + frame-time/memory thresholds + compatibility matrix)
 - quality baseline alert grading schema (`quality_baseline_targets.json.targets.alert_grading`: warning/critical ratios)
+- release gate target schema (`release_gate_targets.json`: alert limits + required scenarios + compatibility/platform markers + publish blockers)
+- compatibility rehearsal target schema (`compatibility_rehearsal_targets.json`: profiles + action bindings + release thresholds + publish blockers)
+- resource acceptance target schema (`resource_acceptance_targets.json`: batch-6 production-ready IDs + acceptance_scene_matrix + scene_visual_requirements + acceptance_profile_policy + trend_baseline + ready-count/ready-ratio/smoke-depth/visual-check/profile-mismatch/trend-regression thresholds)
+- visual snapshot regression schema (`visual_snapshot_targets.json`: chapter/ui snapshots + baseline_alignment (`required_snapshot_ids` + `allowed_capture_modes`) + precision convergence (`sample_rounds`/stddev) + backend profiles (`default/linux_headless/windows_headless`) + diff whitelist governance (`diff_whitelist` + `whitelist_policy`) + backend attribution (`backend_attribution`) + whitelist convergence (`whitelist_convergence`) + exception lifecycle policy (`exception_lifecycle`) + strategy orchestration (`strategy_orchestration`: default strategy + template overrides) + release gate templates (`release_gate_templates`: required strategy bindings + CI mode bindings + publish checklist) + backend matrix governance (`backend_matrix_governance`) + approval workflow (`approval_workflow`) + approval audit trail (`approval_audit_trail`) + approval history archive (`approval_history_archive`) + approval threshold templates (`approval_threshold_templates`) + release candidate tracking (`release_candidate_tracking`) + report_layers + cross_version_baseline + trend-drop gates)
 - environment hazard animation schema (`environment_config.json chapter_*.hazard_anim_interval`: bounded animation cadence)
 - environment ambient fx animation schema (`environment_config.json chapter_*.ambient_fx_interval`: bounded animation cadence)
 - chapter visual profile schema (`environment_config.json chapter_*.visual_profile`: tint/alpha/scroll/pulse/wave ranges)
 - tile atlas manifest schema (`assets/sprites/tiles/atlas_manifest.json`: style + atlas entries)
+- resource catalog + stub schema (`resources/resource_catalog.json` + `resources/**/*.tres`: requires mapped `id/path/source_json/material_profile/asset_state/preview_texture/acceptance_scene/acceptance_profile/acceptance_tier` consistency, valid profile-policy tier mapping, valid source/material/preview/scene targets, scene-visual requirement count consistency, bucket-level counts consistency, and per-category ready-ratio consistency)
 
 Smoke tests:
 - `test/unit/test_character_weapon_profiles.gd` validates character weapon profile schema and projectile setup handshake
@@ -194,6 +265,11 @@ Smoke tests:
 - `test/unit/test_map_generation_config.gd` also validates treasure-room schema keys and generated treasure room types
 - `test/unit/test_evolutions_config.gd` validates evolution recipe schema and evolution_profile bounds
 - `test/unit/test_enemy_pooling.gd` validates enemy pool lifecycle reset and death-release behavior
-- `test/unit/test_quality_baseline_targets.gd` validates quality baseline scenario/threshold schema and required InputMap actions
+- `test/unit/test_quality_baseline_targets.gd` validates quality baseline scenario/threshold schema (including boss endurance setup) and required InputMap actions
+- `test/unit/test_release_gate_targets.gd` validates release gate schema, required scenario list, required input-action bindings, and CI platform markers
+- `test/unit/test_compatibility_rehearsal_targets.gd` validates compatibility rehearsal schema, profile markers, required actions, and CI platform markers
+- `test/unit/test_resource_acceptance_targets.gd` validates resource acceptance target schema, required production-ready IDs, acceptance scene matrix, scene_visual_requirements, acceptance-profile policy mapping, trend baseline thresholds, and per-category ready-count/ready-ratio plus bucket-ratio guards
+- `test/unit/test_resource_directory_baseline.gd` validates resource catalog v8 structure, mapped stub/source/material/preview/acceptance consistency, scene-visual requirement counts, acceptance-tier semantics, production-ready/tier/bucket counts, per-category ready-ratio consistency, and balance-ID coverage across resource families
+- `test/unit/test_visual_snapshot_targets.gd` validates visual snapshot target schema, baseline-alignment references, diff whitelist/whitelist-policy bounds, backend-attribution/whitelist-convergence/exception-lifecycle policy bounds, strategy-orchestration structure/references/override-shape, release-gate-template manifest bindings/checklist constraints, backend-matrix governance + approval-workflow + approval-audit-trail + approval-history-archive constraints, approval-threshold-template and release-candidate-tracking constraints, precision/backend-profile bounds, report layer constraints, cross-version baseline references, tightened trend thresholds, and referenced snapshot scenes existence
 - `test/unit/test_visual_tilemap_layers.gd` validates game_world TileMap visual layers, chapter-specific resource tileset switching (including ground-detail + ambient-fx layers), hazard overlay state reaction, hazard/ambient atlas animation ticking, chapter visual-profile tint/scroll plus pulse/wave feedback, and handdrawn atlas manifest guardrails
-- `test/integration/test_core_flow_regression.gd` validates character-start->progress->settlement persistence, level-up evolution path, baseline/new-cycle shop purchase closure, and stat feedback
+- `test/integration/test_core_flow_regression.gd` validates character-start->progress->settlement persistence, level-up evolution path, baseline/new-cycle shop purchase closure (including D13 + D18 weapon branches), and stat feedback

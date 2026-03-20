@@ -585,6 +585,54 @@
     "memory_ch3_route_raider": {
       "title": "Fragment X: Whisper Bargain",
       "text": "You listened to the ice and took its price, trading warmth for power that never sleeps."
+    },
+    "memory_ch4_route_vanguard": {
+      "title": "Fragment XI: Dusk Bastion",
+      "text": "At the final breach you held the broken gate, buying one last dawn for the camp behind you."
+    },
+    "memory_ch4_route_raider": {
+      "title": "Fragment XII: Crown of Ash",
+      "text": "You struck first at the abyssal throne and left with spoils that burned even in silence."
+    },
+    "memory_ch2_event_forge": {
+      "title": "Fragment XIII: Furnace Ledger",
+      "text": "Every ingot had a name; every blade you raised was a promise you refused to forget."
+    },
+    "memory_ch3_event_sanctum": {
+      "title": "Fragment XIV: Silent Choir",
+      "text": "The frozen sanctum sang without voices, and you learned to read its hymns in fractured light."
+    },
+    "memory_ch4_event_void": {
+      "title": "Fragment XV: Empty Coronation",
+      "text": "When the void offered a crown, you answered with steel and wrote your oath into the dark."
+    },
+    "memory_meta_campfire": {
+      "title": "Fragment XVI: Campfire Testament",
+      "text": "Between runs, embers carried your old vows; each return sharpened the path you chose to keep."
+    },
+    "memory_ch4_route_vanguard_ii": {
+      "title": "Fragment XVII: Last Bulwark",
+      "text": "When the abyss breached the final ward, you planted your banner and held until dawn split the smoke."
+    },
+    "memory_ch4_route_raider_ii": {
+      "title": "Fragment XVIII: Spoils of Dusk",
+      "text": "You returned from the shattered throne with cursed relics and a silence no priest could cleanse."
+    },
+    "memory_ch2_event_forge_ii": {
+      "title": "Fragment XIX: Tempered Debt",
+      "text": "Each strike at the anvil paid an old debt; each spark was a vow to those you failed to protect."
+    },
+    "memory_ch3_event_sanctum_ii": {
+      "title": "Fragment XX: Frostbound Psalm",
+      "text": "In the frozen nave, hymns traced your blade and taught you where mercy ends and duty begins."
+    },
+    "memory_ch4_event_void_ii": {
+      "title": "Fragment XXI: Throne Without Name",
+      "text": "The void called you by your oldest name, and you answered with steel before the echo could root."
+    },
+    "memory_meta_reliquary": {
+      "title": "Fragment XXII: Reliquary Oath",
+      "text": "Back at camp, the reliquary glowed with stolen starlight, reminding you that every run rewrites your covenant."
     }
   },
   "endings": {

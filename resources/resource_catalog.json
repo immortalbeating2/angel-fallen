@@ -1,0 +1,1486 @@
+{
+  "version": "stub_catalog_v8",
+  "generated_at_utc": "2026-03-20T12:45:07Z",
+  "asset_state": "mixed_candidate_ready",
+  "material_profile_map": {
+    "characters": "res://resources/material_profiles/mat_character_base.tres",
+    "weapons": "res://resources/material_profiles/mat_weapon_base.tres",
+    "passives": "res://resources/material_profiles/mat_passive_base.tres",
+    "accessories": "res://resources/material_profiles/mat_accessory_base.tres",
+    "enemies": "res://resources/material_profiles/mat_enemy_base.tres",
+    "evolutions": "res://resources/material_profiles/mat_evolution_base.tres",
+    "meta_upgrades": "res://resources/material_profiles/mat_meta_upgrade_base.tres",
+    "forge_recipes": "res://resources/material_profiles/mat_forge_recipe_base.tres"
+  },
+  "acceptance_scene_map": {
+    "characters": "res://scenes/main_menu/main_menu.tscn",
+    "weapons": "res://scenes/game/game_world.tscn",
+    "passives": "res://scenes/game/game_world.tscn",
+    "accessories": "res://scenes/game/game_world.tscn",
+    "enemies": "res://scenes/game/enemy.tscn",
+    "evolutions": "res://scenes/ui/level_up_panel.tscn",
+    "meta_upgrades": "res://scenes/main_menu/main_menu.tscn",
+    "forge_recipes": "res://scenes/ui/level_up_panel.tscn"
+  },
+  "scene_visual_requirements": {
+    "characters": [
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/CharacterNameValue",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/CharacterTraitValue",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/StartButton",
+        "node_type": "Button",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/CharacterSwitchRow/CharacterPrevButton",
+        "node_type": "Button",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ],
+    "weapons": [
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "GroundTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "DoorTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option1",
+        "node_type": "Button",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "Player/Polygon2D",
+        "node_type": "Polygon2D",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ],
+    "passives": [
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "HazardTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option2",
+        "node_type": "Button",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/hud.tscn",
+        "node_path": "MarginContainer/PanelContainer/VBoxContainer/HazardValue",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "GroundDetailTileMap",
+        "node_type": "TileMap",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ],
+    "accessories": [
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "AmbientFxTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/hud.tscn",
+        "node_path": "MarginContainer/PanelContainer/VBoxContainer/AccessoryValue",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Unlocks",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/hud.tscn",
+        "node_path": "ToastLayer",
+        "node_type": "Control",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ],
+    "enemies": [
+      {
+        "scene": "res://scenes/game/enemy.tscn",
+        "node_path": "Polygon2D",
+        "node_type": "Polygon2D",
+        "rule": "array_non_empty",
+        "property": "polygon"
+      },
+      {
+        "scene": "res://scenes/game/enemy.tscn",
+        "node_path": "CollisionShape2D",
+        "node_type": "CollisionShape2D",
+        "rule": "non_null",
+        "property": "shape"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "EnemySpawner",
+        "node_type": "Node2D",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/game/enemy.tscn",
+        "node_path": "Polygon2D",
+        "node_type": "Polygon2D",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ],
+    "evolutions": [
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option3",
+        "node_type": "Button",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/RouteStyleSummary",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "LevelUpPanel",
+        "node_type": "Control",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option1",
+        "node_type": "Button",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ],
+    "meta_upgrades": [
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/Upgrade1Button",
+        "node_type": "Button",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/runtime_settings_panel.tscn",
+        "node_path": "MasterRow/Slider",
+        "node_type": "HSlider",
+        "rule": "float_gt_zero",
+        "property": "max_value"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/MetaValue",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/runtime_settings_panel.tscn",
+        "node_path": "Actions/ResetDefaultsButton",
+        "node_type": "Button",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ],
+    "forge_recipes": [
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/TimelineAnchorButton",
+        "node_type": "Button",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Title",
+        "node_type": "Label",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/ReviewFragmentButton",
+        "node_type": "Button",
+        "rule": "non_empty_string",
+        "property": "text"
+      },
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/TimelineScopeButton",
+        "node_type": "Button",
+        "rule": "bool_true",
+        "property": "visible"
+      }
+    ]
+  },
+  "scene_visual_requirement_counts": {
+    "characters": 4,
+    "weapons": 4,
+    "passives": 4,
+    "accessories": 4,
+    "enemies": 4,
+    "evolutions": 4,
+    "meta_upgrades": 4,
+    "forge_recipes": 4
+  },
+  "preview_texture_map": {
+    "characters": "res://assets/sprites/tiles/ground_ch1.png",
+    "weapons": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+    "passives": "res://assets/sprites/tiles/ground_detail_ch2.png",
+    "accessories": "res://assets/sprites/tiles/ground_detail_ch3.png",
+    "enemies": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+    "evolutions": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+    "meta_upgrades": "res://assets/sprites/tiles/doors_ch1.png",
+    "forge_recipes": "res://assets/sprites/tiles/doors_ch3.png"
+  },
+  "acceptance_profile_policy": {
+    "required_ready_profile_tier": "ready",
+    "profiles": {
+      "menu_candidate_preview": {
+        "tier": "candidate",
+        "report_bucket": "menu"
+      },
+      "combat_candidate_preview": {
+        "tier": "candidate",
+        "report_bucket": "combat"
+      },
+      "ui_candidate_preview": {
+        "tier": "candidate",
+        "report_bucket": "ui"
+      },
+      "menu_ready_matrix": {
+        "tier": "ready",
+        "report_bucket": "menu"
+      },
+      "combat_ready_matrix": {
+        "tier": "ready",
+        "report_bucket": "combat"
+      },
+      "ui_ready_matrix": {
+        "tier": "ready",
+        "report_bucket": "ui"
+      }
+    },
+    "category_profile_map": {
+      "characters": {
+        "production_candidate": "menu_candidate_preview",
+        "production_ready": "menu_ready_matrix"
+      },
+      "weapons": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "passives": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "accessories": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "enemies": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "evolutions": {
+        "production_candidate": "ui_candidate_preview",
+        "production_ready": "ui_ready_matrix"
+      },
+      "meta_upgrades": {
+        "production_candidate": "menu_candidate_preview",
+        "production_ready": "menu_ready_matrix"
+      },
+      "forge_recipes": {
+        "production_candidate": "ui_candidate_preview",
+        "production_ready": "ui_ready_matrix"
+      }
+    }
+  },
+  "production_ready_counts": {
+    "characters": 12,
+    "weapons": 15,
+    "passives": 14,
+    "accessories": 4,
+    "enemies": 20,
+    "evolutions": 13,
+    "meta_upgrades": 5,
+    "forge_recipes": 13
+  },
+  "production_ready_ratio_by_category": {
+    "characters": 1.0,
+    "weapons": 1.0,
+    "passives": 1.0,
+    "accessories": 1.0,
+    "enemies": 1.0,
+    "evolutions": 1.0,
+    "meta_upgrades": 1.0,
+    "forge_recipes": 1.0
+  },
+  "acceptance_tier_counts": {
+    "characters": {
+      "candidate": 0,
+      "ready": 12
+    },
+    "weapons": {
+      "candidate": 0,
+      "ready": 15
+    },
+    "passives": {
+      "candidate": 0,
+      "ready": 14
+    },
+    "accessories": {
+      "candidate": 0,
+      "ready": 4
+    },
+    "enemies": {
+      "candidate": 0,
+      "ready": 20
+    },
+    "evolutions": {
+      "candidate": 0,
+      "ready": 13
+    },
+    "meta_upgrades": {
+      "candidate": 0,
+      "ready": 5
+    },
+    "forge_recipes": {
+      "candidate": 0,
+      "ready": 13
+    }
+  },
+  "acceptance_bucket_counts": {
+    "menu": {
+      "entries": 17,
+      "ready_entries": 17
+    },
+    "combat": {
+      "entries": 53,
+      "ready_entries": 53
+    },
+    "ui": {
+      "entries": 26,
+      "ready_entries": 26
+    }
+  },
+  "categories": {
+    "characters": [
+      {
+        "id": "char_arbiter",
+        "path": "res://resources/characters/char_arbiter.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_cleric",
+        "path": "res://resources/characters/char_cleric.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_exile",
+        "path": "res://resources/characters/char_exile.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_huntress",
+        "path": "res://resources/characters/char_huntress.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_knight",
+        "path": "res://resources/characters/char_knight.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_mage",
+        "path": "res://resources/characters/char_mage.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_occultist",
+        "path": "res://resources/characters/char_occultist.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_oracle",
+        "path": "res://resources/characters/char_oracle.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_rogue",
+        "path": "res://resources/characters/char_rogue.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_sentinel",
+        "path": "res://resources/characters/char_sentinel.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_templar",
+        "path": "res://resources/characters/char_templar.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_witchblade",
+        "path": "res://resources/characters/char_witchblade.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ],
+    "weapons": [
+      {
+        "id": "wpn_arcane_comet",
+        "path": "res://resources/weapons/wpn_arcane_comet.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_astral_disc",
+        "path": "res://resources/weapons/wpn_astral_disc.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_blood_rite",
+        "path": "res://resources/weapons/wpn_blood_rite.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_frost_orb",
+        "path": "res://resources/weapons/wpn_frost_orb.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_holy_cross",
+        "path": "res://resources/weapons/wpn_holy_cross.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_holy_judgment",
+        "path": "res://resources/weapons/wpn_holy_judgment.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_magic_missile",
+        "path": "res://resources/weapons/wpn_magic_missile.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_nether_shard",
+        "path": "res://resources/weapons/wpn_nether_shard.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_radiant_hammer",
+        "path": "res://resources/weapons/wpn_radiant_hammer.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_sacred_lance",
+        "path": "res://resources/weapons/wpn_sacred_lance.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_shadow_tempest",
+        "path": "res://resources/weapons/wpn_shadow_tempest.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_solar_supernova",
+        "path": "res://resources/weapons/wpn_solar_supernova.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_storm_bow",
+        "path": "res://resources/weapons/wpn_storm_bow.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_void_chain",
+        "path": "res://resources/weapons/wpn_void_chain.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_vowblade",
+        "path": "res://resources/weapons/wpn_vowblade.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ],
+    "passives": [
+      {
+        "id": "pas_armor",
+        "path": "res://resources/passives/pas_armor.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_bastion",
+        "path": "res://resources/passives/pas_bastion.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_focus",
+        "path": "res://resources/passives/pas_focus.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_force",
+        "path": "res://resources/passives/pas_force.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_fortune",
+        "path": "res://resources/passives/pas_fortune.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_harvest",
+        "path": "res://resources/passives/pas_harvest.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_might",
+        "path": "res://resources/passives/pas_might.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_momentum",
+        "path": "res://resources/passives/pas_momentum.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_overcharge",
+        "path": "res://resources/passives/pas_overcharge.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_precision",
+        "path": "res://resources/passives/pas_precision.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_resolve",
+        "path": "res://resources/passives/pas_resolve.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_siphon",
+        "path": "res://resources/passives/pas_siphon.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_warding",
+        "path": "res://resources/passives/pas_warding.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "pas_zeal",
+        "path": "res://resources/passives/pas_zeal.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_passive_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ],
+    "accessories": [
+      {
+        "id": "acc_flame_core",
+        "path": "res://resources/accessories/acc_flame_core.tres",
+        "source_json": "res://scripts/game/game_world.gd",
+        "material_profile": "res://resources/material_profiles/mat_accessory_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch3.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "acc_heart_of_mine",
+        "path": "res://resources/accessories/acc_heart_of_mine.tres",
+        "source_json": "res://scripts/game/game_world.gd",
+        "material_profile": "res://resources/material_profiles/mat_accessory_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch3.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "acc_void_eye",
+        "path": "res://resources/accessories/acc_void_eye.tres",
+        "source_json": "res://scripts/game/game_world.gd",
+        "material_profile": "res://resources/material_profiles/mat_accessory_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch3.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "acc_zero_mark",
+        "path": "res://resources/accessories/acc_zero_mark.tres",
+        "source_json": "res://scripts/game/game_world.gd",
+        "material_profile": "res://resources/material_profiles/mat_accessory_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_detail_ch3.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ],
+    "enemies": [
+      {
+        "id": "enemy_abyss_guard",
+        "path": "res://resources/enemies/enemy_abyss_guard.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_blizzard_mage",
+        "path": "res://resources/enemies/enemy_blizzard_mage.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_brute",
+        "path": "res://resources/enemies/enemy_brute.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_burn_guard",
+        "path": "res://resources/enemies/enemy_burn_guard.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_emberling",
+        "path": "res://resources/enemies/enemy_emberling.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_flame_channeler",
+        "path": "res://resources/enemies/enemy_flame_channeler.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_flame_lord",
+        "path": "res://resources/enemies/enemy_flame_lord.tres",
+        "source_json": "res://data/balance/boss_phases.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_frost_king",
+        "path": "res://resources/enemies/enemy_frost_king.tres",
+        "source_json": "res://data/balance/boss_phases.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_frostling",
+        "path": "res://resources/enemies/enemy_frostling.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_glacier_runner",
+        "path": "res://resources/enemies/enemy_glacier_runner.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_hexcaster",
+        "path": "res://resources/enemies/enemy_hexcaster.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_ice_guard",
+        "path": "res://resources/enemies/enemy_ice_guard.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_rift_runner",
+        "path": "res://resources/enemies/enemy_rift_runner.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_rock_colossus",
+        "path": "res://resources/enemies/enemy_rock_colossus.tres",
+        "source_json": "res://data/balance/boss_phases.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_scorch_runner",
+        "path": "res://resources/enemies/enemy_scorch_runner.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_shadowling",
+        "path": "res://resources/enemies/enemy_shadowling.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_stalker",
+        "path": "res://resources/enemies/enemy_stalker.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_void_lord",
+        "path": "res://resources/enemies/enemy_void_lord.tres",
+        "source_json": "res://data/balance/boss_phases.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_void_priest",
+        "path": "res://resources/enemies/enemy_void_priest.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "enemy_voidling",
+        "path": "res://resources/enemies/enemy_voidling.tres",
+        "source_json": "res://data/balance/enemy_scaling.json",
+        "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "acceptance_scene": "res://scenes/game/enemy.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ],
+    "evolutions": [
+      {
+        "id": "evo_abyssal_chain",
+        "path": "res://resources/evolutions/evo_abyssal_chain.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_arcane_comet",
+        "path": "res://resources/evolutions/evo_arcane_comet.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_astral_horizon",
+        "path": "res://resources/evolutions/evo_astral_horizon.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_blood_requiem",
+        "path": "res://resources/evolutions/evo_blood_requiem.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_glacial_nova",
+        "path": "res://resources/evolutions/evo_glacial_nova.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_holy_judgment",
+        "path": "res://resources/evolutions/evo_holy_judgment.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_nether_maelstrom",
+        "path": "res://resources/evolutions/evo_nether_maelstrom.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_radiant_cataclysm",
+        "path": "res://resources/evolutions/evo_radiant_cataclysm.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_seraph_lance",
+        "path": "res://resources/evolutions/evo_seraph_lance.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_shadow_tempest",
+        "path": "res://resources/evolutions/evo_shadow_tempest.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_solar_supernova",
+        "path": "res://resources/evolutions/evo_solar_supernova.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_tempest_onslaught",
+        "path": "res://resources/evolutions/evo_tempest_onslaught.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_vowstorm",
+        "path": "res://resources/evolutions/evo_vowstorm.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ],
+    "meta_upgrades": [
+      {
+        "id": "meta_crit",
+        "path": "res://resources/meta_upgrades/meta_crit.tres",
+        "source_json": "res://data/balance/meta_upgrades.json",
+        "material_profile": "res://resources/material_profiles/mat_meta_upgrade_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "meta_damage",
+        "path": "res://resources/meta_upgrades/meta_damage.tres",
+        "source_json": "res://data/balance/meta_upgrades.json",
+        "material_profile": "res://resources/material_profiles/mat_meta_upgrade_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "meta_max_hp",
+        "path": "res://resources/meta_upgrades/meta_max_hp.tres",
+        "source_json": "res://data/balance/meta_upgrades.json",
+        "material_profile": "res://resources/material_profiles/mat_meta_upgrade_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "meta_speed",
+        "path": "res://resources/meta_upgrades/meta_speed.tres",
+        "source_json": "res://data/balance/meta_upgrades.json",
+        "material_profile": "res://resources/material_profiles/mat_meta_upgrade_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "meta_stamina",
+        "path": "res://resources/meta_upgrades/meta_stamina.tres",
+        "source_json": "res://data/balance/meta_upgrades.json",
+        "material_profile": "res://resources/material_profiles/mat_meta_upgrade_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ],
+    "forge_recipes": [
+      {
+        "id": "forge_abyssal_chain",
+        "path": "res://resources/forge_recipes/forge_abyssal_chain.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_arcane_comet",
+        "path": "res://resources/forge_recipes/forge_arcane_comet.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_astral_horizon",
+        "path": "res://resources/forge_recipes/forge_astral_horizon.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_blood_requiem",
+        "path": "res://resources/forge_recipes/forge_blood_requiem.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_glacial_nova",
+        "path": "res://resources/forge_recipes/forge_glacial_nova.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_holy_judgment",
+        "path": "res://resources/forge_recipes/forge_holy_judgment.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_nether_maelstrom",
+        "path": "res://resources/forge_recipes/forge_nether_maelstrom.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_radiant_cataclysm",
+        "path": "res://resources/forge_recipes/forge_radiant_cataclysm.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_seraph_lance",
+        "path": "res://resources/forge_recipes/forge_seraph_lance.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_shadow_tempest",
+        "path": "res://resources/forge_recipes/forge_shadow_tempest.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_solar_supernova",
+        "path": "res://resources/forge_recipes/forge_solar_supernova.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_tempest_onslaught",
+        "path": "res://resources/forge_recipes/forge_tempest_onslaught.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_vowstorm",
+        "path": "res://resources/forge_recipes/forge_vowstorm.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      }
+    ]
+  }
+}

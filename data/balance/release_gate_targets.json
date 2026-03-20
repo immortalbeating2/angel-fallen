@@ -1,0 +1,39 @@
+{
+  "channel": "internal_candidate",
+  "baseline_alert_limits": {
+    "max_total": 0,
+    "max_critical": 0,
+    "max_warning": 0
+  },
+  "scenario_requirements": {
+    "must_include": [
+      "menu_idle",
+      "game_world_idle",
+      "game_world_elite_pressure_medium",
+      "game_world_elite_pressure_high",
+      "game_world_elite_pressure_extreme",
+      "game_world_boss_pressure_endurance"
+    ]
+  },
+  "compatibility_requirements": {
+    "required_actions_with_events": [
+      "move_up",
+      "move_down",
+      "move_left",
+      "move_right",
+      "sprint",
+      "interact",
+      "pause"
+    ],
+    "required_platform_markers": [
+      "ubuntu-latest",
+      "windows-latest"
+    ]
+  },
+  "publish_blockers": {
+    "require_baseline_json": true,
+    "require_baseline_markdown": true,
+    "require_zero_critical_alerts": true,
+    "require_zero_warning_alerts": true
+  }
+}

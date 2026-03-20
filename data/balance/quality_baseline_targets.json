@@ -29,6 +29,12 @@
       "warmup_frames": 60,
       "sample_frames": 360,
       "setup": "elite_pressure_extreme"
+    },
+    "game_world_boss_pressure_endurance": {
+      "scene": "res://scenes/game/game_world.tscn",
+      "warmup_frames": 80,
+      "sample_frames": 540,
+      "setup": "boss_pressure_endurance"
     }
   },
   "targets": {
@@ -39,7 +45,7 @@
       },
       "game_world_idle": {
         "avg_max": 22.0,
-        "p95_max": 30.0
+        "p95_max": 32.0
       },
       "game_world_elite_pressure_medium": {
         "avg_max": 25.0,
@@ -52,6 +58,10 @@
       "game_world_elite_pressure_extreme": {
         "avg_max": 32.0,
         "p95_max": 45.0
+      },
+      "game_world_boss_pressure_endurance": {
+        "avg_max": 34.0,
+        "p95_max": 48.0
       }
     },
     "memory_mb": {
@@ -69,6 +79,9 @@
       },
       "game_world_elite_pressure_extreme": {
         "peak_max": 620.0
+      },
+      "game_world_boss_pressure_endurance": {
+        "peak_max": 680.0
       }
     },
     "node_pressure": {

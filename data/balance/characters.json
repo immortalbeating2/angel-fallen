@@ -257,6 +257,134 @@
       "crit_multiplier": 1.8,
       "base_damage": 12.1,
       "attack_interval": 0.4
+    },
+    {
+      "id": "char_sentinel",
+      "name": "Sentinel",
+      "description": "A fortified guardian who anchors the line with crushing hammer strikes.",
+      "unlock_type": "achievement",
+      "unlock_value": "ach_guardian_200",
+      "unlock_desc": "Unlock by obtaining achievement 'Guardian 200'",
+      "trait_id": "trait_wall_of_dawn",
+      "trait_name": "Wall of Dawn",
+      "trait_desc": "Gain max HP and armor bonuses at run start.",
+      "trait_effects": {
+        "max_hp_bonus": 20,
+        "armor_bonus": 0.06
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_radiant_hammer",
+        "mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0,
+        "spread_jitter_deg": 0,
+        "projectile_hits": 4,
+        "projectile_style": "sentinel_hammer"
+      },
+      "max_hp": 138,
+      "move_speed": 168,
+      "stamina_max": 126,
+      "armor": 0.15,
+      "crit_chance": 0.06,
+      "crit_multiplier": 1.6,
+      "base_damage": 14.2,
+      "attack_interval": 0.49
+    },
+    {
+      "id": "char_witchblade",
+      "name": "Witchblade",
+      "description": "A dusk duelist weaving blood rites into rapid chained volleys.",
+      "unlock_type": "meta_runs",
+      "unlock_value": "18",
+      "unlock_desc": "Unlock after completing 18 runs",
+      "trait_id": "trait_crimson_ritual",
+      "trait_name": "Crimson Ritual",
+      "trait_desc": "Gain bonus damage and critical multiplier at run start.",
+      "trait_effects": {
+        "damage_bonus_pct": 0.1,
+        "crit_multiplier_bonus": 0.14
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_blood_rite",
+        "mode": "spread",
+        "projectile_count": 3,
+        "spread_angle_deg": 16,
+        "spread_jitter_deg": 4.0,
+        "projectile_hits": 2,
+        "projectile_style": "witchblade_rite"
+      },
+      "max_hp": 102,
+      "move_speed": 196,
+      "stamina_max": 112,
+      "armor": 0.06,
+      "crit_chance": 0.13,
+      "crit_multiplier": 1.82,
+      "base_damage": 12.8,
+      "attack_interval": 0.39
+    },
+    {
+      "id": "char_arbiter",
+      "name": "Arbiter",
+      "description": "A disciplined judge who delivers precise vowblade strikes through fortified stances.",
+      "unlock_type": "achievement",
+      "unlock_value": "ach_vanguard_300",
+      "unlock_desc": "Unlock by obtaining achievement 'Vanguard 300'",
+      "trait_id": "trait_oathflare",
+      "trait_name": "Oathflare",
+      "trait_desc": "Gain bonus armor and critical chance at run start.",
+      "trait_effects": {
+        "armor_bonus": 0.05,
+        "crit_chance_bonus": 0.03
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_vowblade",
+        "mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0,
+        "spread_jitter_deg": 0,
+        "projectile_hits": 3,
+        "projectile_style": "arbiter_vowblade"
+      },
+      "max_hp": 128,
+      "move_speed": 180,
+      "stamina_max": 120,
+      "armor": 0.12,
+      "crit_chance": 0.1,
+      "crit_multiplier": 1.72,
+      "base_damage": 13.4,
+      "attack_interval": 0.43
+    },
+    {
+      "id": "char_oracle",
+      "name": "Oracle",
+      "description": "A starbound caster weaving astral discs and void echoes into layered volleys.",
+      "unlock_type": "meta_runs",
+      "unlock_value": "24",
+      "unlock_desc": "Unlock after completing 24 runs",
+      "trait_id": "trait_starseer",
+      "trait_name": "Starseer",
+      "trait_desc": "Gain crit multiplier and faster attack cadence at run start.",
+      "trait_effects": {
+        "crit_multiplier_bonus": 0.16,
+        "attack_interval_mult": 0.94
+      },
+      "weapon_profile": {
+        "weapon_id": "wpn_astral_disc",
+        "mode": "spread",
+        "projectile_count": 3,
+        "spread_angle_deg": 14,
+        "spread_jitter_deg": 2.5,
+        "projectile_hits": 2,
+        "projectile_style": "oracle_disc"
+      },
+      "max_hp": 100,
+      "move_speed": 194,
+      "stamina_max": 114,
+      "armor": 0.06,
+      "crit_chance": 0.14,
+      "crit_multiplier": 1.86,
+      "base_damage": 12.9,
+      "attack_interval": 0.38
     }
   ]
 }

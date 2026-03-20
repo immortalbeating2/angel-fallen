@@ -18,6 +18,10 @@ REQUIRED_FILES = {
     "achievements.json",
     "meta_upgrades.json",
     "quality_baseline_targets.json",
+    "release_gate_targets.json",
+    "compatibility_rehearsal_targets.json",
+    "resource_acceptance_targets.json",
+    "visual_snapshot_targets.json",
 }
 
 
@@ -1177,6 +1181,7 @@ def _validate_quality_baseline_targets(data: dict[str, Any], errors: list[str]) 
         "game_world_elite_pressure_medium",
         "game_world_elite_pressure_high",
         "game_world_elite_pressure_extreme",
+        "game_world_boss_pressure_endurance",
     }
 
     if not isinstance(scenarios, dict) or not scenarios:
@@ -1199,8 +1204,8 @@ def _validate_quality_baseline_targets(data: dict[str, Any], errors: list[str]) 
                 _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.warmup_frames must be int within [0, 300]")
             if not isinstance(sample_frames, int) or sample_frames < 60 or sample_frames > 1800:
                 _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.sample_frames must be int within [60, 1800]")
-            if not isinstance(setup, str) or setup not in {"none", "elite_pressure_medium", "elite_pressure_high", "elite_pressure_extreme"}:
-                _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.setup must be one of none/elite_pressure_medium/elite_pressure_high/elite_pressure_extreme")
+            if not isinstance(setup, str) or setup not in {"none", "elite_pressure_medium", "elite_pressure_high", "elite_pressure_extreme", "boss_pressure_endurance"}:
+                _add_error(errors, f"quality_baseline_targets.json scenarios.{scenario_id}.setup must be one of none/elite_pressure_medium/elite_pressure_high/elite_pressure_extreme/boss_pressure_endurance")
 
     if not isinstance(targets, dict) or not targets:
         _add_error(errors, "quality_baseline_targets.json targets must be non-empty object")
@@ -1306,6 +1311,1228 @@ def _validate_quality_baseline_targets(data: dict[str, Any], errors: list[str]) 
                     _add_error(errors, f"quality_baseline_targets.json compatibility_matrix.required_actions[{idx}] must be non-empty string")
 
 
+def _validate_release_gate_targets(data: dict[str, Any], errors: list[str]) -> None:
+    channel = data.get("channel")
+    alert_limits = data.get("baseline_alert_limits")
+    scenario_requirements = data.get("scenario_requirements")
+    compatibility_requirements = data.get("compatibility_requirements")
+    publish_blockers = data.get("publish_blockers")
+
+    if not isinstance(channel, str) or not channel.strip():
+        _add_error(errors, "release_gate_targets.json channel must be non-empty string")
+
+    if not isinstance(alert_limits, dict) or not alert_limits:
+        _add_error(errors, "release_gate_targets.json baseline_alert_limits must be non-empty object")
+    else:
+        for key in ("max_total", "max_critical", "max_warning"):
+            value = alert_limits.get(key)
+            if not isinstance(value, int) or value < 0:
+                _add_error(errors, f"release_gate_targets.json baseline_alert_limits.{key} must be int >= 0")
+
+    if not isinstance(scenario_requirements, dict) or not scenario_requirements:
+        _add_error(errors, "release_gate_targets.json scenario_requirements must be non-empty object")
+    else:
+        must_include = scenario_requirements.get("must_include")
+        if not isinstance(must_include, list) or not must_include:
+            _add_error(errors, "release_gate_targets.json scenario_requirements.must_include must be non-empty array")
+        else:
+            for idx, row in enumerate(must_include):
+                if not isinstance(row, str) or not row.strip():
+                    _add_error(errors, f"release_gate_targets.json scenario_requirements.must_include[{idx}] must be non-empty string")
+
+    if not isinstance(compatibility_requirements, dict) or not compatibility_requirements:
+        _add_error(errors, "release_gate_targets.json compatibility_requirements must be non-empty object")
+    else:
+        required_actions = compatibility_requirements.get("required_actions_with_events")
+        required_markers = compatibility_requirements.get("required_platform_markers")
+        if not isinstance(required_actions, list) or not required_actions:
+            _add_error(errors, "release_gate_targets.json compatibility_requirements.required_actions_with_events must be non-empty array")
+        else:
+            for idx, row in enumerate(required_actions):
+                if not isinstance(row, str) or not row.strip():
+                    _add_error(errors, f"release_gate_targets.json compatibility_requirements.required_actions_with_events[{idx}] must be non-empty string")
+
+        if not isinstance(required_markers, list) or not required_markers:
+            _add_error(errors, "release_gate_targets.json compatibility_requirements.required_platform_markers must be non-empty array")
+        else:
+            for idx, row in enumerate(required_markers):
+                if not isinstance(row, str) or not row.strip():
+                    _add_error(errors, f"release_gate_targets.json compatibility_requirements.required_platform_markers[{idx}] must be non-empty string")
+
+    if not isinstance(publish_blockers, dict) or not publish_blockers:
+        _add_error(errors, "release_gate_targets.json publish_blockers must be non-empty object")
+    else:
+        for key in (
+            "require_baseline_json",
+            "require_baseline_markdown",
+            "require_zero_critical_alerts",
+            "require_zero_warning_alerts",
+        ):
+            value = publish_blockers.get(key)
+            if not isinstance(value, bool):
+                _add_error(errors, f"release_gate_targets.json publish_blockers.{key} must be bool")
+
+
+def _validate_compatibility_rehearsal_targets(data: dict[str, Any], errors: list[str]) -> None:
+    channel = data.get("channel")
+    profiles = data.get("profiles")
+    required_actions = data.get("required_actions")
+    thresholds = data.get("thresholds")
+    publish_blockers = data.get("publish_blockers")
+
+    if not isinstance(channel, str) or not channel.strip():
+        _add_error(errors, "compatibility_rehearsal_targets.json channel must be non-empty string")
+
+    if not isinstance(profiles, list) or not profiles:
+        _add_error(errors, "compatibility_rehearsal_targets.json profiles must be non-empty array")
+    else:
+        for idx, profile in enumerate(profiles):
+            if not isinstance(profile, dict):
+                _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}] must be object")
+                continue
+
+            profile_id = profile.get("id")
+            platform_marker = profile.get("platform_marker")
+            resolution = profile.get("resolution")
+            input_mode = profile.get("input_mode")
+            renderer = profile.get("renderer")
+            required_scenes = profile.get("required_scenes")
+
+            if not isinstance(profile_id, str) or not profile_id.strip():
+                _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].id must be non-empty string")
+            if not isinstance(platform_marker, str) or not platform_marker.strip():
+                _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].platform_marker must be non-empty string")
+
+            if not isinstance(resolution, str) or "x" not in resolution:
+                _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].resolution must be WxH string")
+            else:
+                parts = resolution.lower().split("x")
+                if len(parts) != 2 or not parts[0].strip().isdigit() or not parts[1].strip().isdigit():
+                    _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].resolution must be WxH numeric string")
+                else:
+                    width = int(parts[0].strip())
+                    height = int(parts[1].strip())
+                    if width < 640 or height < 360:
+                        _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].resolution must be at least 640x360")
+
+            if not isinstance(input_mode, str) or input_mode not in {"keyboard_mouse", "gamepad"}:
+                _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].input_mode must be keyboard_mouse or gamepad")
+
+            if not isinstance(renderer, str) or renderer not in {"forward_plus", "mobile", "compatibility"}:
+                _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].renderer must be forward_plus/mobile/compatibility")
+
+            if not isinstance(required_scenes, list) or not required_scenes:
+                _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].required_scenes must be non-empty array")
+            else:
+                for scene_idx, scene_path in enumerate(required_scenes):
+                    if not isinstance(scene_path, str) or not scene_path.startswith("res://"):
+                        _add_error(errors, f"compatibility_rehearsal_targets.json profiles[{idx}].required_scenes[{scene_idx}] must be res:// path")
+
+    if not isinstance(required_actions, list) or not required_actions:
+        _add_error(errors, "compatibility_rehearsal_targets.json required_actions must be non-empty array")
+    else:
+        for idx, action in enumerate(required_actions):
+            if not isinstance(action, str) or not action.strip():
+                _add_error(errors, f"compatibility_rehearsal_targets.json required_actions[{idx}] must be non-empty string")
+
+    if not isinstance(thresholds, dict) or not thresholds:
+        _add_error(errors, "compatibility_rehearsal_targets.json thresholds must be non-empty object")
+    else:
+        min_pass_rate = _to_float(thresholds.get("min_profile_pass_rate"))
+        max_profile_failures = thresholds.get("max_profile_failures")
+        max_missing_actions = thresholds.get("max_missing_actions")
+
+        if min_pass_rate is None or min_pass_rate < 0.5 or min_pass_rate > 1.0:
+            _add_error(errors, "compatibility_rehearsal_targets.json thresholds.min_profile_pass_rate must be within [0.5, 1.0]")
+        if not isinstance(max_profile_failures, int) or max_profile_failures < 0:
+            _add_error(errors, "compatibility_rehearsal_targets.json thresholds.max_profile_failures must be int >= 0")
+        if not isinstance(max_missing_actions, int) or max_missing_actions < 0:
+            _add_error(errors, "compatibility_rehearsal_targets.json thresholds.max_missing_actions must be int >= 0")
+
+    if not isinstance(publish_blockers, dict) or not publish_blockers:
+        _add_error(errors, "compatibility_rehearsal_targets.json publish_blockers must be non-empty object")
+    else:
+        for key in (
+            "require_release_gate_json",
+            "require_release_gate_markdown",
+            "require_zero_profile_failures",
+        ):
+            value = publish_blockers.get(key)
+            if not isinstance(value, bool):
+                _add_error(errors, f"compatibility_rehearsal_targets.json publish_blockers.{key} must be bool")
+
+
+def _validate_resource_acceptance_targets(data: dict[str, Any], errors: list[str]) -> None:
+    channel = data.get("channel")
+    required_fields = data.get("required_fields")
+    scene_map = data.get("acceptance_scene_map")
+    scene_matrix = data.get("acceptance_scene_matrix")
+    scene_visual_requirements = data.get("scene_visual_requirements")
+    texture_map = data.get("preview_texture_map")
+    required_ready = data.get("required_production_ready_ids")
+    profile_policy = data.get("acceptance_profile_policy")
+    trend_baseline = data.get("trend_baseline")
+    thresholds = data.get("thresholds")
+
+    categories = (
+        "characters",
+        "weapons",
+        "passives",
+        "accessories",
+        "enemies",
+        "evolutions",
+        "meta_upgrades",
+        "forge_recipes",
+    )
+
+    if not isinstance(channel, str) or not channel.strip():
+        _add_error(errors, "resource_acceptance_targets.json channel must be non-empty string")
+
+    if not isinstance(required_fields, list) or not required_fields:
+        _add_error(errors, "resource_acceptance_targets.json required_fields must be non-empty array")
+    else:
+        required_field_set = {
+            "display_name",
+            "material_profile",
+            "asset_state",
+            "preview_texture",
+            "acceptance_scene",
+            "acceptance_profile",
+            "acceptance_tier",
+        }
+        for idx, row in enumerate(required_fields):
+            if not isinstance(row, str) or not row.strip():
+                _add_error(errors, f"resource_acceptance_targets.json required_fields[{idx}] must be non-empty string")
+        if not required_field_set.issubset(set(required_fields)):
+            _add_error(errors, "resource_acceptance_targets.json required_fields missing mandatory entries")
+
+    if not isinstance(scene_map, dict) or not scene_map:
+        _add_error(errors, "resource_acceptance_targets.json acceptance_scene_map must be non-empty object")
+    else:
+        for category in categories:
+            path = scene_map.get(category)
+            if not isinstance(path, str) or not path.startswith("res://"):
+                _add_error(errors, f"resource_acceptance_targets.json acceptance_scene_map.{category} must be res:// path")
+
+    if not isinstance(scene_matrix, dict) or not scene_matrix:
+        _add_error(errors, "resource_acceptance_targets.json acceptance_scene_matrix must be non-empty object")
+    else:
+        for category in categories:
+            rows = scene_matrix.get(category)
+            if not isinstance(rows, list) or not rows:
+                _add_error(errors, f"resource_acceptance_targets.json acceptance_scene_matrix.{category} must be non-empty array")
+                continue
+            for idx, row in enumerate(rows):
+                if not isinstance(row, str) or not row.startswith("res://"):
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_scene_matrix.{category}[{idx}] must be res:// path")
+
+    if not isinstance(scene_visual_requirements, dict) or not scene_visual_requirements:
+        _add_error(errors, "resource_acceptance_targets.json scene_visual_requirements must be non-empty object")
+    else:
+        allowed_rules = {
+            "exists",
+            "non_null",
+            "non_empty_string",
+            "array_non_empty",
+            "float_gt_zero",
+            "bool_true",
+        }
+        for category in categories:
+            rows = scene_visual_requirements.get(category)
+            if not isinstance(rows, list) or not rows:
+                _add_error(errors, f"resource_acceptance_targets.json scene_visual_requirements.{category} must be non-empty array")
+                continue
+            for idx, row in enumerate(rows):
+                if not isinstance(row, dict) or not row:
+                    _add_error(errors, f"resource_acceptance_targets.json scene_visual_requirements.{category}[{idx}] must be non-empty object")
+                    continue
+                scene_path = row.get("scene")
+                node_path = row.get("node_path")
+                node_type = row.get("node_type")
+                rule = row.get("rule")
+                prop = row.get("property")
+                if not isinstance(scene_path, str) or not scene_path.startswith("res://"):
+                    _add_error(errors, f"resource_acceptance_targets.json scene_visual_requirements.{category}[{idx}].scene must be res:// path")
+                if not isinstance(node_path, str) or not node_path.strip():
+                    _add_error(errors, f"resource_acceptance_targets.json scene_visual_requirements.{category}[{idx}].node_path must be non-empty string")
+                if not isinstance(node_type, str) or not node_type.strip():
+                    _add_error(errors, f"resource_acceptance_targets.json scene_visual_requirements.{category}[{idx}].node_type must be non-empty string")
+                if not isinstance(rule, str) or rule not in allowed_rules:
+                    _add_error(errors, f"resource_acceptance_targets.json scene_visual_requirements.{category}[{idx}].rule must be one of {sorted(allowed_rules)}")
+                if rule != "exists" and (not isinstance(prop, str) or not prop.strip()):
+                    _add_error(errors, f"resource_acceptance_targets.json scene_visual_requirements.{category}[{idx}].property must be non-empty when rule != exists")
+
+    if not isinstance(texture_map, dict) or not texture_map:
+        _add_error(errors, "resource_acceptance_targets.json preview_texture_map must be non-empty object")
+    else:
+        for category in categories:
+            path = texture_map.get(category)
+            if not isinstance(path, str) or not path.startswith("res://"):
+                _add_error(errors, f"resource_acceptance_targets.json preview_texture_map.{category} must be res:// path")
+
+    if not isinstance(required_ready, dict) or not required_ready:
+        _add_error(errors, "resource_acceptance_targets.json required_production_ready_ids must be non-empty object")
+    else:
+        for category in categories:
+            rows = required_ready.get(category)
+            if not isinstance(rows, list) or not rows:
+                _add_error(errors, f"resource_acceptance_targets.json required_production_ready_ids.{category} must be non-empty array")
+                continue
+            for idx, row in enumerate(rows):
+                if not isinstance(row, str) or not row.strip():
+                    _add_error(errors, f"resource_acceptance_targets.json required_production_ready_ids.{category}[{idx}] must be non-empty string")
+
+    profile_names: set[str] = set()
+    if not isinstance(profile_policy, dict) or not profile_policy:
+        _add_error(errors, "resource_acceptance_targets.json acceptance_profile_policy must be non-empty object")
+    else:
+        required_ready_profile_tier = profile_policy.get("required_ready_profile_tier")
+        profiles = profile_policy.get("profiles")
+        category_profile_map = profile_policy.get("category_profile_map")
+
+        if not isinstance(required_ready_profile_tier, str) or required_ready_profile_tier not in {"candidate", "ready"}:
+            _add_error(errors, "resource_acceptance_targets.json acceptance_profile_policy.required_ready_profile_tier must be candidate or ready")
+
+        if not isinstance(profiles, dict) or not profiles:
+            _add_error(errors, "resource_acceptance_targets.json acceptance_profile_policy.profiles must be non-empty object")
+        else:
+            for profile_name, row in profiles.items():
+                profile_names.add(str(profile_name))
+                if not isinstance(profile_name, str) or not profile_name.strip():
+                    _add_error(errors, "resource_acceptance_targets.json acceptance_profile_policy.profiles key must be non-empty string")
+                    continue
+                if not isinstance(row, dict) or not row:
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.profiles.{profile_name} must be non-empty object")
+                    continue
+                tier = row.get("tier")
+                report_bucket = row.get("report_bucket")
+                if not isinstance(tier, str) or tier not in {"candidate", "ready"}:
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.profiles.{profile_name}.tier must be candidate or ready")
+                if not isinstance(report_bucket, str) or not report_bucket.strip():
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.profiles.{profile_name}.report_bucket must be non-empty string")
+
+        if not isinstance(category_profile_map, dict) or not category_profile_map:
+            _add_error(errors, "resource_acceptance_targets.json acceptance_profile_policy.category_profile_map must be non-empty object")
+        else:
+            for category in categories:
+                row = category_profile_map.get(category)
+                if not isinstance(row, dict) or not row:
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.category_profile_map.{category} must be non-empty object")
+                    continue
+                candidate_profile = row.get("production_candidate")
+                ready_profile = row.get("production_ready")
+                if not isinstance(candidate_profile, str) or not candidate_profile.strip():
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.category_profile_map.{category}.production_candidate must be non-empty string")
+                elif profile_names and candidate_profile not in profile_names:
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.category_profile_map.{category}.production_candidate must reference profiles key")
+                if not isinstance(ready_profile, str) or not ready_profile.strip():
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.category_profile_map.{category}.production_ready must be non-empty string")
+                elif profile_names and ready_profile not in profile_names:
+                    _add_error(errors, f"resource_acceptance_targets.json acceptance_profile_policy.category_profile_map.{category}.production_ready must reference profiles key")
+
+    if not isinstance(thresholds, dict) or not thresholds:
+        _add_error(errors, "resource_acceptance_targets.json thresholds must be non-empty object")
+    else:
+        min_ready_per_category = thresholds.get("min_ready_per_category")
+        min_ready_ratio_per_category = _to_float(thresholds.get("min_ready_ratio_per_category"))
+        min_scene_smokes_per_category = thresholds.get("min_scene_smokes_per_category")
+        min_visual_checks_per_category = thresholds.get("min_visual_checks_per_category")
+        max_visual_failures = thresholds.get("max_visual_failures")
+        max_profile_mismatches = thresholds.get("max_profile_mismatches")
+        max_trend_regressions = thresholds.get("max_trend_regressions")
+        max_failures = thresholds.get("max_failures")
+        if not isinstance(min_ready_per_category, int) or min_ready_per_category < 1:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.min_ready_per_category must be int >= 1")
+        if min_ready_ratio_per_category is None or min_ready_ratio_per_category < 0.1 or min_ready_ratio_per_category > 1.0:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.min_ready_ratio_per_category must be within [0.1, 1.0]")
+        if not isinstance(min_scene_smokes_per_category, int) or min_scene_smokes_per_category < 1:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.min_scene_smokes_per_category must be int >= 1")
+        if not isinstance(min_visual_checks_per_category, int) or min_visual_checks_per_category < 1:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.min_visual_checks_per_category must be int >= 1")
+        if not isinstance(max_visual_failures, int) or max_visual_failures < 0:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.max_visual_failures must be int >= 0")
+        if not isinstance(max_profile_mismatches, int) or max_profile_mismatches < 0:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.max_profile_mismatches must be int >= 0")
+        if not isinstance(max_trend_regressions, int) or max_trend_regressions < 0:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.max_trend_regressions must be int >= 0")
+        if not isinstance(max_failures, int) or max_failures < 0:
+            _add_error(errors, "resource_acceptance_targets.json thresholds.max_failures must be int >= 0")
+
+    if not isinstance(trend_baseline, dict) or not trend_baseline:
+        _add_error(errors, "resource_acceptance_targets.json trend_baseline must be non-empty object")
+    else:
+        bucket_ready_ratio_min = trend_baseline.get("bucket_ready_ratio_min")
+        max_category_ratio_drop = _to_float(trend_baseline.get("max_category_ratio_drop"))
+        max_bucket_ratio_drop = _to_float(trend_baseline.get("max_bucket_ratio_drop"))
+
+        if not isinstance(bucket_ready_ratio_min, dict) or not bucket_ready_ratio_min:
+            _add_error(errors, "resource_acceptance_targets.json trend_baseline.bucket_ready_ratio_min must be non-empty object")
+        else:
+            for bucket in ("menu", "combat", "ui"):
+                ratio = _to_float(bucket_ready_ratio_min.get(bucket))
+                if ratio is None or ratio < 0.1 or ratio > 1.0:
+                    _add_error(errors, f"resource_acceptance_targets.json trend_baseline.bucket_ready_ratio_min.{bucket} must be within [0.1, 1.0]")
+
+        if max_category_ratio_drop is None or max_category_ratio_drop < 0.0 or max_category_ratio_drop > 1.0:
+            _add_error(errors, "resource_acceptance_targets.json trend_baseline.max_category_ratio_drop must be within [0.0, 1.0]")
+        if max_bucket_ratio_drop is None or max_bucket_ratio_drop < 0.0 or max_bucket_ratio_drop > 1.0:
+            _add_error(errors, "resource_acceptance_targets.json trend_baseline.max_bucket_ratio_drop must be within [0.0, 1.0]")
+
+
+def _validate_visual_snapshot_targets(data: dict[str, Any], errors: list[str]) -> None:
+    channel = data.get("channel")
+    snapshots = data.get("snapshots")
+    precision = data.get("precision")
+    backend_profiles = data.get("backend_profiles")
+    thresholds = data.get("thresholds")
+    baseline_alignment = data.get("baseline_alignment")
+    diff_whitelist = data.get("diff_whitelist")
+    whitelist_policy = data.get("whitelist_policy")
+    backend_attribution = data.get("backend_attribution")
+    whitelist_convergence = data.get("whitelist_convergence")
+    exception_lifecycle = data.get("exception_lifecycle")
+    strategy_orchestration = data.get("strategy_orchestration")
+    release_gate_templates = data.get("release_gate_templates")
+    backend_matrix_governance = data.get("backend_matrix_governance")
+    approval_workflow = data.get("approval_workflow")
+    approval_audit_trail = data.get("approval_audit_trail")
+    approval_history_archive = data.get("approval_history_archive")
+    approval_threshold_templates = data.get("approval_threshold_templates")
+    release_candidate_tracking = data.get("release_candidate_tracking")
+    report_layers = data.get("report_layers")
+    cross_version_baseline = data.get("cross_version_baseline")
+
+    if not isinstance(channel, str) or not channel.strip():
+        _add_error(errors, "visual_snapshot_targets.json channel must be non-empty string")
+    elif channel != "chapter_snapshot_v12":
+        _add_error(errors, "visual_snapshot_targets.json channel must be chapter_snapshot_v12")
+
+    if not isinstance(snapshots, dict) or not snapshots:
+        _add_error(errors, "visual_snapshot_targets.json snapshots must be a non-empty object")
+        return
+
+    for snapshot_id, row in snapshots.items():
+        if not isinstance(snapshot_id, str) or not snapshot_id.strip():
+            _add_error(errors, "visual_snapshot_targets.json snapshots key must be non-empty string")
+            continue
+        if not isinstance(row, dict):
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id} must be object")
+            continue
+
+        scene = row.get("scene")
+        setup = row.get("setup")
+        width = row.get("width")
+        height = row.get("height")
+        warmup_frames = row.get("warmup_frames")
+        capture_frames = row.get("capture_frames")
+        opaque_ratio_min = _to_float(row.get("opaque_ratio_min"))
+        unique_colors_min = row.get("unique_colors_min")
+        luma_min = _to_float(row.get("luma_min"))
+        luma_max = _to_float(row.get("luma_max"))
+
+        if not isinstance(scene, str) or not scene.startswith("res://"):
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.scene must be res:// path")
+        if not isinstance(setup, str) or not setup:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.setup must be non-empty string")
+        if not isinstance(width, int) or width < 320:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.width must be int >= 320")
+        if not isinstance(height, int) or height < 180:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.height must be int >= 180")
+        if not isinstance(warmup_frames, int) or warmup_frames < 1:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.warmup_frames must be int >= 1")
+        if not isinstance(capture_frames, int) or capture_frames < 1:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.capture_frames must be int >= 1")
+        if opaque_ratio_min is None or opaque_ratio_min < 0.0 or opaque_ratio_min > 1.0:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.opaque_ratio_min must be within [0.0, 1.0]")
+        if not isinstance(unique_colors_min, int) or unique_colors_min < 1:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.unique_colors_min must be int >= 1")
+        if luma_min is None or luma_min < 0.0 or luma_min > 1.0:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.luma_min must be within [0.0, 1.0]")
+        if luma_max is None or luma_max < 0.0 or luma_max > 1.0:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.luma_max must be within [0.0, 1.0]")
+        if luma_min is not None and luma_max is not None and luma_min > luma_max:
+            _add_error(errors, f"visual_snapshot_targets.json snapshots.{snapshot_id}.luma_min cannot exceed luma_max")
+
+    if not isinstance(precision, dict) or not precision:
+        _add_error(errors, "visual_snapshot_targets.json precision must be non-empty object")
+    else:
+        sample_rounds = precision.get("sample_rounds")
+        max_opaque_ratio_stddev = _to_float(precision.get("max_opaque_ratio_stddev"))
+        max_luma_stddev = _to_float(precision.get("max_luma_stddev"))
+        max_unique_color_stddev_ratio = _to_float(precision.get("max_unique_color_stddev_ratio"))
+
+        if not isinstance(sample_rounds, int) or sample_rounds < 1 or sample_rounds > 8:
+            _add_error(errors, "visual_snapshot_targets.json precision.sample_rounds must be int within [1, 8]")
+        if max_opaque_ratio_stddev is None or max_opaque_ratio_stddev < 0.0 or max_opaque_ratio_stddev > 0.5:
+            _add_error(errors, "visual_snapshot_targets.json precision.max_opaque_ratio_stddev must be within [0.0, 0.5]")
+        if max_luma_stddev is None or max_luma_stddev < 0.0 or max_luma_stddev > 0.5:
+            _add_error(errors, "visual_snapshot_targets.json precision.max_luma_stddev must be within [0.0, 0.5]")
+        if max_unique_color_stddev_ratio is None or max_unique_color_stddev_ratio < 0.0 or max_unique_color_stddev_ratio > 1.0:
+            _add_error(errors, "visual_snapshot_targets.json precision.max_unique_color_stddev_ratio must be within [0.0, 1.0]")
+
+    if not isinstance(backend_profiles, dict) or not backend_profiles:
+        _add_error(errors, "visual_snapshot_targets.json backend_profiles must be non-empty object")
+    else:
+        if "default" not in backend_profiles:
+            _add_error(errors, "visual_snapshot_targets.json backend_profiles must include 'default'")
+        for required_profile in ("linux_headless", "windows_headless"):
+            if required_profile not in backend_profiles:
+                _add_error(errors, f"visual_snapshot_targets.json backend_profiles must include '{required_profile}'")
+        for profile_name, row in backend_profiles.items():
+            if not isinstance(profile_name, str) or not profile_name.strip():
+                _add_error(errors, "visual_snapshot_targets.json backend_profiles key must be non-empty string")
+                continue
+            if not isinstance(row, dict) or not row:
+                _add_error(errors, f"visual_snapshot_targets.json backend_profiles.{profile_name} must be non-empty object")
+                continue
+            max_opaque_drop = _to_float(row.get("max_opaque_ratio_drop"))
+            max_unique_drop = _to_float(row.get("max_unique_color_drop_ratio"))
+            max_luma_delta_profile = _to_float(row.get("max_luma_delta"))
+            unique_scale = _to_float(row.get("unique_colors_min_scale"))
+            luma_padding = _to_float(row.get("luma_range_padding"))
+
+            if max_opaque_drop is None or max_opaque_drop < 0.0 or max_opaque_drop > 1.0:
+                _add_error(errors, f"visual_snapshot_targets.json backend_profiles.{profile_name}.max_opaque_ratio_drop must be within [0.0, 1.0]")
+            if max_unique_drop is None or max_unique_drop < 0.0 or max_unique_drop > 1.0:
+                _add_error(errors, f"visual_snapshot_targets.json backend_profiles.{profile_name}.max_unique_color_drop_ratio must be within [0.0, 1.0]")
+            if max_luma_delta_profile is None or max_luma_delta_profile < 0.0 or max_luma_delta_profile > 1.0:
+                _add_error(errors, f"visual_snapshot_targets.json backend_profiles.{profile_name}.max_luma_delta must be within [0.0, 1.0]")
+            if unique_scale is None or unique_scale < 0.5 or unique_scale > 2.0:
+                _add_error(errors, f"visual_snapshot_targets.json backend_profiles.{profile_name}.unique_colors_min_scale must be within [0.5, 2.0]")
+            if luma_padding is None or luma_padding < 0.0 or luma_padding > 0.3:
+                _add_error(errors, f"visual_snapshot_targets.json backend_profiles.{profile_name}.luma_range_padding must be within [0.0, 0.3]")
+
+    if not isinstance(baseline_alignment, dict) or not baseline_alignment:
+        _add_error(errors, "visual_snapshot_targets.json baseline_alignment must be non-empty object")
+    else:
+        required_snapshot_ids = baseline_alignment.get("required_snapshot_ids")
+        allowed_capture_modes = baseline_alignment.get("allowed_capture_modes")
+        if not isinstance(required_snapshot_ids, list) or not required_snapshot_ids:
+            _add_error(errors, "visual_snapshot_targets.json baseline_alignment.required_snapshot_ids must be non-empty array")
+        else:
+            for idx, snapshot_id in enumerate(required_snapshot_ids):
+                if not isinstance(snapshot_id, str) or not snapshot_id.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json baseline_alignment.required_snapshot_ids[{idx}] must be non-empty string")
+                elif isinstance(snapshots, dict) and snapshot_id not in snapshots:
+                    _add_error(errors, f"visual_snapshot_targets.json baseline_alignment.required_snapshot_ids[{idx}] must reference snapshots key")
+
+        if not isinstance(allowed_capture_modes, dict) or not allowed_capture_modes:
+            _add_error(errors, "visual_snapshot_targets.json baseline_alignment.allowed_capture_modes must be non-empty object")
+        else:
+            for required_profile in ("default", "linux_headless", "windows_headless"):
+                if required_profile not in allowed_capture_modes:
+                    _add_error(errors, f"visual_snapshot_targets.json baseline_alignment.allowed_capture_modes must include '{required_profile}'")
+            for backend_name, modes in allowed_capture_modes.items():
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json baseline_alignment.allowed_capture_modes key must be non-empty string")
+                    continue
+                if not isinstance(modes, list) or not modes:
+                    _add_error(errors, f"visual_snapshot_targets.json baseline_alignment.allowed_capture_modes.{backend_name} must be non-empty array")
+                    continue
+                for idx, mode in enumerate(modes):
+                    if not isinstance(mode, str) or not mode.strip():
+                        _add_error(errors, f"visual_snapshot_targets.json baseline_alignment.allowed_capture_modes.{backend_name}[{idx}] must be non-empty string")
+
+    if diff_whitelist is not None:
+        if not isinstance(diff_whitelist, dict):
+            _add_error(errors, "visual_snapshot_targets.json diff_whitelist must be object when provided")
+        else:
+            for backend_name, backend_rows in diff_whitelist.items():
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json diff_whitelist key must be non-empty string")
+                    continue
+                if not isinstance(backend_rows, dict):
+                    _add_error(errors, f"visual_snapshot_targets.json diff_whitelist.{backend_name} must be object")
+                    continue
+                for snapshot_id, row in backend_rows.items():
+                    if not isinstance(snapshot_id, str) or not snapshot_id.strip():
+                        _add_error(errors, f"visual_snapshot_targets.json diff_whitelist.{backend_name} snapshot key must be non-empty string")
+                        continue
+                    if isinstance(snapshots, dict) and snapshot_id not in snapshots:
+                        _add_error(errors, f"visual_snapshot_targets.json diff_whitelist.{backend_name}.{snapshot_id} must reference snapshots key")
+                    if not isinstance(row, dict) or not row:
+                        _add_error(errors, f"visual_snapshot_targets.json diff_whitelist.{backend_name}.{snapshot_id} must be non-empty object")
+                        continue
+                    if "reason" in row and (not isinstance(row.get("reason"), str) or not str(row.get("reason", "")).strip()):
+                        _add_error(errors, f"visual_snapshot_targets.json diff_whitelist.{backend_name}.{snapshot_id}.reason must be non-empty string")
+                    for numeric_key in ("max_opaque_ratio_drop", "max_unique_color_drop_ratio", "max_luma_delta"):
+                        if numeric_key not in row:
+                            continue
+                        value = _to_float(row.get(numeric_key))
+                        if value is None or value < 0.0 or value > 1.0:
+                            _add_error(errors, f"visual_snapshot_targets.json diff_whitelist.{backend_name}.{snapshot_id}.{numeric_key} must be within [0.0, 1.0]")
+
+    if not isinstance(whitelist_policy, dict) or not whitelist_policy:
+        _add_error(errors, "visual_snapshot_targets.json whitelist_policy must be non-empty object")
+    else:
+        max_hits = whitelist_policy.get("max_hits")
+        max_ratio = _to_float(whitelist_policy.get("max_ratio"))
+        if not isinstance(max_hits, int) or max_hits < 0:
+            _add_error(errors, "visual_snapshot_targets.json whitelist_policy.max_hits must be int >= 0")
+        if max_ratio is None or max_ratio < 0.0 or max_ratio > 1.0:
+            _add_error(errors, "visual_snapshot_targets.json whitelist_policy.max_ratio must be within [0.0, 1.0]")
+
+    if not isinstance(backend_attribution, dict) or not backend_attribution:
+        _add_error(errors, "visual_snapshot_targets.json backend_attribution must be non-empty object")
+    else:
+        required_backends = backend_attribution.get("required_backends")
+        max_unattributed_regressions = backend_attribution.get("max_unattributed_regressions")
+        max_backend_specific_regressions = backend_attribution.get("max_backend_specific_regressions")
+
+        if not isinstance(required_backends, list) or not required_backends:
+            _add_error(errors, "visual_snapshot_targets.json backend_attribution.required_backends must be non-empty array")
+        else:
+            required_backend_set = set()
+            for idx, backend_name in enumerate(required_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json backend_attribution.required_backends[{idx}] must be non-empty string")
+                    continue
+                required_backend_set.add(backend_name)
+            for must_have in ("linux_headless", "windows_headless"):
+                if must_have not in required_backend_set:
+                    _add_error(errors, f"visual_snapshot_targets.json backend_attribution.required_backends must include '{must_have}'")
+
+        if not isinstance(max_unattributed_regressions, int) or max_unattributed_regressions < 0:
+            _add_error(errors, "visual_snapshot_targets.json backend_attribution.max_unattributed_regressions must be int >= 0")
+        if not isinstance(max_backend_specific_regressions, int) or max_backend_specific_regressions < 0:
+            _add_error(errors, "visual_snapshot_targets.json backend_attribution.max_backend_specific_regressions must be int >= 0")
+
+    if not isinstance(whitelist_convergence, dict) or not whitelist_convergence:
+        _add_error(errors, "visual_snapshot_targets.json whitelist_convergence must be non-empty object")
+    else:
+        stale_run_threshold = whitelist_convergence.get("stale_run_threshold")
+        tighten_margin_ratio = _to_float(whitelist_convergence.get("tighten_margin_ratio"))
+        max_suggestions = whitelist_convergence.get("max_suggestions")
+
+        if not isinstance(stale_run_threshold, int) or stale_run_threshold < 1:
+            _add_error(errors, "visual_snapshot_targets.json whitelist_convergence.stale_run_threshold must be int >= 1")
+        if tighten_margin_ratio is None or tighten_margin_ratio < 0.0 or tighten_margin_ratio > 1.0:
+            _add_error(errors, "visual_snapshot_targets.json whitelist_convergence.tighten_margin_ratio must be within [0.0, 1.0]")
+        if not isinstance(max_suggestions, int) or max_suggestions < 0:
+            _add_error(errors, "visual_snapshot_targets.json whitelist_convergence.max_suggestions must be int >= 0")
+
+    if not isinstance(exception_lifecycle, dict) or not exception_lifecycle:
+        _add_error(errors, "visual_snapshot_targets.json exception_lifecycle must be non-empty object")
+    else:
+        expire_idle_runs = exception_lifecycle.get("expire_idle_runs")
+        auto_reclaim_hit_streak = exception_lifecycle.get("auto_reclaim_hit_streak")
+        max_expired_entries = exception_lifecycle.get("max_expired_entries")
+        max_reclaim_candidates = exception_lifecycle.get("max_reclaim_candidates")
+
+        if not isinstance(expire_idle_runs, int) or expire_idle_runs < 1:
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle.expire_idle_runs must be int >= 1")
+        if not isinstance(auto_reclaim_hit_streak, int) or auto_reclaim_hit_streak < 1:
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle.auto_reclaim_hit_streak must be int >= 1")
+        if not isinstance(max_expired_entries, int) or max_expired_entries < 0:
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle.max_expired_entries must be int >= 0")
+        if not isinstance(max_reclaim_candidates, int) or max_reclaim_candidates < 0:
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle.max_reclaim_candidates must be int >= 0")
+
+    if not isinstance(strategy_orchestration, dict) or not strategy_orchestration:
+        _add_error(errors, "visual_snapshot_targets.json strategy_orchestration must be non-empty object")
+    else:
+        default_strategy = strategy_orchestration.get("default_strategy")
+        strategies = strategy_orchestration.get("strategies")
+        templates = strategy_orchestration.get("templates")
+
+        if not isinstance(default_strategy, str) or not default_strategy.strip():
+            _add_error(errors, "visual_snapshot_targets.json strategy_orchestration.default_strategy must be non-empty string")
+
+        if not isinstance(strategies, dict) or not strategies:
+            _add_error(errors, "visual_snapshot_targets.json strategy_orchestration.strategies must be non-empty object")
+            strategies = {}
+        if not isinstance(templates, dict) or not templates:
+            _add_error(errors, "visual_snapshot_targets.json strategy_orchestration.templates must be non-empty object")
+            templates = {}
+
+        if isinstance(default_strategy, str) and default_strategy and default_strategy not in strategies:
+            _add_error(errors, "visual_snapshot_targets.json strategy_orchestration.default_strategy must reference strategies key")
+
+        allowed_template_sections = {
+            "thresholds",
+            "whitelist_policy",
+            "backend_attribution",
+            "whitelist_convergence",
+            "exception_lifecycle",
+            "cross_version_baseline",
+            "report_layers",
+        }
+
+        for strategy_name, strategy_row in strategies.items():
+            if not isinstance(strategy_name, str) or not strategy_name.strip():
+                _add_error(errors, "visual_snapshot_targets.json strategy_orchestration.strategies key must be non-empty string")
+                continue
+            if not isinstance(strategy_row, dict) or not strategy_row:
+                _add_error(errors, f"visual_snapshot_targets.json strategy_orchestration.strategies.{strategy_name} must be non-empty object")
+                continue
+            template_name = strategy_row.get("template")
+            if not isinstance(template_name, str) or not template_name.strip():
+                _add_error(errors, f"visual_snapshot_targets.json strategy_orchestration.strategies.{strategy_name}.template must be non-empty string")
+            elif template_name not in templates:
+                _add_error(errors, f"visual_snapshot_targets.json strategy_orchestration.strategies.{strategy_name}.template must reference templates key")
+
+        for template_name, template_row in templates.items():
+            if not isinstance(template_name, str) or not template_name.strip():
+                _add_error(errors, "visual_snapshot_targets.json strategy_orchestration.templates key must be non-empty string")
+                continue
+            if not isinstance(template_row, dict) or not template_row:
+                _add_error(errors, f"visual_snapshot_targets.json strategy_orchestration.templates.{template_name} must be non-empty object")
+                continue
+            for section_key, section_row in template_row.items():
+                if section_key not in allowed_template_sections:
+                    _add_error(errors, f"visual_snapshot_targets.json strategy_orchestration.templates.{template_name}.{section_key} is not a supported override section")
+                    continue
+                if not isinstance(section_row, dict) or not section_row:
+                    _add_error(errors, f"visual_snapshot_targets.json strategy_orchestration.templates.{template_name}.{section_key} must be non-empty object")
+
+    if not isinstance(release_gate_templates, dict) or not release_gate_templates:
+        _add_error(errors, "visual_snapshot_targets.json release_gate_templates must be non-empty object")
+    else:
+        required_strategies = release_gate_templates.get("required_strategies")
+        required_strategy_bindings = release_gate_templates.get("required_strategy_bindings")
+        ci_mode_bindings = release_gate_templates.get("ci_mode_bindings")
+        release_checklist = release_gate_templates.get("release_checklist")
+
+        if not isinstance(required_strategies, list) or not required_strategies:
+            _add_error(errors, "visual_snapshot_targets.json release_gate_templates.required_strategies must be non-empty array")
+            required_strategies = []
+        else:
+            for idx, strategy_name in enumerate(required_strategies):
+                if not isinstance(strategy_name, str) or not strategy_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.required_strategies[{idx}] must be non-empty string")
+
+        if not isinstance(required_strategy_bindings, dict) or not required_strategy_bindings:
+            _add_error(errors, "visual_snapshot_targets.json release_gate_templates.required_strategy_bindings must be non-empty object")
+            required_strategy_bindings = {}
+        else:
+            for strategy_name, template_name in required_strategy_bindings.items():
+                if not isinstance(strategy_name, str) or not strategy_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json release_gate_templates.required_strategy_bindings key must be non-empty string")
+                    continue
+                if not isinstance(template_name, str) or not template_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.required_strategy_bindings.{strategy_name} must be non-empty string")
+
+        if not isinstance(ci_mode_bindings, dict) or not ci_mode_bindings:
+            _add_error(errors, "visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must be non-empty object")
+            ci_mode_bindings = {}
+        else:
+            for mode_name, strategy_name in ci_mode_bindings.items():
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json release_gate_templates.ci_mode_bindings key must be non-empty string")
+                    continue
+                if not isinstance(strategy_name, str) or not strategy_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings.{mode_name} must be non-empty string")
+
+        if not isinstance(release_checklist, dict) or not release_checklist:
+            _add_error(errors, "visual_snapshot_targets.json release_gate_templates.release_checklist must be non-empty object")
+        else:
+            required_reports = release_checklist.get("required_reports")
+            required_strategies_for_publish = release_checklist.get("required_strategies_for_publish")
+            require_zero_warnings_for = release_checklist.get("require_zero_warnings_for")
+            max_checklist_failures = release_checklist.get("max_checklist_failures")
+
+            if not isinstance(required_reports, list) or not required_reports:
+                _add_error(errors, "visual_snapshot_targets.json release_gate_templates.release_checklist.required_reports must be non-empty array")
+            else:
+                for idx, report_path in enumerate(required_reports):
+                    if not isinstance(report_path, str) or not report_path.strip() or not report_path.startswith("user://"):
+                        _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.release_checklist.required_reports[{idx}] must be non-empty user:// path")
+
+            if not isinstance(required_strategies_for_publish, list) or not required_strategies_for_publish:
+                _add_error(errors, "visual_snapshot_targets.json release_gate_templates.release_checklist.required_strategies_for_publish must be non-empty array")
+            else:
+                for idx, strategy_name in enumerate(required_strategies_for_publish):
+                    if not isinstance(strategy_name, str) or not strategy_name.strip():
+                        _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.release_checklist.required_strategies_for_publish[{idx}] must be non-empty string")
+
+            if not isinstance(require_zero_warnings_for, list):
+                _add_error(errors, "visual_snapshot_targets.json release_gate_templates.release_checklist.require_zero_warnings_for must be array")
+            else:
+                for idx, strategy_name in enumerate(require_zero_warnings_for):
+                    if not isinstance(strategy_name, str) or not strategy_name.strip():
+                        _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.release_checklist.require_zero_warnings_for[{idx}] must be non-empty string")
+
+            if not isinstance(max_checklist_failures, int) or max_checklist_failures < 0:
+                _add_error(errors, "visual_snapshot_targets.json release_gate_templates.release_checklist.max_checklist_failures must be int >= 0")
+
+        if isinstance(required_strategies, list) and isinstance(required_strategy_bindings, dict):
+            for strategy_name in required_strategies:
+                if isinstance(strategy_name, str) and strategy_name and strategy_name not in required_strategy_bindings:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.required_strategy_bindings must include '{strategy_name}'")
+
+        strategies_row = strategy_orchestration.get("strategies", {}) if isinstance(strategy_orchestration, dict) else {}
+        templates_row = strategy_orchestration.get("templates", {}) if isinstance(strategy_orchestration, dict) else {}
+
+        if isinstance(required_strategy_bindings, dict):
+            for strategy_name, template_name in required_strategy_bindings.items():
+                if not isinstance(strategy_name, str) or not strategy_name:
+                    continue
+                if isinstance(strategies_row, dict) and strategy_name not in strategies_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.required_strategy_bindings.{strategy_name} must reference strategy_orchestration.strategies")
+                    continue
+                if isinstance(strategies_row, dict):
+                    strategy_row = strategies_row.get(strategy_name, {})
+                    if isinstance(strategy_row, dict):
+                        actual_template = strategy_row.get("template")
+                        if isinstance(template_name, str) and template_name and actual_template != template_name:
+                            _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.required_strategy_bindings.{strategy_name} must match strategy_orchestration template")
+                if isinstance(template_name, str) and template_name and isinstance(templates_row, dict) and template_name not in templates_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.required_strategy_bindings.{strategy_name} must reference strategy_orchestration.templates")
+
+        if isinstance(ci_mode_bindings, dict):
+            for mode_name, strategy_name in ci_mode_bindings.items():
+                if not isinstance(mode_name, str) or not mode_name:
+                    continue
+                if isinstance(strategy_name, str) and strategy_name and isinstance(strategies_row, dict) and strategy_name not in strategies_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings.{mode_name} must reference strategy_orchestration.strategies")
+
+        if isinstance(release_checklist, dict):
+            publish_strategies = release_checklist.get("required_strategies_for_publish", [])
+            zero_warning_strategies = release_checklist.get("require_zero_warnings_for", [])
+            if isinstance(publish_strategies, list):
+                for strategy_name in publish_strategies:
+                    if isinstance(strategy_name, str) and strategy_name and isinstance(required_strategies, list) and strategy_name not in required_strategies:
+                        _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.release_checklist.required_strategies_for_publish must be subset of required_strategies ({strategy_name})")
+            if isinstance(zero_warning_strategies, list):
+                for strategy_name in zero_warning_strategies:
+                    if isinstance(strategy_name, str) and strategy_name and isinstance(required_strategies, list) and strategy_name not in required_strategies:
+                        _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.release_checklist.require_zero_warnings_for must be subset of required_strategies ({strategy_name})")
+
+    if not isinstance(backend_matrix_governance, dict) or not backend_matrix_governance:
+        _add_error(errors, "visual_snapshot_targets.json backend_matrix_governance must be non-empty object")
+    else:
+        required_backend_matrix = backend_matrix_governance.get("required_backend_matrix")
+        required_run_modes = backend_matrix_governance.get("required_run_modes")
+        max_missing_backend_matrix = backend_matrix_governance.get("max_missing_backend_matrix")
+        max_missing_run_mode_bindings = backend_matrix_governance.get("max_missing_run_mode_bindings")
+
+        required_backend_set: set[str] = set()
+        if not isinstance(required_backend_matrix, list) or not required_backend_matrix:
+            _add_error(errors, "visual_snapshot_targets.json backend_matrix_governance.required_backend_matrix must be non-empty array")
+        else:
+            for idx, backend_name in enumerate(required_backend_matrix):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json backend_matrix_governance.required_backend_matrix[{idx}] must be non-empty string")
+                    continue
+                required_backend_set.add(backend_name)
+            for must_have in ("linux_headless", "windows_headless"):
+                if must_have not in required_backend_set:
+                    _add_error(errors, f"visual_snapshot_targets.json backend_matrix_governance.required_backend_matrix must include '{must_have}'")
+
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json backend_matrix_governance.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json backend_matrix_governance.required_run_modes[{idx}] must be non-empty string")
+
+        if not isinstance(max_missing_backend_matrix, int) or max_missing_backend_matrix < 0:
+            _add_error(errors, "visual_snapshot_targets.json backend_matrix_governance.max_missing_backend_matrix must be int >= 0")
+        if not isinstance(max_missing_run_mode_bindings, int) or max_missing_run_mode_bindings < 0:
+            _add_error(errors, "visual_snapshot_targets.json backend_matrix_governance.max_missing_run_mode_bindings must be int >= 0")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if isinstance(required_run_modes, list) and isinstance(ci_mode_bindings_row, dict):
+            for mode_name in required_run_modes:
+                if isinstance(mode_name, str) and mode_name and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for backend_matrix_governance.required_run_modes")
+
+    if not isinstance(approval_workflow, dict) or not approval_workflow:
+        _add_error(errors, "visual_snapshot_targets.json approval_workflow must be non-empty object")
+    else:
+        required_report_sections = approval_workflow.get("required_report_sections")
+        require_zero_blockers = approval_workflow.get("require_zero_blockers")
+        require_zero_warnings_for_strategies = approval_workflow.get("require_zero_warnings_for_strategies")
+        max_approval_failures = approval_workflow.get("max_approval_failures")
+
+        allowed_sections = {
+            "Snapshots",
+            "Trend",
+            "Whitelist",
+            "Backend Attribution",
+            "Release Manifest",
+            "Backend Matrix Governance",
+            "Approval Workflow",
+            "Approval Audit Trail",
+            "Approval History Archive",
+            "Approval Template",
+            "Release Candidate Tracking",
+        }
+
+        if not isinstance(required_report_sections, list) or not required_report_sections:
+            _add_error(errors, "visual_snapshot_targets.json approval_workflow.required_report_sections must be non-empty array")
+        else:
+            for idx, section_name in enumerate(required_report_sections):
+                if not isinstance(section_name, str) or not section_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json approval_workflow.required_report_sections[{idx}] must be non-empty string")
+                    continue
+                if section_name not in allowed_sections:
+                    _add_error(errors, f"visual_snapshot_targets.json approval_workflow.required_report_sections[{idx}] is not supported")
+
+        if not isinstance(require_zero_blockers, bool):
+            _add_error(errors, "visual_snapshot_targets.json approval_workflow.require_zero_blockers must be bool")
+
+        if not isinstance(require_zero_warnings_for_strategies, list):
+            _add_error(errors, "visual_snapshot_targets.json approval_workflow.require_zero_warnings_for_strategies must be array")
+        else:
+            required_strategies_row = release_gate_templates.get("required_strategies", []) if isinstance(release_gate_templates, dict) else []
+            for idx, strategy_name in enumerate(require_zero_warnings_for_strategies):
+                if not isinstance(strategy_name, str) or not strategy_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json approval_workflow.require_zero_warnings_for_strategies[{idx}] must be non-empty string")
+                    continue
+                if isinstance(required_strategies_row, list) and strategy_name not in required_strategies_row:
+                    _add_error(errors, f"visual_snapshot_targets.json approval_workflow.require_zero_warnings_for_strategies[{idx}] must be subset of release_gate_templates.required_strategies")
+
+        if not isinstance(max_approval_failures, int) or max_approval_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_workflow.max_approval_failures must be int >= 0")
+
+    if not isinstance(approval_audit_trail, dict) or not approval_audit_trail:
+        _add_error(errors, "visual_snapshot_targets.json approval_audit_trail must be non-empty object")
+    else:
+        history_file = approval_audit_trail.get("history_file")
+        max_entries = approval_audit_trail.get("max_entries")
+        required_run_modes = approval_audit_trail.get("required_run_modes")
+        required_backends = approval_audit_trail.get("required_backends")
+        require_unique_pipeline_id = approval_audit_trail.get("require_unique_pipeline_id")
+        max_missing_pipeline_id = approval_audit_trail.get("max_missing_pipeline_id")
+        max_history_trace_failures = approval_audit_trail.get("max_history_trace_failures")
+
+        if not isinstance(history_file, str) or not history_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json approval_audit_trail.history_file must be non-empty user:// path")
+        if not isinstance(max_entries, int) or max_entries < 10:
+            _add_error(errors, "visual_snapshot_targets.json approval_audit_trail.max_entries must be int >= 10")
+
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json approval_audit_trail.required_run_modes must be non-empty array")
+            required_run_modes = []
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json approval_audit_trail.required_run_modes[{idx}] must be non-empty string")
+
+        if not isinstance(required_backends, list) or not required_backends:
+            _add_error(errors, "visual_snapshot_targets.json approval_audit_trail.required_backends must be non-empty array")
+            required_backends = []
+        else:
+            backend_set = set()
+            for idx, backend_name in enumerate(required_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json approval_audit_trail.required_backends[{idx}] must be non-empty string")
+                    continue
+                backend_set.add(backend_name)
+            for must_have in ("linux_headless", "windows_headless"):
+                if must_have not in backend_set:
+                    _add_error(errors, f"visual_snapshot_targets.json approval_audit_trail.required_backends must include '{must_have}'")
+
+        if not isinstance(require_unique_pipeline_id, bool):
+            _add_error(errors, "visual_snapshot_targets.json approval_audit_trail.require_unique_pipeline_id must be bool")
+        if not isinstance(max_missing_pipeline_id, int) or max_missing_pipeline_id < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_audit_trail.max_missing_pipeline_id must be int >= 0")
+        if not isinstance(max_history_trace_failures, int) or max_history_trace_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_audit_trail.max_history_trace_failures must be int >= 0")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if isinstance(required_run_modes, list) and isinstance(ci_mode_bindings_row, dict):
+            for mode_name in required_run_modes:
+                if isinstance(mode_name, str) and mode_name and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for approval_audit_trail.required_run_modes")
+
+        required_backend_matrix_row = backend_matrix_governance.get("required_backend_matrix", []) if isinstance(backend_matrix_governance, dict) else []
+        if isinstance(required_backends, list) and isinstance(required_backend_matrix_row, list):
+            for backend_name in required_backends:
+                if isinstance(backend_name, str) and backend_name and backend_name not in required_backend_matrix_row:
+                    _add_error(errors, f"visual_snapshot_targets.json backend_matrix_governance.required_backend_matrix must include '{backend_name}' for approval_audit_trail.required_backends")
+
+    if not isinstance(approval_history_archive, dict) or not approval_history_archive:
+        _add_error(errors, "visual_snapshot_targets.json approval_history_archive must be non-empty object")
+    else:
+        archive_file = approval_history_archive.get("archive_file")
+        max_entries = approval_history_archive.get("max_entries")
+        aggregation_window = approval_history_archive.get("aggregation_window")
+        required_archive_run_modes = approval_history_archive.get("required_run_modes")
+        required_archive_backends = approval_history_archive.get("required_backends")
+        max_missing_archive_backends = approval_history_archive.get("max_missing_archive_backends")
+        max_missing_archive_run_modes = approval_history_archive.get("max_missing_archive_run_modes")
+        max_backend_warning_delta = approval_history_archive.get("max_backend_warning_delta")
+        max_backend_blocker_delta = approval_history_archive.get("max_backend_blocker_delta")
+        max_archive_trace_failures = approval_history_archive.get("max_archive_trace_failures")
+
+        if not isinstance(archive_file, str) or not archive_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.archive_file must be non-empty user:// path")
+        if not isinstance(max_entries, int) or max_entries < 20:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.max_entries must be int >= 20")
+        if not isinstance(aggregation_window, int) or aggregation_window < 10:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.aggregation_window must be int >= 10")
+
+        if not isinstance(required_archive_run_modes, list) or not required_archive_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.required_run_modes must be non-empty array")
+            required_archive_run_modes = []
+        else:
+            for idx, mode_name in enumerate(required_archive_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json approval_history_archive.required_run_modes[{idx}] must be non-empty string")
+
+        if not isinstance(required_archive_backends, list) or not required_archive_backends:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.required_backends must be non-empty array")
+            required_archive_backends = []
+        else:
+            archive_backend_set = set()
+            for idx, backend_name in enumerate(required_archive_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json approval_history_archive.required_backends[{idx}] must be non-empty string")
+                    continue
+                archive_backend_set.add(backend_name)
+            for must_have in ("linux_headless", "windows_headless"):
+                if must_have not in archive_backend_set:
+                    _add_error(errors, f"visual_snapshot_targets.json approval_history_archive.required_backends must include '{must_have}'")
+
+        if not isinstance(max_missing_archive_backends, int) or max_missing_archive_backends < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.max_missing_archive_backends must be int >= 0")
+        if not isinstance(max_missing_archive_run_modes, int) or max_missing_archive_run_modes < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.max_missing_archive_run_modes must be int >= 0")
+        if not isinstance(max_backend_warning_delta, int) or max_backend_warning_delta < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.max_backend_warning_delta must be int >= 0")
+        if not isinstance(max_backend_blocker_delta, int) or max_backend_blocker_delta < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.max_backend_blocker_delta must be int >= 0")
+        if not isinstance(max_archive_trace_failures, int) or max_archive_trace_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json approval_history_archive.max_archive_trace_failures must be int >= 0")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if isinstance(required_archive_run_modes, list) and isinstance(ci_mode_bindings_row, dict):
+            for mode_name in required_archive_run_modes:
+                if isinstance(mode_name, str) and mode_name and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for approval_history_archive.required_run_modes")
+
+        required_backend_matrix_row = backend_matrix_governance.get("required_backend_matrix", []) if isinstance(backend_matrix_governance, dict) else []
+        if isinstance(required_archive_backends, list) and isinstance(required_backend_matrix_row, list):
+            for backend_name in required_archive_backends:
+                if isinstance(backend_name, str) and backend_name and backend_name not in required_backend_matrix_row:
+                    _add_error(errors, f"visual_snapshot_targets.json backend_matrix_governance.required_backend_matrix must include '{backend_name}' for approval_history_archive.required_backends")
+
+    if not isinstance(approval_threshold_templates, dict) or not approval_threshold_templates:
+        _add_error(errors, "visual_snapshot_targets.json approval_threshold_templates must be non-empty object")
+    else:
+        default_template = approval_threshold_templates.get("default_template")
+        run_mode_templates = approval_threshold_templates.get("run_mode_templates")
+        templates = approval_threshold_templates.get("templates")
+
+        if not isinstance(default_template, str) or not default_template.strip():
+            _add_error(errors, "visual_snapshot_targets.json approval_threshold_templates.default_template must be non-empty string")
+        if not isinstance(run_mode_templates, dict) or not run_mode_templates:
+            _add_error(errors, "visual_snapshot_targets.json approval_threshold_templates.run_mode_templates must be non-empty object")
+            run_mode_templates = {}
+        if not isinstance(templates, dict) or not templates:
+            _add_error(errors, "visual_snapshot_targets.json approval_threshold_templates.templates must be non-empty object")
+            templates = {}
+
+        if isinstance(default_template, str) and default_template and isinstance(templates, dict) and default_template not in templates:
+            _add_error(errors, "visual_snapshot_targets.json approval_threshold_templates.default_template must reference templates key")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        for mode_name, template_name in run_mode_templates.items():
+            if not isinstance(mode_name, str) or not mode_name.strip():
+                _add_error(errors, "visual_snapshot_targets.json approval_threshold_templates.run_mode_templates key must be non-empty string")
+                continue
+            if not isinstance(template_name, str) or not template_name.strip():
+                _add_error(errors, f"visual_snapshot_targets.json approval_threshold_templates.run_mode_templates.{mode_name} must be non-empty string")
+                continue
+            if isinstance(templates, dict) and template_name not in templates:
+                _add_error(errors, f"visual_snapshot_targets.json approval_threshold_templates.run_mode_templates.{mode_name} must reference templates key")
+            if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for approval_threshold_templates.run_mode_templates")
+
+        allowed_template_sections = {"approval_workflow", "approval_audit_trail", "approval_history_archive"}
+        for template_name, template_row in templates.items():
+            if not isinstance(template_name, str) or not template_name.strip():
+                _add_error(errors, "visual_snapshot_targets.json approval_threshold_templates.templates key must be non-empty string")
+                continue
+            if not isinstance(template_row, dict) or not template_row:
+                _add_error(errors, f"visual_snapshot_targets.json approval_threshold_templates.templates.{template_name} must be non-empty object")
+                continue
+            for section_name, section_row in template_row.items():
+                if section_name not in allowed_template_sections:
+                    _add_error(errors, f"visual_snapshot_targets.json approval_threshold_templates.templates.{template_name}.{section_name} is not a supported override section")
+                    continue
+                if not isinstance(section_row, dict) or not section_row:
+                    _add_error(errors, f"visual_snapshot_targets.json approval_threshold_templates.templates.{template_name}.{section_name} must be non-empty object")
+
+    if not isinstance(release_candidate_tracking, dict) or not release_candidate_tracking:
+        _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking must be non-empty object")
+    else:
+        history_file = release_candidate_tracking.get("history_file")
+        window = release_candidate_tracking.get("window")
+        required_tracking_run_modes = release_candidate_tracking.get("required_run_modes")
+        required_tracking_strategies = release_candidate_tracking.get("required_strategies")
+        min_runs = release_candidate_tracking.get("min_runs")
+        max_avg_warnings = _to_float(release_candidate_tracking.get("max_avg_warnings"))
+        max_total_blockers = release_candidate_tracking.get("max_total_blockers")
+        max_tracking_failures = release_candidate_tracking.get("max_tracking_failures")
+
+        if not isinstance(history_file, str) or not history_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.history_file must be non-empty user:// path")
+        if not isinstance(window, int) or window < 5:
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.window must be int >= 5")
+        if not isinstance(required_tracking_run_modes, list) or not required_tracking_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.required_run_modes must be non-empty array")
+            required_tracking_run_modes = []
+        else:
+            ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+            for idx, mode_name in enumerate(required_tracking_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_candidate_tracking.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for release_candidate_tracking.required_run_modes")
+
+        if not isinstance(required_tracking_strategies, list) or not required_tracking_strategies:
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.required_strategies must be non-empty array")
+        else:
+            required_strategies_row = release_gate_templates.get("required_strategies", []) if isinstance(release_gate_templates, dict) else []
+            for idx, strategy_name in enumerate(required_tracking_strategies):
+                if not isinstance(strategy_name, str) or not strategy_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_candidate_tracking.required_strategies[{idx}] must be non-empty string")
+                    continue
+                if isinstance(required_strategies_row, list) and strategy_name not in required_strategies_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_candidate_tracking.required_strategies[{idx}] must be subset of release_gate_templates.required_strategies")
+
+        if not isinstance(min_runs, int) or min_runs < 1:
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.min_runs must be int >= 1")
+        if max_avg_warnings is None or max_avg_warnings < 0.0:
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.max_avg_warnings must be float >= 0.0")
+        if not isinstance(max_total_blockers, int) or max_total_blockers < 0:
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.max_total_blockers must be int >= 0")
+        if not isinstance(max_tracking_failures, int) or max_tracking_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.max_tracking_failures must be int >= 0")
+
+    if not isinstance(report_layers, dict) or not report_layers:
+        _add_error(errors, "visual_snapshot_targets.json report_layers must be non-empty object")
+    else:
+        for layer_name, layer_row in report_layers.items():
+            if not isinstance(layer_name, str) or not layer_name.strip():
+                _add_error(errors, "visual_snapshot_targets.json report_layers key must be non-empty string")
+                continue
+            if not isinstance(layer_row, dict) or not layer_row:
+                _add_error(errors, f"visual_snapshot_targets.json report_layers.{layer_name} must be non-empty object")
+                continue
+
+            snapshot_ids = layer_row.get("snapshot_ids")
+            max_layer_blockers = layer_row.get("max_layer_blockers")
+            max_layer_warnings = layer_row.get("max_layer_warnings")
+            min_pass_ratio = _to_float(layer_row.get("min_pass_ratio"))
+
+            if not isinstance(snapshot_ids, list) or not snapshot_ids:
+                _add_error(errors, f"visual_snapshot_targets.json report_layers.{layer_name}.snapshot_ids must be non-empty array")
+            else:
+                for idx, snapshot_id in enumerate(snapshot_ids):
+                    if not isinstance(snapshot_id, str) or not snapshot_id.strip():
+                        _add_error(errors, f"visual_snapshot_targets.json report_layers.{layer_name}.snapshot_ids[{idx}] must be non-empty string")
+                    elif isinstance(snapshots, dict) and snapshot_id not in snapshots:
+                        _add_error(errors, f"visual_snapshot_targets.json report_layers.{layer_name}.snapshot_ids[{idx}] must reference snapshots key")
+
+            if not isinstance(max_layer_blockers, int) or max_layer_blockers < 0:
+                _add_error(errors, f"visual_snapshot_targets.json report_layers.{layer_name}.max_layer_blockers must be int >= 0")
+            if not isinstance(max_layer_warnings, int) or max_layer_warnings < 0:
+                _add_error(errors, f"visual_snapshot_targets.json report_layers.{layer_name}.max_layer_warnings must be int >= 0")
+            if min_pass_ratio is None or min_pass_ratio < 0.0 or min_pass_ratio > 1.0:
+                _add_error(errors, f"visual_snapshot_targets.json report_layers.{layer_name}.min_pass_ratio must be within [0.0, 1.0]")
+
+    if not isinstance(cross_version_baseline, dict) or not cross_version_baseline:
+        _add_error(errors, "visual_snapshot_targets.json cross_version_baseline must be non-empty object")
+    else:
+        reference_channels = cross_version_baseline.get("reference_channels")
+        max_drift = cross_version_baseline.get("max_drift")
+        max_violations = cross_version_baseline.get("max_violations")
+        snapshot_references = cross_version_baseline.get("snapshot_references")
+
+        if not isinstance(reference_channels, list) or not reference_channels:
+            _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.reference_channels must be non-empty array")
+            reference_channels = []
+        else:
+            for idx, channel_name in enumerate(reference_channels):
+                if not isinstance(channel_name, str) or not channel_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.reference_channels[{idx}] must be non-empty string")
+
+        if not isinstance(max_drift, dict) or not max_drift:
+            _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.max_drift must be non-empty object")
+        else:
+            opaque_drift = _to_float(max_drift.get("opaque_ratio"))
+            unique_drift = _to_float(max_drift.get("unique_color_ratio"))
+            luma_drift = _to_float(max_drift.get("avg_luma"))
+            if opaque_drift is None or opaque_drift < 0.0 or opaque_drift > 1.0:
+                _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.max_drift.opaque_ratio must be within [0.0, 1.0]")
+            if unique_drift is None or unique_drift < 0.0 or unique_drift > 1.0:
+                _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.max_drift.unique_color_ratio must be within [0.0, 1.0]")
+            if luma_drift is None or luma_drift < 0.0 or luma_drift > 1.0:
+                _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.max_drift.avg_luma must be within [0.0, 1.0]")
+
+        if not isinstance(max_violations, int) or max_violations < 0:
+            _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.max_violations must be int >= 0")
+
+        if not isinstance(snapshot_references, dict) or not snapshot_references:
+            _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.snapshot_references must be non-empty object")
+        else:
+            for snapshot_id, ref_row in snapshot_references.items():
+                if not isinstance(snapshot_id, str) or not snapshot_id.strip():
+                    _add_error(errors, "visual_snapshot_targets.json cross_version_baseline.snapshot_references key must be non-empty string")
+                    continue
+                if isinstance(snapshots, dict) and snapshot_id not in snapshots:
+                    _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.snapshot_references.{snapshot_id} must reference snapshots key")
+                if not isinstance(ref_row, dict) or not ref_row:
+                    _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.snapshot_references.{snapshot_id} must be non-empty object")
+                    continue
+
+                opaque_refs = ref_row.get("opaque_ratio")
+                unique_refs = ref_row.get("unique_colors")
+                luma_refs = ref_row.get("avg_luma")
+                for metric_key, metric_refs in {
+                    "opaque_ratio": opaque_refs,
+                    "unique_colors": unique_refs,
+                    "avg_luma": luma_refs,
+                }.items():
+                    if not isinstance(metric_refs, dict) or not metric_refs:
+                        _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.snapshot_references.{snapshot_id}.{metric_key} must be non-empty object")
+                        continue
+                    for channel_name in reference_channels:
+                        if isinstance(channel_name, str) and channel_name and channel_name not in metric_refs:
+                            _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.snapshot_references.{snapshot_id}.{metric_key} must include {channel_name}")
+                    for channel_name, metric_value in metric_refs.items():
+                        if not isinstance(channel_name, str) or not channel_name.strip():
+                            _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.snapshot_references.{snapshot_id}.{metric_key} channel key must be non-empty string")
+                            continue
+                        if metric_key == "unique_colors":
+                            value = _to_float(metric_value)
+                            if value is None or value < 1.0:
+                                _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.snapshot_references.{snapshot_id}.unique_colors.{channel_name} must be >= 1")
+                        else:
+                            value = _to_float(metric_value)
+                            if value is None or value < 0.0 or value > 1.0:
+                                _add_error(errors, f"visual_snapshot_targets.json cross_version_baseline.snapshot_references.{snapshot_id}.{metric_key}.{channel_name} must be within [0.0, 1.0]")
+
+    if not isinstance(thresholds, dict) or not thresholds:
+        _add_error(errors, "visual_snapshot_targets.json thresholds must be non-empty object")
+        return
+
+    min_snapshots = thresholds.get("min_snapshots")
+    max_failures = thresholds.get("max_failures")
+    max_trend_regressions = thresholds.get("max_trend_regressions")
+    max_opaque_ratio_drop = _to_float(thresholds.get("max_opaque_ratio_drop"))
+    max_unique_color_drop_ratio = _to_float(thresholds.get("max_unique_color_drop_ratio"))
+    max_luma_delta = _to_float(thresholds.get("max_luma_delta"))
+
+    if not isinstance(min_snapshots, int) or min_snapshots < 1:
+        _add_error(errors, "visual_snapshot_targets.json thresholds.min_snapshots must be int >= 1")
+    if not isinstance(max_failures, int) or max_failures < 0:
+        _add_error(errors, "visual_snapshot_targets.json thresholds.max_failures must be int >= 0")
+    if not isinstance(max_trend_regressions, int) or max_trend_regressions < 0:
+        _add_error(errors, "visual_snapshot_targets.json thresholds.max_trend_regressions must be int >= 0")
+    if max_opaque_ratio_drop is None or max_opaque_ratio_drop < 0.0 or max_opaque_ratio_drop > 1.0:
+        _add_error(errors, "visual_snapshot_targets.json thresholds.max_opaque_ratio_drop must be within [0.0, 1.0]")
+    if max_unique_color_drop_ratio is None or max_unique_color_drop_ratio < 0.0 or max_unique_color_drop_ratio > 1.0:
+        _add_error(errors, "visual_snapshot_targets.json thresholds.max_unique_color_drop_ratio must be within [0.0, 1.0]")
+    if max_luma_delta is None or max_luma_delta < 0.0 or max_luma_delta > 1.0:
+        _add_error(errors, "visual_snapshot_targets.json thresholds.max_luma_delta must be within [0.0, 1.0]")
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     balance_dir = root / "data" / "balance"
@@ -1354,6 +2581,14 @@ def main() -> int:
         _validate_evolutions(parsed_by_name["evolutions.json"], errors)
     if "quality_baseline_targets.json" in parsed_by_name:
         _validate_quality_baseline_targets(parsed_by_name["quality_baseline_targets.json"], errors)
+    if "release_gate_targets.json" in parsed_by_name:
+        _validate_release_gate_targets(parsed_by_name["release_gate_targets.json"], errors)
+    if "compatibility_rehearsal_targets.json" in parsed_by_name:
+        _validate_compatibility_rehearsal_targets(parsed_by_name["compatibility_rehearsal_targets.json"], errors)
+    if "resource_acceptance_targets.json" in parsed_by_name:
+        _validate_resource_acceptance_targets(parsed_by_name["resource_acceptance_targets.json"], errors)
+    if "visual_snapshot_targets.json" in parsed_by_name:
+        _validate_visual_snapshot_targets(parsed_by_name["visual_snapshot_targets.json"], errors)
 
     if warnings:
         for message in warnings:

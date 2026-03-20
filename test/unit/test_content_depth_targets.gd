@@ -23,14 +23,14 @@ func test_character_roster_reaches_content_depth_target() -> void:
 	var cfg := _load_json_dict(CHARACTERS_CONFIG_PATH)
 	var rows: Array = cfg.get("characters", [])
 	assert_typeof(rows, TYPE_ARRAY, "characters should be an Array")
-	assert_gte(rows.size(), 8, "characters should contain at least 8 entries")
+	assert_gte(rows.size(), 12, "characters should contain at least 12 entries")
 
 
 func test_evolution_roster_reaches_content_depth_target() -> void:
 	var cfg := _load_json_dict(EVOLUTIONS_CONFIG_PATH)
 	var rows: Array = cfg.get("evolutions", [])
 	assert_typeof(rows, TYPE_ARRAY, "evolutions should be an Array")
-	assert_gte(rows.size(), 7, "evolutions should contain at least 7 entries")
+	assert_gte(rows.size(), 13, "evolutions should contain at least 13 entries")
 
 	var seen_result_ids := {}
 	for row_var: Variant in rows:
@@ -53,12 +53,12 @@ func test_shop_pools_reach_content_depth_target() -> void:
 	assert_typeof(passive_pool, TYPE_ARRAY, "passive pool should be an Array")
 	assert_typeof(weapon_pool, TYPE_ARRAY, "weapon pool should be an Array")
 
-	assert_gte(passive_pool.size(), 8, "passive pool should contain at least 8 entries")
-	assert_gte(weapon_pool.size(), 9, "weapon pool should contain at least 9 entries")
+	assert_gte(passive_pool.size(), 14, "passive pool should contain at least 14 entries")
+	assert_gte(weapon_pool.size(), 15, "weapon pool should contain at least 15 entries")
 
 
 func test_memory_fragments_reach_content_depth_target() -> void:
 	var cfg := _load_json_dict(NARRATIVE_CONFIG_PATH)
 	var memory_fragments: Dictionary = cfg.get("memory_fragments", {})
 	assert_typeof(memory_fragments, TYPE_DICTIONARY, "memory_fragments should be a Dictionary")
-	assert_gte(memory_fragments.size(), 10, "memory_fragments should contain at least 10 entries")
+	assert_gte(memory_fragments.size(), 22, "memory_fragments should contain at least 22 entries")

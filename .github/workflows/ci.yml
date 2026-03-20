@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: JSON syntax gate
+        run: python scripts/tools/check_json_syntax.py
+
       - name: Validate JSON configs
         run: python scripts/validate_configs.py
 
@@ -28,8 +31,16 @@ jobs:
         run: python scripts/check_resources.py
 
   godot-headless-and-gut:
-    name: Godot Headless and GUT
-    runs-on: ubuntu-latest
+    name: Godot Headless and GUT (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            backend_tag: linux_headless
+          - os: windows-latest
+            backend_tag: windows_headless
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,3 +63,51 @@ jobs:
 
       - name: Run quality baseline snapshot
         run: godot --headless --path . -s res://scripts/tools/run_quality_baseline.gd
+
+      - name: Run release gate rehearsal
+        run: godot --headless --path . -s res://scripts/tools/run_release_gate.gd
+
+      - name: Run compatibility rehearsal
+        run: godot --headless --path . -s res://scripts/tools/run_compatibility_rehearsal.gd
+
+      - name: Run resource acceptance rehearsal (scene visuals)
+        run: godot --headless --path . -s res://scripts/tools/run_resource_acceptance.gd
+
+      - name: Run resource acceptance trend+visual gate
+        run: godot --headless --path . -s res://scripts/tools/run_resource_acceptance.gd
+
+      - name: Run visual snapshot regression rehearsal
+        env:
+          VISUAL_PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.backend_tag }}-rehearsal
+          VISUAL_SNAPSHOT_BACKEND_TAG: ${{ matrix.backend_tag }}
+          VISUAL_SNAPSHOT_BACKEND_MATRIX: linux_headless,windows_headless
+          VISUAL_SNAPSHOT_STRATEGY: ci_rehearsal
+          VISUAL_SNAPSHOT_RUN_MODE: rehearsal
+        run: godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.gd
+
+      - name: Run visual snapshot regression trend gate
+        env:
+          VISUAL_PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.backend_tag }}-trend-gate
+          VISUAL_SNAPSHOT_BACKEND_TAG: ${{ matrix.backend_tag }}
+          VISUAL_SNAPSHOT_BACKEND_MATRIX: linux_headless,windows_headless
+          VISUAL_SNAPSHOT_STRATEGY: ci_trend_gate
+          VISUAL_SNAPSHOT_RUN_MODE: trend_gate
+        run: godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.gd
+
+      - name: Run visual snapshot release-candidate template
+        env:
+          VISUAL_PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.backend_tag }}-release-candidate
+          VISUAL_SNAPSHOT_BACKEND_TAG: ${{ matrix.backend_tag }}
+          VISUAL_SNAPSHOT_BACKEND_MATRIX: linux_headless,windows_headless
+          VISUAL_SNAPSHOT_STRATEGY: release_candidate
+          VISUAL_SNAPSHOT_RUN_MODE: release_candidate
+        run: godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.gd
+
+      - name: Run visual snapshot release-blocking template
+        env:
+          VISUAL_PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.backend_tag }}-release-blocking
+          VISUAL_SNAPSHOT_BACKEND_TAG: ${{ matrix.backend_tag }}
+          VISUAL_SNAPSHOT_BACKEND_MATRIX: linux_headless,windows_headless
+          VISUAL_SNAPSHOT_STRATEGY: release_blocking
+          VISUAL_SNAPSHOT_RUN_MODE: release_blocking
+        run: godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.gd

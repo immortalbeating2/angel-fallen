@@ -1,0 +1,57 @@
+{
+  "channel": "internal_candidate",
+  "profiles": [
+    {
+      "id": "win10_1080p_keyboard",
+      "platform_marker": "windows-latest",
+      "resolution": "1920x1080",
+      "input_mode": "keyboard_mouse",
+      "renderer": "forward_plus",
+      "required_scenes": [
+        "res://scenes/main_menu/main_menu.tscn",
+        "res://scenes/game/game_world.tscn"
+      ]
+    },
+    {
+      "id": "win11_1440p_gamepad",
+      "platform_marker": "windows-latest",
+      "resolution": "2560x1440",
+      "input_mode": "gamepad",
+      "renderer": "forward_plus",
+      "required_scenes": [
+        "res://scenes/main_menu/main_menu.tscn",
+        "res://scenes/game/game_world.tscn"
+      ]
+    },
+    {
+      "id": "ubuntu22_1080p_keyboard",
+      "platform_marker": "ubuntu-latest",
+      "resolution": "1920x1080",
+      "input_mode": "keyboard_mouse",
+      "renderer": "forward_plus",
+      "required_scenes": [
+        "res://scenes/main_menu/main_menu.tscn",
+        "res://scenes/game/game_world.tscn"
+      ]
+    }
+  ],
+  "required_actions": [
+    "move_up",
+    "move_down",
+    "move_left",
+    "move_right",
+    "sprint",
+    "interact",
+    "pause"
+  ],
+  "thresholds": {
+    "min_profile_pass_rate": 1.0,
+    "max_profile_failures": 0,
+    "max_missing_actions": 0
+  },
+  "publish_blockers": {
+    "require_release_gate_json": true,
+    "require_release_gate_markdown": true,
+    "require_zero_profile_failures": true
+  }
+}

@@ -127,6 +127,8 @@ func _setup_scenario(node: Node, setup_mode: String) -> void:
             _configure_elite_pressure(node, 11, 30, 1.2, 1.1, 1.12)
         "elite_pressure_extreme":
             _configure_elite_pressure(node, 14, 38, 1.35, 1.2, 1.2)
+        "boss_pressure_endurance":
+            _configure_boss_pressure(node, 13, 40, 1.4, 1.28, 1.3)
         _:
             return
 
@@ -150,6 +152,27 @@ func _configure_elite_pressure(
         node.set("_room_index", room_index)
         node.set("_current_room_type", "elite")
         node.call("_enter_elite_room")
+
+
+func _configure_boss_pressure(
+    node: Node,
+    room_index: int,
+    max_alive: int,
+    spawn_rate_mult: float,
+    enemy_hp_mult: float,
+    enemy_damage_mult: float
+) -> void:
+    var spawner: Node = node.get_node_or_null("EnemySpawner")
+    if spawner != null:
+        if spawner.get("max_alive") != null:
+            spawner.max_alive = max_alive
+        if spawner.has_method("set_runtime_modifiers"):
+            spawner.call("set_runtime_modifiers", spawn_rate_mult, enemy_hp_mult, enemy_damage_mult)
+
+    if node.has_method("_enter_boss_room"):
+        node.set("_room_index", room_index)
+        node.set("_current_room_type", "boss")
+        node.call("_enter_boss_room")
 
 
 func _teardown_scenario(node: Node) -> void:

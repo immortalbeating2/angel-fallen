@@ -1,0 +1,514 @@
+{
+  "channel": "batch_6",
+  "required_fields": [
+    "display_name",
+    "material_profile",
+    "asset_state",
+    "preview_texture",
+    "acceptance_scene",
+    "acceptance_profile",
+    "acceptance_tier"
+  ],
+  "acceptance_scene_map": {
+    "characters": "res://scenes/main_menu/main_menu.tscn",
+    "weapons": "res://scenes/game/game_world.tscn",
+    "passives": "res://scenes/game/game_world.tscn",
+    "accessories": "res://scenes/game/game_world.tscn",
+    "enemies": "res://scenes/game/enemy.tscn",
+    "evolutions": "res://scenes/ui/level_up_panel.tscn",
+    "meta_upgrades": "res://scenes/main_menu/main_menu.tscn",
+    "forge_recipes": "res://scenes/ui/level_up_panel.tscn"
+  },
+  "acceptance_scene_matrix": {
+    "characters": [
+      "res://scenes/main_menu/main_menu.tscn",
+      "res://scenes/game/game_world.tscn",
+      "res://scenes/ui/run_result_panel.tscn",
+      "res://scenes/ui/runtime_settings_panel.tscn"
+    ],
+    "weapons": [
+      "res://scenes/game/game_world.tscn",
+      "res://scenes/ui/level_up_panel.tscn",
+      "res://scenes/ui/hud.tscn",
+      "res://scenes/ui/run_result_panel.tscn"
+    ],
+    "passives": [
+      "res://scenes/game/game_world.tscn",
+      "res://scenes/ui/level_up_panel.tscn",
+      "res://scenes/ui/hud.tscn",
+      "res://scenes/ui/run_result_panel.tscn"
+    ],
+    "accessories": [
+      "res://scenes/game/game_world.tscn",
+      "res://scenes/ui/hud.tscn",
+      "res://scenes/ui/run_result_panel.tscn",
+      "res://scenes/ui/level_up_panel.tscn"
+    ],
+    "enemies": [
+      "res://scenes/game/enemy.tscn",
+      "res://scenes/game/game_world.tscn",
+      "res://scenes/ui/hud.tscn",
+      "res://scenes/ui/run_result_panel.tscn"
+    ],
+    "evolutions": [
+      "res://scenes/ui/level_up_panel.tscn",
+      "res://scenes/game/game_world.tscn",
+      "res://scenes/ui/run_result_panel.tscn",
+      "res://scenes/ui/hud.tscn"
+    ],
+    "meta_upgrades": [
+      "res://scenes/main_menu/main_menu.tscn",
+      "res://scenes/ui/runtime_settings_panel.tscn",
+      "res://scenes/ui/hud.tscn",
+      "res://scenes/ui/run_result_panel.tscn"
+    ],
+    "forge_recipes": [
+      "res://scenes/ui/level_up_panel.tscn",
+      "res://scenes/ui/run_result_panel.tscn",
+      "res://scenes/main_menu/main_menu.tscn",
+      "res://scenes/ui/hud.tscn"
+    ]
+  },
+  "scene_visual_requirements": {
+    "characters": [
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/CharacterNameValue",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/CharacterTraitValue",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/StartButton",
+        "node_type": "Button",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/CharacterSwitchRow/CharacterPrevButton",
+        "node_type": "Button",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ],
+    "weapons": [
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "GroundTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "DoorTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option1",
+        "node_type": "Button",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "Player/Polygon2D",
+        "node_type": "Polygon2D",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ],
+    "passives": [
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "HazardTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option2",
+        "node_type": "Button",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/hud.tscn",
+        "node_path": "MarginContainer/PanelContainer/VBoxContainer/HazardValue",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "GroundDetailTileMap",
+        "node_type": "TileMap",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ],
+    "accessories": [
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "AmbientFxTileMap",
+        "node_type": "TileMap",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/hud.tscn",
+        "node_path": "MarginContainer/PanelContainer/VBoxContainer/AccessoryValue",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Unlocks",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/hud.tscn",
+        "node_path": "ToastLayer",
+        "node_type": "Control",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ],
+    "enemies": [
+      {
+        "scene": "res://scenes/game/enemy.tscn",
+        "node_path": "Polygon2D",
+        "node_type": "Polygon2D",
+        "property": "polygon",
+        "rule": "array_non_empty"
+      },
+      {
+        "scene": "res://scenes/game/enemy.tscn",
+        "node_path": "CollisionShape2D",
+        "node_type": "CollisionShape2D",
+        "property": "shape",
+        "rule": "non_null"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "EnemySpawner",
+        "node_type": "Node2D",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/game/enemy.tscn",
+        "node_path": "Polygon2D",
+        "node_type": "Polygon2D",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ],
+    "evolutions": [
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option3",
+        "node_type": "Button",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/RouteStyleSummary",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/game/game_world.tscn",
+        "node_path": "LevelUpPanel",
+        "node_type": "Control",
+        "rule": "exists"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Option1",
+        "node_type": "Button",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ],
+    "meta_upgrades": [
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/Upgrade1Button",
+        "node_type": "Button",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/runtime_settings_panel.tscn",
+        "node_path": "MasterRow/Slider",
+        "node_type": "HSlider",
+        "property": "max_value",
+        "rule": "float_gt_zero"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/MetaValue",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/runtime_settings_panel.tscn",
+        "node_path": "Actions/ResetDefaultsButton",
+        "node_type": "Button",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ],
+    "forge_recipes": [
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/TimelineAnchorButton",
+        "node_type": "Button",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/level_up_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Title",
+        "node_type": "Label",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/main_menu/main_menu.tscn",
+        "node_path": "CenterContainer/VBoxContainer/ReviewFragmentButton",
+        "node_type": "Button",
+        "property": "text",
+        "rule": "non_empty_string"
+      },
+      {
+        "scene": "res://scenes/ui/run_result_panel.tscn",
+        "node_path": "CenterContainer/PanelContainer/VBoxContainer/TimelineScopeButton",
+        "node_type": "Button",
+        "property": "visible",
+        "rule": "bool_true"
+      }
+    ]
+  },
+  "preview_texture_map": {
+    "characters": "res://assets/sprites/tiles/ground_ch1.png",
+    "weapons": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+    "passives": "res://assets/sprites/tiles/ground_detail_ch2.png",
+    "accessories": "res://assets/sprites/tiles/ground_detail_ch3.png",
+    "enemies": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+    "evolutions": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+    "meta_upgrades": "res://assets/sprites/tiles/doors_ch1.png",
+    "forge_recipes": "res://assets/sprites/tiles/doors_ch3.png"
+  },
+  "acceptance_profile_policy": {
+    "required_ready_profile_tier": "ready",
+    "profiles": {
+      "menu_candidate_preview": {
+        "tier": "candidate",
+        "report_bucket": "menu"
+      },
+      "combat_candidate_preview": {
+        "tier": "candidate",
+        "report_bucket": "combat"
+      },
+      "ui_candidate_preview": {
+        "tier": "candidate",
+        "report_bucket": "ui"
+      },
+      "menu_ready_matrix": {
+        "tier": "ready",
+        "report_bucket": "menu"
+      },
+      "combat_ready_matrix": {
+        "tier": "ready",
+        "report_bucket": "combat"
+      },
+      "ui_ready_matrix": {
+        "tier": "ready",
+        "report_bucket": "ui"
+      }
+    },
+    "category_profile_map": {
+      "characters": {
+        "production_candidate": "menu_candidate_preview",
+        "production_ready": "menu_ready_matrix"
+      },
+      "weapons": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "passives": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "accessories": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "enemies": {
+        "production_candidate": "combat_candidate_preview",
+        "production_ready": "combat_ready_matrix"
+      },
+      "evolutions": {
+        "production_candidate": "ui_candidate_preview",
+        "production_ready": "ui_ready_matrix"
+      },
+      "meta_upgrades": {
+        "production_candidate": "menu_candidate_preview",
+        "production_ready": "menu_ready_matrix"
+      },
+      "forge_recipes": {
+        "production_candidate": "ui_candidate_preview",
+        "production_ready": "ui_ready_matrix"
+      }
+    }
+  },
+  "required_production_ready_ids": {
+    "characters": [
+      "char_arbiter",
+      "char_cleric",
+      "char_exile",
+      "char_huntress",
+      "char_knight",
+      "char_mage",
+      "char_occultist",
+      "char_oracle",
+      "char_rogue",
+      "char_sentinel",
+      "char_templar",
+      "char_witchblade"
+    ],
+    "weapons": [
+      "wpn_arcane_comet",
+      "wpn_astral_disc",
+      "wpn_blood_rite",
+      "wpn_frost_orb",
+      "wpn_holy_cross",
+      "wpn_holy_judgment",
+      "wpn_magic_missile",
+      "wpn_nether_shard",
+      "wpn_radiant_hammer",
+      "wpn_sacred_lance",
+      "wpn_shadow_tempest",
+      "wpn_solar_supernova",
+      "wpn_storm_bow",
+      "wpn_void_chain",
+      "wpn_vowblade"
+    ],
+    "passives": [
+      "pas_armor",
+      "pas_bastion",
+      "pas_focus",
+      "pas_force",
+      "pas_fortune",
+      "pas_harvest",
+      "pas_might",
+      "pas_momentum",
+      "pas_overcharge",
+      "pas_precision",
+      "pas_resolve",
+      "pas_siphon",
+      "pas_warding",
+      "pas_zeal"
+    ],
+    "accessories": [
+      "acc_flame_core",
+      "acc_heart_of_mine",
+      "acc_void_eye",
+      "acc_zero_mark"
+    ],
+    "enemies": [
+      "enemy_abyss_guard",
+      "enemy_blizzard_mage",
+      "enemy_brute",
+      "enemy_burn_guard",
+      "enemy_emberling",
+      "enemy_flame_channeler",
+      "enemy_flame_lord",
+      "enemy_frost_king",
+      "enemy_frostling",
+      "enemy_glacier_runner",
+      "enemy_hexcaster",
+      "enemy_ice_guard",
+      "enemy_rift_runner",
+      "enemy_rock_colossus",
+      "enemy_scorch_runner",
+      "enemy_shadowling",
+      "enemy_stalker",
+      "enemy_void_lord",
+      "enemy_void_priest",
+      "enemy_voidling"
+    ],
+    "evolutions": [
+      "evo_abyssal_chain",
+      "evo_arcane_comet",
+      "evo_astral_horizon",
+      "evo_blood_requiem",
+      "evo_glacial_nova",
+      "evo_holy_judgment",
+      "evo_nether_maelstrom",
+      "evo_radiant_cataclysm",
+      "evo_seraph_lance",
+      "evo_shadow_tempest",
+      "evo_solar_supernova",
+      "evo_tempest_onslaught",
+      "evo_vowstorm"
+    ],
+    "meta_upgrades": [
+      "meta_crit",
+      "meta_damage",
+      "meta_max_hp",
+      "meta_speed",
+      "meta_stamina"
+    ],
+    "forge_recipes": [
+      "forge_abyssal_chain",
+      "forge_arcane_comet",
+      "forge_astral_horizon",
+      "forge_blood_requiem",
+      "forge_glacial_nova",
+      "forge_holy_judgment",
+      "forge_nether_maelstrom",
+      "forge_radiant_cataclysm",
+      "forge_seraph_lance",
+      "forge_shadow_tempest",
+      "forge_solar_supernova",
+      "forge_tempest_onslaught",
+      "forge_vowstorm"
+    ]
+  },
+  "trend_baseline": {
+    "bucket_ready_ratio_min": {
+      "menu": 0.95,
+      "combat": 0.95,
+      "ui": 0.95
+    },
+    "max_category_ratio_drop": 0.02,
+    "max_bucket_ratio_drop": 0.02
+  },
+  "thresholds": {
+    "min_ready_per_category": 4,
+    "min_ready_ratio_per_category": 0.95,
+    "min_scene_smokes_per_category": 4,
+    "min_visual_checks_per_category": 4,
+    "max_visual_failures": 0,
+    "max_profile_mismatches": 0,
+    "max_trend_regressions": 0,
+    "max_failures": 0
+  }
+}

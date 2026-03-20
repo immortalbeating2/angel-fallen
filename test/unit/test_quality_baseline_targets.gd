@@ -31,7 +31,8 @@ func test_quality_baseline_config_has_required_sections() -> void:
 		"game_world_idle",
 		"game_world_elite_pressure_medium",
 		"game_world_elite_pressure_high",
-		"game_world_elite_pressure_extreme"
+		"game_world_elite_pressure_extreme",
+		"game_world_boss_pressure_endurance"
 	]
 	for scenario_id: String in required_scenarios:
 		assert_true(scenarios.has(scenario_id), "scenarios should contain %s" % scenario_id)
@@ -43,6 +44,7 @@ func test_quality_baseline_config_has_required_sections() -> void:
 	assert_eq(str((scenarios.get("game_world_elite_pressure_medium", {}) as Dictionary).get("setup", "")), "elite_pressure_medium", "medium elite scenario setup should match")
 	assert_eq(str((scenarios.get("game_world_elite_pressure_high", {}) as Dictionary).get("setup", "")), "elite_pressure_high", "high elite scenario setup should match")
 	assert_eq(str((scenarios.get("game_world_elite_pressure_extreme", {}) as Dictionary).get("setup", "")), "elite_pressure_extreme", "extreme elite scenario setup should match")
+	assert_eq(str((scenarios.get("game_world_boss_pressure_endurance", {}) as Dictionary).get("setup", "")), "boss_pressure_endurance", "boss endurance scenario setup should match")
 
 	var frame_time: Dictionary = targets.get("frame_time_ms", {})
 	var memory: Dictionary = targets.get("memory_mb", {})

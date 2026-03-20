@@ -139,6 +139,126 @@
         "projectile_hits": 4,
         "projectile_style": "glacial_nova"
       }
+    },
+    {
+      "id": "evo_radiant_cataclysm",
+      "weapon_id": "wpn_radiant_hammer",
+      "passive_id": "pas_armor",
+      "required_passive_level": 3,
+      "result_weapon_id": "wpn_radiant_cataclysm",
+      "title": "Radiant Cataclysm",
+      "desc": "Charge the hammer with dawnfire to deliver decisive multi-hit impacts.",
+      "evolution_profile": {
+        "damage_mult": 1.38,
+        "flat_damage_bonus": 5.5,
+        "interval_mult": 0.9,
+        "weapon_mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0.0,
+        "spread_jitter_deg": 0.0,
+        "projectile_hits": 6,
+        "projectile_style": "radiant_cataclysm"
+      }
+    },
+    {
+      "id": "evo_tempest_onslaught",
+      "weapon_id": "wpn_storm_bow",
+      "passive_id": "pas_precision",
+      "required_passive_level": 3,
+      "result_weapon_id": "wpn_tempest_onslaught",
+      "title": "Tempest Onslaught",
+      "desc": "Storm arrows split into a sweeping barrage with controlled spread.",
+      "evolution_profile": {
+        "damage_mult": 1.27,
+        "flat_damage_bonus": 4.2,
+        "interval_mult": 0.83,
+        "weapon_mode": "spread",
+        "projectile_count": 6,
+        "spread_angle_deg": 28.0,
+        "spread_jitter_deg": 4.0,
+        "projectile_hits": 2,
+        "projectile_style": "tempest_onslaught"
+      }
+    },
+    {
+      "id": "evo_blood_requiem",
+      "weapon_id": "wpn_blood_rite",
+      "passive_id": "pas_force",
+      "required_passive_level": 2,
+      "result_weapon_id": "wpn_blood_requiem",
+      "title": "Blood Requiem",
+      "desc": "Ritual bolts erupt into chained crescents that carve through clustered foes.",
+      "evolution_profile": {
+        "damage_mult": 1.32,
+        "flat_damage_bonus": 4.8,
+        "interval_mult": 0.82,
+        "weapon_mode": "spread",
+        "projectile_count": 4,
+        "spread_angle_deg": 24.0,
+        "spread_jitter_deg": 5.0,
+        "projectile_hits": 3,
+        "projectile_style": "blood_requiem"
+      }
+    },
+    {
+      "id": "evo_vowstorm",
+      "weapon_id": "wpn_vowblade",
+      "passive_id": "pas_bastion",
+      "required_passive_level": 3,
+      "result_weapon_id": "wpn_vowstorm",
+      "title": "Vowstorm",
+      "desc": "The vowblade erupts into a relentless storm of piercing verdicts.",
+      "evolution_profile": {
+        "damage_mult": 1.35,
+        "flat_damage_bonus": 5.2,
+        "interval_mult": 0.88,
+        "weapon_mode": "single",
+        "projectile_count": 1,
+        "spread_angle_deg": 0.0,
+        "spread_jitter_deg": 0.0,
+        "projectile_hits": 5,
+        "projectile_style": "vowstorm"
+      }
+    },
+    {
+      "id": "evo_nether_maelstrom",
+      "weapon_id": "wpn_nether_shard",
+      "passive_id": "pas_siphon",
+      "required_passive_level": 2,
+      "result_weapon_id": "wpn_nether_maelstrom",
+      "title": "Nether Maelstrom",
+      "desc": "Shards spiral into a void maelstrom that chains through dense enemy packs.",
+      "evolution_profile": {
+        "damage_mult": 1.29,
+        "flat_damage_bonus": 4.6,
+        "interval_mult": 0.84,
+        "weapon_mode": "spread",
+        "projectile_count": 5,
+        "spread_angle_deg": 26.0,
+        "spread_jitter_deg": 4.5,
+        "projectile_hits": 3,
+        "projectile_style": "nether_maelstrom"
+      }
+    },
+    {
+      "id": "evo_astral_horizon",
+      "weapon_id": "wpn_astral_disc",
+      "passive_id": "pas_focus",
+      "required_passive_level": 3,
+      "result_weapon_id": "wpn_astral_horizon",
+      "title": "Astral Horizon",
+      "desc": "Astral discs split into converging orbits that tear through the battlefield.",
+      "evolution_profile": {
+        "damage_mult": 1.31,
+        "flat_damage_bonus": 4.9,
+        "interval_mult": 0.83,
+        "weapon_mode": "spread",
+        "projectile_count": 4,
+        "spread_angle_deg": 20.0,
+        "spread_jitter_deg": 3.0,
+        "projectile_hits": 4,
+        "projectile_style": "astral_horizon"
+      }
     }
   ]
 }

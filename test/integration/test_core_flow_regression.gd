@@ -253,3 +253,91 @@ func test_shop_purchase_can_apply_new_cycle_passive_effect() -> void:
 	assert_eq(int(world.get("_gold")), 96, "Shop purchase should deduct forced offer price")
 	assert_true(float(stats.get("base_move_speed")) > base_move_speed, "pas_momentum should increase base_move_speed")
 	assert_true(float(weapon.get("attack_interval")) < base_attack_interval, "pas_momentum should reduce attack_interval")
+
+
+func test_shop_purchase_can_apply_d13_weapon_effect() -> void:
+	var world: Node = await _spawn_game_world()
+	if world == null:
+		return
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player node should exist")
+	if player == null:
+		return
+
+	var weapon: Node = player.get_node_or_null("AutoWeapon")
+	assert_not_null(weapon, "AutoWeapon should exist")
+	if weapon == null:
+		return
+
+	world.set("_room_index", 5)
+	world.call("_enter_shop_room")
+
+	var base_damage: float = float(weapon.get("base_damage"))
+	world.set("_gold", 180)
+	var offers_seed: Array = world.get("_shop_offers")
+	assert_false(offers_seed.is_empty(), "Shop room should generate offers")
+	if offers_seed.is_empty() or not (offers_seed[0] is Dictionary):
+		return
+
+	var forced_offer: Dictionary = offers_seed[0]
+	forced_offer["id"] = "wpn_radiant_hammer"
+	forced_offer["category"] = "weapon"
+	forced_offer["quality"] = "rare"
+	forced_offer["price"] = 62
+	forced_offer["title"] = "Radiant Hammer"
+	forced_offer["desc"] = "+6.8 damage and +2 projectile hits"
+	forced_offer["sold"] = false
+	offers_seed[0] = forced_offer
+	world.set("_shop_offers", offers_seed)
+	world.call("_update_shop_text")
+	world.call("_try_buy_shop_slot", 0)
+
+	assert_eq(int(world.get("_gold")), 118, "Shop purchase should deduct forced D13 weapon price")
+	assert_true(float(weapon.get("base_damage")) > base_damage, "wpn_radiant_hammer should increase base_damage")
+	assert_eq(str(weapon.get("projectile_style")), "radiant_hammer", "wpn_radiant_hammer should apply style override")
+
+
+func test_shop_purchase_can_apply_d18_weapon_effect() -> void:
+	var world: Node = await _spawn_game_world()
+	if world == null:
+		return
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player node should exist")
+	if player == null:
+		return
+
+	var weapon: Node = player.get_node_or_null("AutoWeapon")
+	assert_not_null(weapon, "AutoWeapon should exist")
+	if weapon == null:
+		return
+
+	world.set("_room_index", 6)
+	world.call("_enter_shop_room")
+
+	var base_damage: float = float(weapon.get("base_damage"))
+	var base_hits: int = int(weapon.get("projectile_hits"))
+	world.set("_gold", 190)
+	var offers_seed: Array = world.get("_shop_offers")
+	assert_false(offers_seed.is_empty(), "Shop room should generate offers")
+	if offers_seed.is_empty() or not (offers_seed[0] is Dictionary):
+		return
+
+	var forced_offer: Dictionary = offers_seed[0]
+	forced_offer["id"] = "wpn_vowblade"
+	forced_offer["category"] = "weapon"
+	forced_offer["quality"] = "rare"
+	forced_offer["price"] = 64
+	forced_offer["title"] = "Vowblade"
+	forced_offer["desc"] = "+6.2 damage, focused strike, +1 hit"
+	forced_offer["sold"] = false
+	offers_seed[0] = forced_offer
+	world.set("_shop_offers", offers_seed)
+	world.call("_update_shop_text")
+	world.call("_try_buy_shop_slot", 0)
+
+	assert_eq(int(world.get("_gold")), 126, "Shop purchase should deduct forced D18 weapon price")
+	assert_true(float(weapon.get("base_damage")) > base_damage, "wpn_vowblade should increase base_damage")
+	assert_true(int(weapon.get("projectile_hits")) > base_hits, "wpn_vowblade should increase projectile_hits")
+	assert_eq(str(weapon.get("projectile_style")), "vowblade", "wpn_vowblade should apply style override")
