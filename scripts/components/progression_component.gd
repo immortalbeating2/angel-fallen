@@ -22,6 +22,7 @@ func add_xp(amount: int) -> void:
     current_xp += amount
     EventBus.xp_gained.emit(amount)
 
+    # 使用 while 支持一次拾取连跳多级，避免大额经验被卡在单次升级上限里。
     while current_level < max_level and current_xp >= xp_to_next:
         current_xp -= xp_to_next
         current_level += 1

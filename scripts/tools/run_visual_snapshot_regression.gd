@@ -5940,6 +5940,7 @@ func _rotate_previous_report() -> void:
 	var latest: String = FileAccess.get_file_as_string(REPORT_JSON_PATH)
 	if latest.is_empty():
 		return
+	# 每次写新报告前先保留上一份，供趋势比较和回退诊断直接复用。
 	var prev_file: FileAccess = FileAccess.open(PREV_REPORT_JSON_PATH, FileAccess.WRITE)
 	if prev_file:
 		prev_file.store_string(latest)
@@ -5957,6 +5958,7 @@ func _push_result(
 	message: String,
 	severity: String = "blocker"
 ) -> void:
+	# 所有检查统一走一个结果入口，保证 json / markdown 汇总口径完全一致。
 	var items: Array = report.get("items", [])
 	items.append(
 		{
@@ -5983,6 +5985,7 @@ func _write_reports(report: Dictionary) -> void:
 	if json_file:
 		json_file.store_string(json_text)
 
+	# Markdown 报告保留人类快速阅读的摘要层，详细机器数据仍以 JSON 为准。
 	var lines: Array[String] = []
 	lines.append("# Visual Snapshot Regression Report")
 	lines.append("")

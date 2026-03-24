@@ -21,6 +21,7 @@ var _configs: Dictionary = {}
 
 func reload_all_configs() -> void:
     _configs.clear()
+    # 启动时一次性装入常用配置，运行期统一从缓存读取，减少重复文件 IO。
     for key: String in CONFIG_PATHS.keys():
         _configs[key] = _load_json(CONFIG_PATHS[key])
 

@@ -18,6 +18,7 @@ func take_damage(amount: float) -> bool:
     if owner != null and owner.is_in_group("player"):
         EventBus.health_changed.emit(current_hp, max_hp)
     if current_hp <= 0.0:
+        # 先发 died，再在玩家分支补发全局死亡事件，方便通用血量组件与玩家专属流程解耦。
         died.emit(owner)
         if owner != null and owner.is_in_group("player"):
             EventBus.player_died.emit("hp_depleted")

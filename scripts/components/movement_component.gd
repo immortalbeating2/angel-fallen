@@ -36,6 +36,7 @@ func physics_process_move(delta: float) -> void:
         if is_sprinting and _stats.get("sprint_multiplier") != null:
             speed *= _stats.sprint_multiplier
 
+    # 角色最终速度由输入、冲刺体力和环境减速共同叠加，击退则额外作为外部速度混入。
     speed *= _environment_speed_multiplier
 
     _body.velocity = input_vector * speed + _external_velocity

@@ -58,6 +58,7 @@ func _update_camera_shake(delta: float) -> void:
         return
 
     _shake_trauma = maxf(0.0, _shake_trauma - delta * 1.7)
+    # 震屏强度按 trauma^2 衰减，既保留受击峰值，也避免持续轻微抖动影响操作。
     var amp: float = _shake_trauma * _shake_trauma * 15.0 * _shake_strength
     _camera.offset = Vector2(randf_range(-amp, amp), randf_range(-amp, amp))
 
@@ -70,4 +71,5 @@ func _apply_settings(settings: Dictionary = {}) -> void:
     var source: Dictionary = settings
     if source.is_empty() and SaveManager != null and SaveManager.has_method("get_runtime_settings"):
         source = SaveManager.get_runtime_settings()
+    # 玩家只消费运行时设置里的震屏强度，和全局存档设置保持单向同步即可。
     _shake_strength = clampf(float(source.get("screen_shake", 1.0)), 0.0, 1.0)

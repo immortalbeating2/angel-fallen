@@ -193,6 +193,7 @@ func _build_binding_rows() -> void:
         child.queue_free()
 
     _binding_row_nodes.clear()
+    # 动态重建按键绑定行，避免场景里手写重复控件并统一刷新逻辑。
     for row_data: Dictionary in INPUT_ACTION_ROWS:
         var action_id: String = str(row_data.get("id", "")).strip_edges()
         var label_text: String = str(row_data.get("label", action_id))
@@ -261,6 +262,7 @@ func _assign_binding(action_id: String, target: String, value: int) -> void:
 
 func _persist_binding_patch(action_id: String, row: Dictionary) -> void:
     _input_bindings[action_id] = row
+    # 优先走存档层，让存档负责归一化并同步到 InputMap；缺失时再退回 GameManager 清洗。
     if SaveManager != null and SaveManager.has_method("update_input_bindings"):
         _input_bindings = SaveManager.update_input_bindings({action_id: row})
     elif GameManager != null and GameManager.has_method("sanitize_input_bindings"):

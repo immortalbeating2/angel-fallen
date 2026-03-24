@@ -30,6 +30,7 @@ func tick_stamina(delta: float, wants_sprint: bool) -> bool:
     var was_sprinting: bool = false
     var previous: float = current_stamina
 
+    # 体力用“消耗 -> 冷却 -> 回复”三段式，防止冲刺键快速点按时获得非预期的高机动性。
     if wants_sprint and current_stamina >= min_stamina_to_sprint:
         current_stamina = maxf(0.0, current_stamina - stamina_drain_per_sec * delta)
         _recover_cooldown = stamina_recover_delay

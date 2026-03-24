@@ -77,6 +77,7 @@ func _physics_process(delta: float) -> void:
     var to_player: Vector2 = _player.global_position - global_position
     var distance_to_player: float = to_player.length()
     var direction: Vector2 = to_player.normalized()
+    # 同一套移动入口根据 boss / ranged 分支重写 direction，避免近战、远程、首领各写一份位移逻辑。
     if _is_boss:
         _update_phase_by_hp()
         _process_boss_skills(delta, direction)
@@ -247,6 +248,7 @@ func _apply_phase_transition_pressure(previous_phase: int, new_phase: int) -> vo
     if _player == null:
         return
 
+    # 转阶段时只在近距离触发一次瞬时压迫，强化阶段切换感而不把远距离玩家白白打掉血。
     var radius: float = 156.0 + 30.0 * new_phase
     var distance: float = global_position.distance_to(_player.global_position)
     if distance > radius:
@@ -463,6 +465,7 @@ func _get_ranged_direction(direction_to_player: Vector2, distance_to_player: flo
     if distance_to_player < _preferred_range - 24.0:
         return -direction_to_player
 
+    # 落在舒适射程时改为横向走位，制造 kite 感而不是一直贴着阈值抖动前后横跳。
     var strafe: Vector2 = Vector2(-direction_to_player.y, direction_to_player.x)
     if strafe == Vector2.ZERO:
         strafe = Vector2.RIGHT
@@ -480,6 +483,7 @@ func _process_ranged_attack(distance_to_player: float) -> void:
     if _ranged_cooldown > 0.0:
         return
 
+    # 当前远程敌人走“即时命中 + 视觉脉冲”模型，先把战斗节奏跑通，再由投射物敌人单独扩展。
     _ranged_cooldown = _ranged_attack_interval
     var damage: float = touch_damage * _phase_damage_mult * _ranged_damage_mult
     if _player.has_method("apply_damage"):
@@ -565,6 +569,7 @@ func _reset_for_spawn() -> void:
     _base_color = _resolve_default_color()
     _apply_visual_defaults()
 
+    # 对象池复用时把模板数值、阶段状态和当前血量一起回卷，避免上一波敌人的运行时状态串到下一波。
     if _health_component != null and _health_component.get("max_hp") != null:
         _health_component.max_hp = _template_max_hp
         _health_component.current_hp = _template_max_hp

@@ -131,6 +131,7 @@ func _generate_options() -> Array[Dictionary]:
 
     var picked: Array[Dictionary] = []
     var evolution_options: Array[Dictionary] = _collect_available_evolution_options()
+    # 若当前构筑已经满足进化条件，升级面板优先塞入一个进化候选，避免玩家错过关键跃迁窗口。
     if not evolution_options.is_empty():
         picked.append(_pick_weighted_evolution_option(evolution_options))
 
@@ -216,6 +217,7 @@ func _collect_available_evolution_options() -> Array[Dictionary]:
         return options
 
     var current_weapon_id: String = str(_weapon.get("current_weapon_id")).strip_edges()
+    # 进化候选不是静态列表，而是按当前武器、被动等级和构筑倾向实时筛出来的。
     for recipe in _evolution_recipes:
         if not _can_trigger_evolution(recipe, current_weapon_id):
             continue
@@ -321,6 +323,7 @@ func get_evolution_anchor_weight(recipe: Dictionary) -> float:
     var anchor_id: String = _resolve_anchor_from_passive(passive_id)
     var anchor_score: float = float(_build_anchor_scores.get(anchor_id, 0.0))
     var level_surplus: float = maxf(0.0, float(passive_level - required_level))
+    # 构筑锚点分数越高，说明玩家近期更偏向这条路线，进化选项就越值得在升级面板里被推上来。
     var weight: float = 1.0 + anchor_score * 0.26 + level_surplus * 0.22
     return clampf(weight, 1.0, 4.5)
 

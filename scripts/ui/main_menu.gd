@@ -2050,6 +2050,7 @@ func _get_achievement_group_label(condition: String) -> String:
 
 func _format_unlock_timeline_suffix(run_index: int, discovered_at: String) -> String:
     var parts: Array[String] = []
+    # 解锁记录可能只有 run_index 或只有时间戳，这里统一拼成可复用后缀。
     if run_index > 0:
         parts.append("Run #%d" % run_index)
     var when_text: String = discovered_at.strip_edges()
@@ -2082,6 +2083,7 @@ func _get_branch_mode_label(branch_key: String) -> String:
 
 func _build_last_run_burst_unlocks_summary(raw_achievements: Variant, raw_codex: Variant, raw_difficulty: Variant, raw_meta_return: Variant) -> String:
     var rows: Array[String] = []
+    # 将不同来源的本局解锁汇总成同一块摘要，避免菜单层重复拼装展示逻辑。
     rows.append_array(_build_achievement_unlock_rows(_as_string_array(raw_achievements)))
     rows.append_array(_build_codex_unlock_rows(raw_codex))
     rows.append_array(_build_difficulty_unlock_rows(raw_difficulty))

@@ -52,6 +52,7 @@ func get_chapter_event(chapter_index: int, alignment: float = 0.0, route_style: 
     var weighted_events: Array[Dictionary] = []
     var total_weight: float = 0.0
 
+    # 事件池先按路线、结局解锁与近期历史折成权重，再做一次抽样，保证叙事分支既响应状态又保留变化感。
     for item: Variant in chapter_events:
         if not (item is Dictionary):
             continue
@@ -362,6 +363,7 @@ func _calc_event_weight(event_row: Dictionary, chapter_id: String, alignment: fl
     if not _is_event_allowed_by_endings(event_row, unlocked_endings):
         return 0.0
 
+    # 事件权重同时吃路线倾向、已解锁结局、近期重复衰减和风格倍率，避免同章事件反复刷到同一条线。
     var weight: float = maxf(0.0, float(event_row.get("weight_base", 1.0)))
     if alignment >= 30.0:
         weight *= maxf(0.0, float(event_row.get("weight_if_holy", 1.0)))

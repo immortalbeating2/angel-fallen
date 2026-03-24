@@ -28,6 +28,7 @@ func _ready() -> void:
 
 
 func apply_runtime_settings(settings: Dictionary) -> void:
+    # 音量设置统一走 bus 比例换算，UI 和存档层都只需要维护 0-1 线性值。
     set_bus_volume_ratio(MASTER_BUS, float(settings.get("master_volume", 1.0)))
     set_bus_volume_ratio(BGM_BUS, float(settings.get("bgm_volume", 1.0)))
     set_bus_volume_ratio(SFX_BUS, float(settings.get("sfx_volume", 1.0)))
@@ -81,6 +82,7 @@ func play_ambience(stream: AudioStream) -> void:
 func play_sfx(stream: AudioStream) -> void:
     if stream == null:
         return
+    # 短音效使用一次性 player，避免常驻节点管理大量并发 SFX 生命周期。
     var player: AudioStreamPlayer = AudioStreamPlayer.new()
     player.bus = SFX_BUS
     player.stream = stream
@@ -109,6 +111,7 @@ func play_boss_phase_cue(boss_id: String, phase_index: int, pulse_count: int = 2
     if family == "void":
         frequency_step = 36.0
 
+    # 首领阶段提示音按家族和阶段映射频率，既能区分 frost/void，也便于测试直接读取快照校验。
     var frequency: float = base_frequency + frequency_step * clampf(float(phase_index), 0.0, 6.0)
     var duration: float = clampf(tempo * (0.72 + 0.16 * float(maxi(1, pulse_count))), 0.05, 0.24)
     _last_boss_phase_cue = {
@@ -205,6 +208,7 @@ func _get_cached_tone(duration: float, frequency: float) -> AudioStreamWAV:
     if cached is AudioStreamWAV:
         return cached
 
+    # 测试提示音按 duration/frequency 缓存，避免高频 cue 在同一局里重复生成 PCM 数据。
     var tone: AudioStreamWAV = _build_test_tone_stream(duration, frequency)
     _tone_cache[key] = tone
     return tone

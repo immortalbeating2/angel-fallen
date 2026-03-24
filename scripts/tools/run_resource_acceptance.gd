@@ -351,6 +351,7 @@ func _run_acceptance() -> Dictionary:
 				continue
 
 			instance.free()
+			# 资源验收至少要求配套场景可加载、可实例化，先挡住最基础的生产可用性问题。
 			_push_result(report, str(category), required_id, true, "production_ready resource accepted")
 
 	var profile_buckets: Dictionary = report.get("profile_buckets", {})
@@ -367,6 +368,7 @@ func _run_acceptance() -> Dictionary:
 		profile_buckets[bucket_name] = bucket_row
 
 		var baseline_ratio: float = float(bucket_ready_ratio_min.get(bucket_name, -1.0))
+		# 这里同时看绝对基线和相对回退，避免资源就算总量增长，某个桶仍在悄悄退化。
 		if baseline_ratio >= 0.0 and bucket_ratio < baseline_ratio:
 			_push_warning(
 				report,

@@ -70,6 +70,7 @@ func _sample_scenario(scenario_id: String, row: Dictionary) -> Dictionary:
     root.add_child(node)
     await process_frame
 
+    # 先注入压力场景，再预热若干帧，尽量避开刚进场时的瞬时波动。
     _setup_scenario(node, setup_mode)
 
     for _i: int in range(maxi(0, warmup_frames)):
@@ -82,6 +83,7 @@ func _sample_scenario(scenario_id: String, row: Dictionary) -> Dictionary:
     var pickup_peak: int = 0
 
     var last_tick_us: int = Time.get_ticks_usec()
+    # 这里按帧采样性能和实体峰值，用于生成质量基线而不是精确 profiler 数据。
     for _f: int in range(maxi(1, sample_frames)):
         await process_frame
         var now_us: int = Time.get_ticks_usec()
@@ -141,6 +143,7 @@ func _configure_elite_pressure(
     enemy_hp_mult: float,
     enemy_damage_mult: float
 ) -> void:
+    # 复用实际房间入口来施加压力参数，避免基线脚本和正式玩法分叉。
     var spawner: Node = node.get_node_or_null("EnemySpawner")
     if spawner != null:
         if spawner.get("max_alive") != null:

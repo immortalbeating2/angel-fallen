@@ -647,6 +647,7 @@ func load_meta() -> void:
         save_meta()
         return
 
+    # 存档读取后逐字段走 sanitize，避免旧版本或坏数据直接污染运行时状态。
     var data: Dictionary = parsed
     _meta["meta_currency"] = int(data.get("meta_currency", 0))
     _meta["total_runs"] = int(data.get("total_runs", 0))
@@ -690,6 +691,7 @@ func load_meta() -> void:
             codex_meta[selected_key] = _build_codex_meta_row("characters", selected_character_id, "profile_sync", "global")
             _meta["codex_meta"] = codex_meta
 
+    # 某些隐藏层解锁依赖图鉴状态，读档后要补一次同步，保证老存档也能升级到新规则。
     _sync_hidden_layer_progress_from_codex()
 
 
@@ -699,6 +701,7 @@ func save_meta() -> void:
         push_warning("Cannot write save file: %s" % SAVE_PATH)
         return
 
+    # last_run 不直接塞进 _meta，写盘时再拼回 payload，避免常驻元数据和本局结算记录相互污染。
     var payload: Dictionary = _meta.duplicate(true)
     payload["last_run"] = _last_run
     file.store_string(JSON.stringify(payload, "  "))
@@ -1469,6 +1472,7 @@ func _build_hidden_layer_status(layer_id: String, progress_override: Dictionary 
     var reward_profile: Dictionary = _as_dictionary(interface_profile.get("reward_profile", {}))
     var settlement_profile: Dictionary = _as_dictionary(interface_profile.get("settlement_profile", {}))
 
+    # 这里把进度、解锁、历史纪录和界面文案揉成统一状态对象，供 UI 直接展示而不用再拼装。
     match layer_key:
         HIDDEN_LAYER_FS1:
             var best_flawless: Array[String] = _as_string_array(progress.get("fs1_best_flawless_chapters", []))
@@ -1560,6 +1564,7 @@ func _build_hidden_layer_status(layer_id: String, progress_override: Dictionary 
 
 func _build_hidden_layer_status_rows(progress: Dictionary, unlocks: Dictionary) -> Dictionary:
     var rows: Dictionary = {}
+    # 固定输出全部隐藏层状态，保证界面顺序和缺省占位稳定。
     rows[HIDDEN_LAYER_FS1] = _build_hidden_layer_status(HIDDEN_LAYER_FS1, progress, unlocks)
     rows[HIDDEN_LAYER_FS2] = _build_hidden_layer_status(HIDDEN_LAYER_FS2, progress, unlocks)
     return rows

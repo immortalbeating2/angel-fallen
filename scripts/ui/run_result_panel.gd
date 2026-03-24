@@ -906,6 +906,7 @@ func _build_route_style_summary(raw_styles: Variant, raw_timeline: Variant) -> S
     if raw_styles is Dictionary:
         styles = raw_styles
 
+    # 先给出四章的最终路线风格，再补充锁定时间线，方便结果页快速回顾整局路线演化。
     var lines: Array[String] = ["Route Style Evolution:"]
     var chapter_parts: Array[String] = []
     for idx in range(1, 5):
@@ -1012,6 +1013,7 @@ func _build_grouped_timeline_summary(raw_timeline: Variant, mode: String) -> Str
     var grouped: Dictionary = {}
     var filtered_rows: Array = []
 
+    # 先按筛选模式过滤，再按章节聚合，给折叠视图提供稳定的章节级预览。
     for item: Variant in timeline:
         if not (item is Dictionary):
             continue
@@ -1135,6 +1137,7 @@ func _rebuild_grouped_chapter_order(mode: String) -> void:
         if not dynamic.has(chapter_id):
             dynamic.append(chapter_id)
 
+    # 章节锚点优先按主线章节排序，再把额外章节稳定追加，避免切换筛选时锚点顺序跳变。
     _grouped_chapter_order.clear()
     for chapter_id_var: Variant in preferred:
         var chapter_id: String = str(chapter_id_var)

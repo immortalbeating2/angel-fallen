@@ -67,6 +67,7 @@ var current_chapter_id: String = "global"
 
 
 func _ready() -> void:
+    # 输入映射和配置缓存都在全局入口初始化，后续场景切换只消费已准备好的共享状态。
     _setup_default_input_map()
     ConfigManager.reload_all_configs()
     reset_run_context()
@@ -117,6 +118,7 @@ func sanitize_input_bindings(bindings: Dictionary) -> Dictionary:
     var source: Dictionary = bindings
     var out: Dictionary = {}
 
+    # 只接受白名单 action，并在每个 action 维持 keys / joypad_buttons 的统一结构，方便存档和 UI 互转。
     for action_name: String in DEFAULT_ACTIONS.keys():
         var row: Dictionary = {}
         var row_var: Variant = source.get(action_name, {})
@@ -139,6 +141,7 @@ func sanitize_input_bindings(bindings: Dictionary) -> Dictionary:
 
 func apply_input_bindings(bindings: Dictionary) -> Dictionary:
     var sanitized: Dictionary = sanitize_input_bindings(bindings)
+    # 每次重绑都先清空旧事件，再按净化后的结果重建 InputMap，避免重复绑定不断叠加。
     for action_name: String in DEFAULT_ACTIONS.keys():
         if not InputMap.has_action(action_name):
             InputMap.add_action(action_name)

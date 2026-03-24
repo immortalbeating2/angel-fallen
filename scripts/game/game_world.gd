@@ -899,6 +899,7 @@ func _start_room() -> void:
         _finish_run("victory")
         return
 
+    # 每次进房都先把上一房的敌人、掉落、面板 pending 状态和路线选择上下文清干净，再进入本房逻辑。
     _clear_active_enemies()
     _clear_active_pickups()
     _chapter_intro_pending = false
@@ -936,6 +937,7 @@ func _start_room() -> void:
 
 
 func _enter_current_room_type() -> void:
+    # 房间类型分发集中在一个入口，章节介绍关闭后也复用这里，避免不同路径进入房间时状态不一致。
     if _current_room_type == ROOM_TYPE_COMBAT:
         _enter_combat_room()
     elif _current_room_type == ROOM_TYPE_ELITE:
@@ -1129,6 +1131,7 @@ func _deploy_treasure_rewards(status_prefix: String) -> void:
     if _treasure_rewards_deployed:
         return
 
+    # 宝藏奖励只部署一次，并把金币、矿石、饰品掉落都折算到当前路线与房间奖励倍率上。
     _treasure_rewards_deployed = true
     var player_pos: Vector2 = _player.global_position if _player != null else global_position
     var reward_mult: float = _get_room_reward_mult(_room_index)
@@ -1271,6 +1274,7 @@ func _try_clear_room() -> void:
         if _hidden_layer_pressure_stage < _hidden_layer_required_pressure_stage:
             return
 
+    # 清房不仅看击杀数，还要等刷怪器空、隐藏层额外压力条件满足，避免玩家提前跳过结算门槛。
     _room_active = false
     _run_rooms_cleared += 1
     _mark_room_completed(_room_index)
@@ -1365,6 +1369,7 @@ func _finish_run(outcome: String) -> void:
         "chapter_route_styles": _chapter_route_styles.duplicate(true),
         "route_style_timeline": _route_style_timeline.duplicate(true)
     }
+    # 结算 payload 在 world 侧尽量一次性拼全，SaveManager 只负责归档、解锁和生成结果页数据。
     var hidden_layer_result: Dictionary = _build_hidden_layer_result_payload(outcome)
     for key_var: Variant in hidden_layer_result.keys():
         submit_payload[str(key_var)] = hidden_layer_result.get(key_var)
@@ -1456,6 +1461,7 @@ func _begin_chapter_transition(chapter: int) -> void:
     if recap_text != "":
         _room_status_label.text += " | %s" % recap_text
     if _chapter_transition_panel != null and _chapter_transition_panel.has_method("show_transition"):
+        # 章节过渡面板把路线、碎片、营地反思和下一章预告一次打包展示，避免玩家只看到单点数值变化。
         _chapter_transition_panel.show_transition(
             chapter,
             _alignment,
@@ -1543,6 +1549,7 @@ func _on_event_closed() -> void:
 
 
 func _apply_event_choice_effects(choice_data: Dictionary) -> void:
+    # 事件结算统一在这里落账，保证货币、路线偏移、环境腐化和章节效果始终按同一顺序生效。
     _gold = maxi(0, _gold + int(choice_data.get("gold", 0)))
     _ore = maxi(0, _ore + int(choice_data.get("ore", 0)))
     EventBus.gold_changed.emit(_gold)
@@ -1575,6 +1582,7 @@ func _apply_transition_blessing(choice_id: String) -> void:
         _active_blessing_id = "none"
         return
 
+    # 章节誓约视为互斥 buff，切换时先撤销旧效果，再把新效果直接写进玩家当前运行时属性。
     if choice_id == "holy_vow":
         _active_blessing_id = "holy_vow"
         if stats.get("armor") != null:
@@ -1859,6 +1867,7 @@ func _apply_run_plan(plan: Dictionary, default_room_count: int = 15, default_lay
     if room_map_var is Dictionary:
         _room_plan_map = (room_map_var as Dictionary).duplicate(true)
     else:
+        # 兼容旧格式 rooms 数组，统一转换成 index -> room plan 映射，后续房间查询就只走一个入口。
         var rooms_var: Variant = _run_plan.get("rooms", [])
         if rooms_var is Array:
             for item: Variant in rooms_var:
@@ -1882,6 +1891,7 @@ func _try_enter_hidden_layer(layer_id: String) -> void:
         _update_camp_text()
         return
 
+    # 进入隐藏层时切到独立 run plan，并记录入口时的主线表现用于结算和回流奖励。
     _active_hidden_layer_id = layer_key
     _hidden_layer_entry_rooms_cleared = _run_rooms_cleared
     _hidden_layer_entry_kills = _run_kills
@@ -2079,6 +2089,7 @@ func _prepare_next_room_candidates() -> Array[int]:
             if room_id > 0 and not next_rows_out.has(room_id):
                 next_rows_out.append(room_id)
 
+    # 下一房候选统一缓存在 pending 数组里，供商店、营地、结算提示和路线确认共用同一份数据。
     _pending_next_rooms = next_rows_out
     _selected_next_room_slot = clampi(_selected_next_room_slot, 0, maxi(0, _pending_next_rooms.size() - 1))
     return _pending_next_rooms
@@ -2799,6 +2810,7 @@ func _build_shop_offers() -> Array[Dictionary]:
     var economy_factor: float = _compute_shop_economy_factor()
     _shop_last_economy_factor = economy_factor
 
+    # 商店每个槽位独立掷分类、物品和品质，便于章节/路线/经济因子分别影响不同层级。
     for _i in range(slots):
         var category: String = _pick_shop_category(pools, category_weights)
         var item_id: String = _pick_shop_item_id(pools, category)
@@ -2830,6 +2842,7 @@ func _pick_shop_category(pools: Dictionary, category_weights: Dictionary) -> Str
     if total <= 0.0 or weighted.is_empty():
         return str(keys[randi_range(0, keys.size() - 1)])
 
+    # 只在当前仍有候选物品的分类里做加权抽样，避免空池类别吃掉概率。
     var roll: float = randf() * total
     var cursor: float = 0.0
     for key in weighted.keys():
@@ -2883,6 +2896,7 @@ func _build_shop_offer(item_id: String, category: String, quality: String, econo
             base_price = 46
 
     var floor_mult: float = 1.0 + float(maxi(0, _room_index - 1)) * 0.08
+    # 价格同时受品质、进度、经济补偿、章节和路线修正影响，最后统一收敛到单个 price。
     var price: int = int(round(base_price * quality_mult * floor_mult * economy_factor * _shop_chapter_price_mult * _shop_route_price_mult))
     var info: Dictionary = _get_shop_item_info(item_id)
 
@@ -4552,6 +4566,7 @@ func _build_hidden_layer_result_payload(outcome: String) -> Dictionary:
     var hidden_kills: int = maxi(0, _run_kills - _hidden_layer_entry_kills)
     var reward_payload: Dictionary = _build_hidden_layer_reward_preview(_active_hidden_layer_id, outcome == "victory")
     var gameplay_payload: Dictionary = _build_hidden_layer_gameplay_payload()
+    # 隐藏层结算把表现、奖励预览、玩法指标和剧情钩子合并成单个 payload，便于 SaveManager 原样归档。
     var result: Dictionary = {
         "hidden_layer_id": _active_hidden_layer_id,
         "hidden_layer_rooms_cleared": hidden_rooms_cleared,
@@ -4577,6 +4592,7 @@ func _build_hidden_layer_reward_preview(layer_id: String, victory: bool) -> Dict
     var mastery_preview: Dictionary = _build_hidden_layer_mastery_preview(layer_key)
     match layer_key:
         HIDDEN_LAYER_FS1:
+            # FS1 奖励看房间推进、压力阶段和存活时长，突出“扛压越久、回报越高”的生存循环。
             var time_fragments: int = maxi(3, hidden_rooms_cleared + _hidden_layer_best_pressure_stage + int(floor(_hidden_layer_best_survival_seconds / 30.0)))
             if not victory:
                 time_fragments = 0
@@ -4604,6 +4620,7 @@ func _build_hidden_layer_reward_preview(layer_id: String, victory: bool) -> Dict
                 "summary": summary
             }
         HIDDEN_LAYER_FS2:
+            # FS2 奖励更偏构筑深度：通关给基础锻造产出，打得更深和完成收藏再叠额外配方收益。
             var draft_count: int = 0
             var trial_labels: Array[String] = _get_hidden_layer_trial_label_collection()
             var relic_merges: int = 1 if victory else 0
@@ -4767,6 +4784,7 @@ func _build_hidden_layer_gameplay_payload() -> Dictionary:
     var mastery_preview: Dictionary = _build_hidden_layer_mastery_preview(_active_hidden_layer_id)
     match _active_hidden_layer_id:
         HIDDEN_LAYER_FS1:
+            # 结果页需要的是“玩家这局到底扛到了什么程度”，所以这里输出阶段、存活和回响收藏而不是房间原始配置。
             var echo_collection: Array[String] = _get_hidden_layer_boss_echo_collection()
             return {
                 "pressure_label": _hidden_layer_pressure_label if _hidden_layer_pressure_label != "" else "Rift Surge",
@@ -4784,6 +4802,7 @@ func _build_hidden_layer_gameplay_payload() -> Dictionary:
                 "mastery_label": str(mastery_preview.get("mastery_label", "")).strip_edges()
             }
         HIDDEN_LAYER_FS2:
+            # FS2 记录试炼深度与标签集合，让结果页和存档都能直接展示锻炉推进轨迹。
             var trial_labels: Array[String] = _get_hidden_layer_trial_label_collection()
             var deepest_label: String = _hidden_layer_deepest_trial_label if _hidden_layer_deepest_trial_label != "" else (trial_labels[trial_labels.size() - 1] if not trial_labels.is_empty() else "")
             return {
@@ -4885,6 +4904,7 @@ func _build_hidden_layer_mastery_preview(layer_id: String) -> Dictionary:
     for item: String in current_items:
         _append_unique_string(merged_items, item)
 
+    # mastery 预览把历史收藏和本局新增先合并，再判断是否达到整套收集，避免领奖前结果页少算本次战果。
     var collection_complete: bool = required_total > 0 and merged_items.size() >= required_total
     var bonus_claimed: bool = bool(status.get("collection_bonus_claimed", false))
     var mastery_label: String = ""

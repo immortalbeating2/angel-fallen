@@ -70,6 +70,7 @@ func _process(delta: float) -> void:
     if enemy == null:
         return
 
+    # 命中时才实时结算最终伤害，确保暴击、穿透和来源属性都按发射瞬间快照参与计算。
     var damage_value: float = DamageSystem.calculate_damage(
         _source,
         enemy,
@@ -104,6 +105,7 @@ func _find_colliding_enemy() -> Node2D:
         var enemy: Node2D = node
         if _hit_enemy_ids.has(enemy.get_instance_id()):
             continue
+        # 这里用轻量距离检测替代物理碰撞回调，方便对象池投射物在无额外碰撞配置时也能稳定工作。
         if global_position.distance_to(enemy.global_position) <= hit_radius:
             return enemy
 
@@ -138,6 +140,7 @@ func _apply_visual_style(style_id: String, is_crit: bool) -> void:
     if _shape == null:
         return
 
+    # 投射物外观直接由武器风格 id 决定，暴击只额外做一次高亮混色，不改底层几何模板。
     var color: Color = Color(1.0, 0.93, 0.44, 1.0)
     var polygon: PackedVector2Array = PackedVector2Array([-6, -3, 8, 0, -6, 3])
 

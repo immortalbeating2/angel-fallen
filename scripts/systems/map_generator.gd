@@ -76,6 +76,7 @@ func generate_run_plan(config: Dictionary) -> Dictionary:
     var chapter_rollable_slots: Dictionary = _build_chapter_rollable_slots(chapter_order, chapters, room_count, fixed_room_types, avoid_shop_near_boss, avoid_event_near_boss)
     var chapter_slot_cursor: Dictionary = {}
 
+    # 主线 run plan 在逐房生成时同时满足固定房、章节权重、最小/最大类型约束和 Boss 邻近限制。
     for room_index in range(1, room_count + 1):
         var chapter_id: String = _resolve_chapter_id(room_index, chapter_order, chapters)
         var chapter_row: Dictionary = chapters.get(chapter_id, {})
@@ -141,6 +142,7 @@ func generate_run_plan(config: Dictionary) -> Dictionary:
                         restrict_types.append(str(deficit_key))
 
                 if not restrict_types.is_empty():
+                    # 当某类房间的最低配额快来不及补齐时，临时收紧候选池，优先把欠账的类型补回来。
                     var restricted_total: float = 0.0
                     for room_type_key in ROLLABLE_ROOM_TYPES:
                         if not restrict_types.has(room_type_key):

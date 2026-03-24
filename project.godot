@@ -28,6 +28,9 @@ ConfigManager="*res://scripts/autoload/config_manager.gd"
 AudioManager="*res://scripts/autoload/audio_manager.gd"
 ObjectPool="*res://scripts/autoload/object_pool.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
+MCPScreenshot="*res://addons/godot_mcp/mcp_screenshot_service.gd"
+MCPInputService="*res://addons/godot_mcp/mcp_input_service.gd"
+MCPGameInspector="*res://addons/godot_mcp/mcp_game_inspector_service.gd"
 
 [display]
 

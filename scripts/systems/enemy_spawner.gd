@@ -142,6 +142,7 @@ func _spawn_enemy() -> void:
         return
 
     var archetype: String = _pick_enemy_archetype()
+    # 精英房固定走精英配置；普通房则按间隔插入精英波次，避免战斗曲线过平。
     var is_elite_wave: bool = _combat_mode == "elite" or (_elite_wave_interval > 0 and _spawn_count > 0 and _spawn_count % _elite_wave_interval == 0)
     var chapter_id: String = _get_chapter_id_for_floor(floor_index)
     var enemy_id: String = _build_enemy_id(archetype, is_elite_wave, chapter_id)
@@ -178,6 +179,7 @@ func _spawn_enemy() -> void:
         enemy.attack_interval = maxf(0.2, float(enemy.attack_interval) * attack_interval_mult)
 
     if enemy.has_method("apply_spawn_profile"):
+        # 视觉与远程战斗参数统一走 profile，确保对象池复用后也能恢复到本次刷怪配置。
         enemy.apply_spawn_profile({
             "tier": tier,
             "archetype": archetype,
@@ -544,6 +546,7 @@ func _pick_enemy_archetype() -> String:
 
     var roll: float = randf() * total
     var cumulative: float = 0.0
+    # 用累积权重做一次随机落点，保持配置热更新后仍能按权重稳定抽样。
     for key: Variant in _enemy_type_weights.keys():
         var weight: float = maxf(0.0, float(_enemy_type_weights.get(key, 0.0)))
         cumulative += weight
@@ -566,6 +569,7 @@ func _build_enemy_id(archetype: String, is_elite: bool, chapter_id: String) -> S
 
 
 func _build_archetype_profile(archetype: String, is_elite: bool) -> Dictionary:
+    # 这里集中维护不同敌人原型的数值与视觉差异，避免散落在刷怪流程里难以校准。
     var profile: Dictionary = {
         "tier": "normal",
         "hp_mult": 1.0,
@@ -632,6 +636,7 @@ func _load_spawn_profile_config() -> void:
         config_weights = config_weights_var
 
     var required_types: Array[String] = ["normal", "fast", "tank", "ranged"]
+    # 配置缺项时保留现有默认值，避免坏配置把某个类型完全刷没。
     for enemy_type: String in required_types:
         var raw_weight: float = float(config_weights.get(enemy_type, _enemy_type_weights.get(enemy_type, 0.0)))
         _enemy_type_weights[enemy_type] = maxf(0.0, raw_weight)
