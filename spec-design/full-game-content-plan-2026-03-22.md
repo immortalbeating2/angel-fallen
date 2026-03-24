@@ -1,0 +1,250 @@
+# 完整版内容完工总计划（2026-03-22）
+
+## 目标
+
+- 将项目目标从“先完成 MVP 发布”切换为“先完成完整版内容，形成真正完整可玩的成品”。
+- 完整版范围按 `spec-design/level-design.md`、`spec-design/requirements.md`、`spec-design/core-systems.md` 为内容真值，按 `spec-design/roadmap.md` 的 `MVP + v1.1 + v1.2 + v1.3` 总量推进。
+- 执行策略采用“完整版目标、主线优先、扩展后置”：先打通完整主线，再补隐藏层与后期内容，最后做表现与发布收口。
+
+## 完整版完成线
+
+### 第一完成线：完整主线成品
+
+- `F1-F13` 主线完整可玩。
+- `4` 个主线 Boss 全部具备独立阶段、技能与演出。
+- `3` 条结局（救赎 / 堕落 / 平衡）全部可达成。
+- 章节转场、路线系统、安全营地、记忆碎片主链完整闭环。
+
+### 第二完成线：完整版内容
+
+- 隐藏层 `FS1`、`FS2` 可解锁并通关。
+- 角色扩展到完整版目标，路线图中的后续角色、武器、进化、饰品、图鉴、成就、高难度全部补齐。
+- 音频、视觉、引导、长局测试达到“完整游戏”标准，而不是只保留骨架闭环。
+
+## 当前实现判断
+
+- 当前仓库已具备：主菜单 -> 角色选择 -> 开局 -> 房间推进 -> 商店/事件/Boss -> 结算落盘的基础可玩链路。
+- 当前已不止基础可玩链路：Stage 5 的叙事/营地/结局前台闭环已基本落地，隐藏层档案/状态体系、`FS1` 最小闭环，以及 `CL1` 挑战层最小闭环也已进入代码与测试真值。
+- 当前主要缺口不是“无法运行”，而是“隐藏层/挑战层尚未扩成完整版体量、长期动机与资源体系尚未完全兑现、表现层仍偏占位”。
+- 最先要补的不是重新搭骨架，而是基于现有真值继续完成 Stage 5 正式收口、Stage 6 深化与 Stage 7 成品化。
+
+## 执行原则
+
+1. 先修内容链断裂，再扩章节内容；避免在断裂数据上继续堆新功能。
+2. 先做主线成品，再补隐藏层和后期扩展；避免主线未闭环时扩散范围。
+3. 先保证每一章都有独立敌人/Boss/环境/叙事手感，再做额外收藏与系统装饰。
+4. 每完成一轮内容扩张，都补对应测试与配置校验，避免内容回归失控。
+
+## 顺序执行计划
+
+### 阶段 1：内容基线对齐
+
+目标：修正当前“已经承诺但数据不一致”的基础内容，给后续完整版扩张建立稳定底板。
+
+包含事项：
+- 角色解锁链与成就表对齐。
+- 记忆碎片数量与索引目标对齐到 `33`。
+- 关键配置中的显性断裂项先清零。
+- 为这些基线补充单元测试。
+
+完成标准：
+- 角色解锁不再引用不存在的 achievement id。
+- `narrative_index.json` 中的 `memory_fragments.total` 与 `narrative_content.json` 实际条目一致。
+- 对应校验与 GUT 测试通过。
+
+### 阶段 2：完整主线章节与环境
+
+目标：把主线从当前骨架扩到 `F1-F13` 的完整章节体验。
+
+包含事项：
+- 第三章、第四章完整房间节奏与章节规则。
+- 冻伤、极光、暴风雪、冰晶折射、虚空腐蚀、空间扭曲等环境机制兑现。
+- 地图/房间池从“泛化战斗房”提升为章节化房间体验。
+
+完成标准：
+- 四章主线都有明确差异化的环境压力与房间体验。
+- 可从开局连续推进到 `F13`，且章节差异明确可感知。
+
+### 阶段 3：Boss 与敌群成品化
+
+目标：让四章 Boss 和敌群从“参数变化”升级为“战斗记忆点”。
+
+包含事项：
+- `寒霜君王`、`虚空之主` 完整实现。
+- 已有 Boss 重做为独立技能/阶段/机制战。
+- Mini-Boss 与章节敌群协同补齐。
+
+完成标准：
+- 四个主线 Boss 都具备清晰阶段差异与独特压力。
+- 敌群与章节环境有明显联动，而不是单纯数值上升。
+
+### 阶段 4：构筑、经济与成长深度
+
+目标：把局内 build 从“可升级”扩到“有明显流派”。
+
+包含事项：
+- 完整 6 类基础武器与后续扩展武器接入。
+- 被动、进化、饰品、商店、锻造、Boss 掉落联动。
+- 角色差异、解锁节奏、Meta 与局内成长深度同步增强。
+
+完成标准：
+- 至少 6 角色 / 6 基础武器 / 完整进化链在实战中可形成可区分流派。
+- 锻造不再只是临时按钮，而是实际系统。
+
+### 阶段 5：叙事、营地与结局闭环
+
+目标：把“能播的叙事”升级为“完整故事体验”。
+
+包含事项：
+- 三段章节过渡与路线追踪深化。
+- `33` 个记忆碎片完整兑现。
+- 安全营地功能层做满：商店、锻造、碎片解读、剧情推进、下一章预告。
+- 三结局与后记、隐藏层解锁条件补齐。
+
+完成标准：
+- 玩家能明确感受到路线选择、章节推进、结局分化与长期目标回流。
+
+### 阶段 6：隐藏层与后期系统
+
+目标：补齐完整版相对主线版新增的高阶内容。
+
+包含事项：
+- `FS1`、`FS2` 隐藏层。
+- 后期挑战层体系（当前已有 `CL1` 最小闭环）。
+- 图鉴、成就、高难度。
+- 额外角色、额外武器、全武器进化路线。
+
+完成标准：
+- 主线通关后仍有明确的后期目标与重复游玩动机。
+
+### 阶段 7：成品表现与最终验收
+
+目标：把“系统完整”推进到“像完整游戏”。
+
+包含事项：
+- 音频内容与播放链接入。
+- 关键角色/敌人/Boss/武器/UI 占位资源替换。
+- 首局引导、完整通关回归、结局回归、长局平衡验证。
+
+完成标准：
+- 不只是能通关，而是具备成品表现、成品反馈和成品级回归保障。
+
+## 当前顺序与执行状态
+
+| 顺位 | 任务 | 状态 | 说明 |
+|---|---|---|---|
+| 1 | 内容基线对齐 | completed | 已修复 achievement 解锁链、补齐 33 条记忆碎片，并补充测试护栏 |
+| 2 | 主线章节与环境补完 | completed | 第一至四批已落地：四章 room_profiles、新环境机制、章节房间节奏、推进事件/历史节奏、主线节点表达与历史回看摘要 |
+| 3 | Boss 与敌群成品化 | completed | 第一至三批已落地：阶段技能差异、阶段转折压制、Mini-Boss协同与演出节奏/强度曲线收口 |
+| 4 | 构筑与成长深度 | completed | 第一至四批已落地：流派锚点、锻造配方化、饰品/Boss掉落联动、跨章节收益曲线与长局平衡首轮收口 |
+| 5 | 叙事、营地与结局闭环 | in_progress | 前台闭环已基本完成：结算页 / 主菜单 / 记忆祭坛 / 转场已接入后记分支、碎片回看、隐藏层钩子/故事/状态；剩正式收口文档与验收 |
+| 6 | 隐藏层与后期系统 | in_progress | 已落地 `FS1/FS2` 解锁与档案状态基础、`FS1` 最小可玩闭环、`CL1` 挑战层最小闭环；完整版后期系统仍大量待补 |
+| 7 | 成品表现与最终验收 | pending | 音频、视觉替换、通关回归 |
+
+## 本轮执行记录
+
+- 本文档创建后，立即按顺序执行第 1 项：`内容基线对齐`。
+- 本轮已完成：
+  - 补齐 `ach_guardian_200`、`ach_vanguard_300`，修复角色 achievement 解锁链缺失。
+  - 将 `narrative_content.json` 的记忆碎片补齐到 `33` 条，与 `narrative_index.json` 对齐。
+  - 在 `test/unit/test_content_depth_targets.gd` 中补充 achievement 对齐断言与 `33` 条记忆碎片护栏。
+  - 已通过 JSON 语法、配置校验、资源检查与 Godot unit tests。
+- 当前已推进第 2 项第一批：
+  - 在 `environment_config.json` 为四章补齐 `room_profiles`，让 `combat / elite / boss / safe_camp` 等房型拥有独立 hazard 与 visual override。
+  - 在 `game_world.gd` 中接入 room-profile 驱动的 hazard 组合、visual profile merge 与 hazard pressure。
+  - 为 `chapter_3` / `chapter_4` 新增简化但可感知的 `blizzard`、`crystal_reflection`、`spatial_distortion` 环境机制。
+  - 在 `validate_configs.py` 补齐 `room_profiles` / `hazard_pressure` / `visual_profile_overrides` schema 护栏。
+  - 在 `test/unit/test_visual_tilemap_layers.gd` 增加房型 hazard 差异和新环境机制状态影响测试。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py` 与 Godot unit tests（`49/49 passed`）。
+- 当前已推进第 2 项第二批：
+  - 在 `map_generation.json` 新增四章 `chapter_room_profiles`，为 `combat / elite / boss / event / treasure / shop / safe_camp` 定义章节化 `title / objective / route_tag / status_hint / required_kills_mult / reward_mult`。
+  - 在 `game_world.gd` 中接入章节房间节奏 profile，让 combat / elite / treasure challenge 的 required kills 与奖励倍率按章节变化，并让 room status、safe camp、shop、boss、route brief 体现章节化标签。
+  - 在 `test/unit/test_map_generation_config.gd` 补 `chapter_room_profiles` schema 与 late-chapter pacing 断言。
+  - 新增 `test/unit/test_room_pacing_profiles.gd`，覆盖 route brief、required kills 缩放、treasure reward multiplier，以及 chapter_3 camp/boss 章节化文本。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py` 与 Godot unit tests（`51/51 passed`）。
+- 当前已推进第 2 项第三批：
+  - 在 `map_generation.json` 新增四章 `chapter_progression_profiles`，落地 `clear_banner / transition_intro / transition_resolved / event_resolved / camp_recovery_note / checkpoint_label / history_pace_tags`。
+  - 在 `game_world.gd` 接入章节推进文案与房间历史节奏：非 boss clear 文案、transition 开始/结束文案、event 结束文案、camp recovery note、history pace/checkpoint 记录。
+  - 在 `validate_configs.py` 增加 `chapter_progression_profiles` schema 护栏（字段完整性、长度限制、七房型 pace tags）。
+  - 在 `test/unit/test_map_generation_config.gd` 与 `test/unit/test_room_pacing_profiles.gd` 增加第三批断言，覆盖 progression profile 结构和 clear/transition/event/room_history 行为。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py` 与 Godot unit tests（`53/53 passed`）。
+- 当前已推进第 2 项第四批（阶段 2 收口）：
+  - 在 `map_generation.json` 的四章 `chapter_progression_profiles` 增加 `history_recap_prefix / history_recap_limit / mainline_nodes`，补齐主线节点标签和章节历史回看模板。
+  - 在 `game_world.gd` 接入第四批运行时表达：
+    - `room_history` 记录 `mainline_node`
+    - clear / transition / event / shop / camp 文案追加 `Mainline` 与章节 history recap
+    - 新增 `_get_chapter_history_recap_prefix`、`_get_chapter_history_recap_limit`、`_get_chapter_mainline_node`、`_build_chapter_history_recap`。
+  - 在 `validate_configs.py` 扩展 `chapter_progression_profiles` 校验，新增 `history_recap_prefix`、`history_recap_limit`、`mainline_nodes` 的非空、类型与长度/范围护栏。
+  - 在 `test/unit/test_map_generation_config.gd` 补第四批 schema 断言；在 `test/unit/test_room_pacing_profiles.gd` 补第四批行为断言（Mainline 文案、history recap 前缀/窗口、`mainline_node` 落盘）。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py` 与 Godot unit tests（`54/54 passed`）。
+- 当前已推进第 3 项第一批：
+  - 在 `scripts/game/enemy.gd` 为 `boss_frost_king`、`boss_void_lord` 增加阶段差异技能（寒霜碎裂冲击 / 虚空引力井），并按阶段调整冷却与额外伤害反馈。
+  - 在 `scripts/systems/enemy_spawner.gd` 新增 Boss 协同召唤链路：根据 Boss 当前 phase 在阈值转折时触发一次性支援波次，并按 Frost/Void 章节映射不同 archetype 组合。
+  - 修复支援存活统计误计对象池预热节点的问题（`_get_boss_support_alive_count` 过滤 `ObjectPool` 父节点），避免错误触发 alive limit 阻断召唤。
+  - 在 `scripts/game/enemy.gd` 暴露 `get_phase_index()`，并在 `test/unit/test_boss_phase_mechanics.gd` 增补阶段驱动与协同召唤行为测试。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`57/57 passed`）。
+- 当前已推进第 3 项第二批：
+  - 在 `scripts/game/enemy.gd` 增加 Boss 阶段转折压制（phase transition pressure），在阶段切换时触发 burst 伤害与方向性击退/拉扯反馈，且 Frost/Void 方向与强度差异化。
+  - 在 `scripts/systems/enemy_spawner.gd` 增强 Boss 协同召唤波次：phase 2+ 引入 `miniboss_frost_warden`，void late phase 引入 `miniboss_void_harbinger`，并对 mini-boss 支援附加独立强度系数。
+  - 在 `test/unit/test_boss_phase_mechanics.gd` 新增并扩展第二批行为测试，覆盖阶段转折压制向量差异与 mini-boss 支援波次出现条件。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`58/58 passed`）。
+- 当前已推进第 3 项第三批（阶段 3 收口）：
+  - 在 `scripts/autoload/audio_manager.gd` 增加 Boss 演出占位音频联动与快照接口：`play_boss_phase_cue`、`play_boss_support_cue`、`get_last_boss_phase_cue_snapshot`、`get_last_boss_support_cue_snapshot`。
+  - 在 `scripts/game/enemy.gd` 接入阶段转折音频 cue，并新增 `play_boss_support_stage_cue` 作为支援波次视觉脉冲演出。
+  - 在 `scripts/systems/enemy_spawner.gd` 增加跨章 Boss 支援强度曲线：`_build_boss_support_curve`、`get_boss_support_curve_snapshot`、`get_last_boss_support_snapshot`，并将支援波次结果升级为包含 `curve/includes_miniboss` 的快照。
+  - 新增 `test/unit/test_boss_phase_showcase_curve.gd`，覆盖 Boss 阶段/支援 cue 快照与跨章曲线强度对比（Void 晚期 mini-boss > Frost）。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`60/60 passed`）。
+- 当前已推进第 4 项第一批：
+  - 在 `scripts/systems/level_up_system.gd` 新增构筑锚点体系：`offense/tempo/precision/survival/economy`，并接入被动升级、商店购买、锻造行为的锚点增量入口。
+  - 将进化候选从“纯随机挑选”升级为“锚点权重驱动”的首轮联动：`_pick_weighted_evolution_option` + `get_evolution_anchor_weight`，使被动进度与构筑倾向可影响进化曝光概率。
+  - 在 `scripts/game/game_world.gd` 接入 `LevelUpSystem` 联动，`_apply_shop_item_effect`、`_try_forge_damage`、`_try_forge_speed` 成功路径会回灌锚点事件。
+  - 新增 `test/unit/test_build_anchor_links.gd`，覆盖锚点累积、进化权重偏好、GameWorld -> LevelUpSystem 通知链路。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`63/63 passed`）。
+- 当前已推进第 4 项第二批：
+  - 在 `data/balance/shop_items.json` 新增 `forge_recipes`（`damage` / `speed`），将锻造成本、效果、锚点与成功文案参数化。
+  - 在 `scripts/game/game_world.gd` 接入锻造配方执行链路：`_forge_recipes`、`_default_forge_recipes`、`_sanitize_forge_recipes`、`_try_forge_recipe`，并让 camp UI 动态显示配方 ore cost。
+  - 保留原快捷键（F/G）的同时，将执行逻辑切换为数据驱动配方；锻造成功时按配方回灌构筑锚点（`anchor` + `anchor_amount`）。
+  - 在 `scripts/validate_configs.py` 扩展 `shop_items.forge_recipes` schema 护栏（required recipes、效果字段范围、anchor/文案约束）。
+  - 在 `test/unit/test_shop_economy_config.gd` 与 `test/unit/test_build_anchor_links.gd` 补第二批断言，覆盖配方字段范围与数据驱动 cost/message 行为。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`65/65 passed`）。
+- 当前已推进第 4 项第三批：
+  - 在 `scripts/game/game_world.gd` 增加章节 Boss 饰品联动：`CHAPTER_BOSS_ACCESSORY`、`_boss_accessory_claimed`，并在 boss clear 分支触发 `_grant_boss_stage_accessory(chapter_id)`。
+  - 将饰品授予流程统一为 `_grant_specific_accessory(...)`，支持随机掉落、指定拾取 ID（`acc_*`）与 Boss 清房奖励共用同一套逻辑。
+  - 新增 `ACCESSORY_ANCHOR_BONUS` 与 `_apply_accessory_anchor_bonus(...)`，饰品装备后按配置回灌构筑锚点（precision/offense/survival 等）。
+  - `test/unit/test_build_anchor_links.gd` 补第三批行为断言，覆盖 Boss 章节饰品“只发放一次”、饰品锚点来源标记、`acc_*` 拾取直授链路。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`67/67 passed`）。
+- 当前已推进第 4 项第四批（阶段 4 收口）：
+  - 在 `data/balance/drop_tables.json` 新增 `chapter_reward_profiles` 与 `long_run_room_curve`，为四章 XP/金币/矿石/宝藏收益定义跨章节曲线与长局房间倍率。
+  - 在 `scripts/game/game_world.gd` 接入 `_get_reward_curve_profile`、`_get_long_run_room_curve`、`_get_reward_curve_multiplier`、`_get_long_run_reward_bonus`、`_scale_reward_amount`，让 XP 宝石、金币/矿石掉落与 treasure reward 随章节与房间深度增长。
+  - 在 `scripts/validate_configs.py` 扩展 `drop_tables.json` 校验，新增 `chapter_reward_profiles` 与 `long_run_room_curve` 的范围与结构护栏。
+  - 新增 `test/unit/test_reward_curve_profiles.gd`，覆盖章节奖励曲线结构、late chapter XP/矿石成长，以及 late-run treasure 金币/矿石倍率。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`70/70 passed`）。
+- 当前已推进第 5 项第一批：
+  - 在 `data/balance/narrative_content.json` 新增 `route_arc_profiles` 与 `camp_reflections`，为 `balance / redeem / fall` 路线弧线与四章营地反思补齐文本基础。
+  - 在 `scripts/systems/narrative_system.gd` 新增 `get_route_arc_summary`、`get_camp_reflection`、`get_recent_choice_summary` 等 helper，把 alignment / route_style / unlocked fragments / recent choices 汇聚为可直接消费的叙事摘要。
+  - 在 `scripts/game/game_world.gd` 的 camp、memory altar、chapter transition 流程接入 Route arc / Fragment progress / Camp reflection / Recent vows 文本，增强营地中场与章节过渡的叙事连续性。
+  - 在 `scripts/ui/chapter_transition_panel.gd` 扩展 `show_transition(...)` 参数，使章节过渡面板能够展示路线弧线、碎片进度与最近选择摘要。
+  - 在 `scripts/validate_configs.py` 扩展 `narrative_content.json` 护栏，新增 `route_arc_profiles` 与 `camp_reflections` 的结构与非空校验。
+  - 新增 `test/unit/test_narrative_camp_flow.gd`，并扩展 `test/unit/test_narrative_route_style_config.gd`，覆盖路线弧线、营地反思、camp text 与 transition summary 行为。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`74/74 passed`）。
+- 当前已推进第 5 项第二批：
+  - 在 `data/balance/narrative_content.json` 新增 `ending_payoff_profiles`、`epilogue_chains`、`fragment_trigger_profiles`，为三结局路线兑现、后记链路与章节碎片触发节奏提供数据来源。
+  - 在 `scripts/systems/narrative_system.gd` 新增 `get_ending_payoff`、`get_epilogue_chain`、`get_fragment_trigger_payload`，将 alignment / route_style / chapter / trigger type 聚合为运行时可消费的结局与碎片 payload。
+  - 在 `scripts/autoload/save_manager.gd` 扩展 run result 持久化，记录 `route_style`、`ending_payoff`、`ending_epilogue_chain`、`fragment_triggers`，使结局兑现与后记链路能随 run 一起保存。
+  - 在 `scripts/game/game_world.gd` 接入 `camp` / `event` / `transition` 的碎片触发节奏，并让 memory altar 与 run result 能读取最新触发结果。
+  - 在 `scripts/ui/run_result_panel.gd` 增强结算页，展示 `Payoff`、`Epilogue Chain` 与 `Fragments` 列表，形成三结局兑现后的可视化后记链路。
+  - 在 `scripts/validate_configs.py` 扩展 `narrative_content.json` 护栏，新增 `ending_payoff_profiles`、`epilogue_chains`、`fragment_trigger_profiles` 的结构与非空校验。
+  - 新增 `test/unit/test_narrative_payoff_flow.gd`，并扩展 `test/unit/test_narrative_route_style_config.gd`，覆盖 SaveManager payoff 持久化、GameWorld pacing fragment、RunResultPanel 展示，以及新 narrative config section 的结构断言。
+  - 已通过 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py`、`python -m py_compile scripts/validate_configs.py scripts/check_resources.py` 与 Godot unit tests（`78/78 passed`）。
+- 当前已推进第 5 项第三批（前台闭环基本完成）：
+  - 在叙事数据、`NarrativeSystem`、`SaveManager`、`game_world.gd`、`run_result_panel.gd`、`main_menu.gd`、`chapter_transition_panel.gd` 与记忆祭坛链路中接入 `epilogue_branch_profiles`、`fragment_recap_profiles`、`hidden_layer_hooks`、`hidden_layer_story_profiles` 与 `hidden_layer_statuses`。
+  - 将 `fragment_recap`、`hidden_layer_hook`、`hidden_layer_story`、`hidden_layer_statuses`、`ending_payoff`、`ending_epilogue`、`epilogue_branch`、`ending_epilogue_chain` 同步到结算页、主菜单 Last Run、Ending Archive / Hidden Layer Track / Memory Altar 等前台入口。
+  - `chapter_transition_panel.gd` 已补齐 route echo、forward note、hidden progress、fragment recap、camp loop、checkpoint/mainline/history recap，以及 `Chapter hazards ahead`、`Active chapter effects`、`Next route` 预测行。
+  - 相关测试已扩至 `test/unit/test_narrative_camp_flow.gd`、`test/unit/test_narrative_payoff_flow.gd`、`test/unit/test_hidden_layer_achievement_flow.gd`、`test/unit/test_room_pacing_profiles.gd`。
+- 当前已推进第 6 项第一批：
+  - `FS1/FS2` 的解锁、状态归档、故事归档、成就/档案/Meta Return 联动已接入 `SaveManager`、结算页、主菜单 Last Run、记忆祭坛与 Hidden Layer Track。
+  - `FS1` 已验证营地入口、最小房间推进、结算文案与档案回写的运行时闭环；`FS2` 已具备解锁与档案状态基线。
+- 当前已推进第 6 项第二批：
+  - 新增 `CL1` 挑战层最小闭环：通过 Meta Return 链解锁，安全营地预览 -> 入口 staging -> 战斗环 -> 结算营地 -> 奖励选择 -> `SaveManager` 落盘 -> 结算页/主菜单 Challenge 摘要。
+  - `challenge_layer_record` 已持久化 `attempts`、`clears`、`best_rooms`、`best_kills`、`total_meta_bonus`、`total_sigils`、`total_insight`、`last_reward_title` 等字段，并在 UI 中展示 Reward Ledger / Archive Stats / Last Reward。
+- 下一步从两条线并行推进：先完成 Stage 5 正式收口文档与验收回写，再继续 Stage 6 的 `FS2` 对齐、`CL1` 失败/替代奖励分支与更完整后期系统扩展。

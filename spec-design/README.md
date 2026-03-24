@@ -28,6 +28,23 @@
 | [development-plan-2026-03-20.md](./development-plan-2026-03-20.md) | 真值核对后的落地开发计划与推进记录 |
 | [development-plan-supplement-2026-03-20-session.md](./development-plan-supplement-2026-03-20-session.md) | 基于 session 复盘的开发过程确认与计划补充（V2） |
 | [content-depth-cycle-1-d1-freeze-2026-03-20.md](./content-depth-cycle-1-d1-freeze-2026-03-20.md) | 下一周期内容优先计划的 D1 冻结清单（目标阈值与新增 ID 锁定） |
+| [full-game-content-plan-2026-03-22.md](./full-game-content-plan-2026-03-22.md) | 完整版内容完工总计划：完整版目标、顺序执行阶段与当前执行项 |
+| [remaining-game-content-checklist-2026-03-22.md](./remaining-game-content-checklist-2026-03-22.md) | 当前阶段剩余游戏开发内容清单，聚焦 Stage 5 收口与下一阶段切换 |
+| [full-development-remaining-checklist-2026-03-22.md](./full-development-remaining-checklist-2026-03-22.md) | 从当前进度到完整游戏收尾的剩余内容总清单与推荐 session 顺序 |
+| [mvp-release-freeze-2026-03-22.md](./mvp-release-freeze-2026-03-22.md) | D43 后的可发布 MVP 冻结范围、发布阻塞项与最短执行路径 |
+| [release-smoke-checklist-2026-03-22.md](./release-smoke-checklist-2026-03-22.md) | MVP 发布前的自动化门禁、三平台导出命令与人工 smoke checklist |
+| [export-template-setup-2026-03-22.md](./export-template-setup-2026-03-22.md) | Godot 4.6.1 导出模板安装要求、本机 CLI 约定与导出前置校验 |
+| [release-rehearsal-record-2026-03-22.md](./release-rehearsal-record-2026-03-22.md) | 首轮发布演练记录：自动化通过、三平台导出产物已生成，待人工 smoke 收口 |
+| [stage7-asset-production-guide-2026-03-24.md](./stage7-asset-production-guide-2026-03-24.md) | Stage 7 可单独开发资产清单、统一风格圣经、Gemini 提示词模板、项目路径与文件格式要求 |
+| [stage7-gemini-batch-production-manual-2026-03-24.md](./stage7-gemini-batch-production-manual-2026-03-24.md) | Stage 7 Gemini 批量生成执行手册：批次拆分、提示词母版、筛选标准与落盘建议 |
+| [stage7-gemini-first-batch-task-list-2026-03-24.md](./stage7-gemini-first-batch-task-list-2026-03-24.md) | Stage 7 首批 Gemini 生成任务清单：可立即开跑的首批背景、UI、图标与音频提示词任务卡 |
+| [stage7-gemini-copyable-prompt-pack-2026-03-24.md](./stage7-gemini-copyable-prompt-pack-2026-03-24.md) | Stage 7 Gemini 可复制提示词包：面向首批任务的直接投喂文本、变体提示词与筛选口径 |
+| [stage7-gemini-effects-fonts-shaders-prompt-pack-2026-03-24.md](./stage7-gemini-effects-fonts-shaders-prompt-pack-2026-03-24.md) | Stage 7 Gemini 提示词包补充：覆盖 effects、fonts、shaders 三类目录的可执行文本、brief 与草案任务 |
+| [stage7-character-enemy-weapon-asset-strategy-2026-03-24.md](./stage7-character-enemy-weapon-asset-strategy-2026-03-24.md) | Stage 7 角色/敌人/武器资产生成策略：明确三类精灵目录的阶段边界、生成流程、命名与 Gemini 使用方式 |
+| [stage7-three-tier-prompt-system-2026-03-24.md](./stage7-three-tier-prompt-system-2026-03-24.md) | Stage 7 三档提示词总表：为全部主要资产类别统一提供完整版、标准版、超短版提示词 |
+| [stage7-asset-review-and-landing-workflow-2026-03-24.md](./stage7-asset-review-and-landing-workflow-2026-03-24.md) | Stage 7 资产筛选与落盘工作流：统一候选筛选、状态分层、命名、目录落点与入库验收流程 |
+| [stage7-asset-intake-ledger-template-2026-03-24.md](./stage7-asset-intake-ledger-template-2026-03-24.md) | Stage 7 资产 intake ledger 模板：统一记录批次、任务 ID、主选/备选、提示词档位、状态与落盘目录 |
+| [stage7-first-batch-intake-ledger-template-2026-03-24.md](./stage7-first-batch-intake-ledger-template-2026-03-24.md) | Stage 7 首批批次收稿模板：预填 A1-A4、B1-B3、C1-C2、G1-G2 的首轮收稿表与验收清单 |
 
 ## 版本记录
 
@@ -84,3 +101,40 @@
 | 0.4.36 | 2026-03-20 | 下一周期 D34 完成：审批记录持久化与跨流水线历史追溯（chapter_snapshot_v10 + approval_audit_trail） |
 | 0.4.37 | 2026-03-20 | 下一周期 D35 完成：审批历史聚合与跨后端长期趋势归档（chapter_snapshot_v11 + approval_history_archive） |
 | 0.4.38 | 2026-03-20 | 下一周期 D36 完成：审批历史分层阈值模板与发布候选追踪报告（chapter_snapshot_v12 + approval_threshold_templates + release_candidate_tracking） |
+| 0.4.39 | 2026-03-21 | 下一周期 D37 完成：发布候选稳定性分层评分与审批收敛看板（chapter_snapshot_v13 + stability_scoring/stability_tiers/convergence_dashboard/ci_signal_contract） |
+| 0.4.40 | 2026-03-21 | 下一周期 D38 完成：收敛趋势强化与异常生命周期联动治理（chapter_snapshot_v14 + convergence_trend_reinforcement/exception_lifecycle_linkage） |
+| 0.4.41 | 2026-03-21 | 下一周期 D39 完成：视觉门禁与性能基线联评（chapter_snapshot_v15 + visual_performance_cogate） |
+| 0.4.42 | 2026-03-21 | 下一周期 D40 完成：联评阈值模板化与跨平台对齐治理（chapter_snapshot_v16 + cogate_threshold_templates/cross_platform_alignment） |
+| 0.4.43 | 2026-03-21 | 下一周期 D41 完成：高压场景性能压测标准化与对齐看板细化（chapter_snapshot_v17 + pressure_scenario_standardization/alignment_dashboard_refinement） |
+| 0.4.44 | 2026-03-21 | 下一周期 D42 完成：高压场景对齐收敛门禁与回归周期开窗治理（chapter_snapshot_v18 + pressure_alignment_convergence_gate/regression_cycle_window_governance） |
+| 0.4.45 | 2026-03-22 | 下一周期 D43 完成：多周期自适应门禁与发布回灌治理（chapter_snapshot_v19 + multi_cycle_adaptive_gate/release_feedback_governance） |
+| 0.4.46 | 2026-03-22 | 新增可发布 MVP 冻结清单，明确最短发布路径、P0 阻塞项与延期范围 |
+| 0.4.47 | 2026-03-22 | 补齐 Win/Linux/macOS 导出预设并新增 MVP 发布 smoke checklist |
+| 0.4.48 | 2026-03-22 | 新增导出模板准备文档与首轮发布演练记录，明确当前发布阻塞为 export templates 缺失 |
+| 0.4.49 | 2026-03-22 | 安装 Godot 4.6.1 export templates 并打通三平台首轮导出，发布阻塞收敛为产物级人工 smoke 与归档 |
+| 0.4.50 | 2026-03-22 | 补充三平台产物大小与 SHA256 归档，并确认 Windows 最小启动 smoke 已通过 |
+| 0.4.51 | 2026-03-22 | 新增完整版内容完工总计划，并完成第 1 顺位内容基线对齐（角色解锁链 + 33 条记忆碎片 + 测试护栏） |
+| 0.4.52 | 2026-03-22 | 推进第 2 顺位主线章节与环境补完第一批：四章 room_profiles、chapter_3/4 新环境机制与测试护栏 |
+| 0.4.53 | 2026-03-22 | 推进第 2 顺位主线章节与环境补完第二批：章节房间节奏 profile、route brief 文案差异与房间 pacing 测试 |
+| 0.4.54 | 2026-03-22 | 推进第 2 顺位主线章节与环境补完第三批：chapter_progression_profiles、章节化 clear/transition/event 表达与 room_history 节奏护栏 |
+| 0.4.55 | 2026-03-22 | 推进第 2 顺位主线章节与环境补完第四批并完成阶段收口：mainline nodes + history recap 运行时表达、schema 护栏与测试补齐 |
+| 0.4.56 | 2026-03-22 | 推进第 3 顺位 Boss 与敌群成品化第一批：寒霜君王/虚空之主阶段技能差异、Boss 协同召唤与对象池统计修复 |
+| 0.4.57 | 2026-03-22 | 推进第 3 顺位 Boss 与敌群成品化第二批：阶段转折压制、Mini-Boss 协同召唤增强与行为测试补齐 |
+| 0.4.58 | 2026-03-22 | 推进第 3 顺位 Boss 与敌群成品化第三批并完成阶段收口：Boss 演出节奏音频联动、跨章 Mini-Boss 强度曲线与专项回归测试 |
+| 0.4.59 | 2026-03-22 | 推进第 4 顺位构筑与成长深度第一批：流派锚点体系与锻造-商店-进化首轮联动（含专项回归测试） |
+| 0.4.60 | 2026-03-22 | 推进第 4 顺位构筑与成长深度第二批：锻造配方化与 shop 配置驱动联动（含 schema 护栏与行为回归） |
+| 0.4.61 | 2026-03-22 | 推进第 4 顺位构筑与成长深度第三批：章节 Boss 饰品掉落与构筑锚点联动（含行为回归测试） |
+| 0.4.62 | 2026-03-22 | 推进第 4 顺位构筑与成长深度第四批并完成阶段收口：跨章节收益曲线、长局房间倍率与奖励曲线专项测试 |
+| 0.4.63 | 2026-03-22 | 推进第 5 顺位叙事、营地与结局闭环第一批：路线弧线摘要、营地反思文本与章节转场叙事增强 |
+| 0.4.64 | 2026-03-22 | 推进第 5 顺位叙事、营地与结局闭环第二批：三结局兑现、后记链路、碎片触发节奏与 payoff/epilogue 结算展示 |
+| 0.4.65 | 2026-03-22 | 新增剩余游戏开发内容清单与完整开发剩余内容清单，供新 session 直接承接后续阶段 |
+| 0.4.66 | 2026-03-24 | 按当前代码/测试真值同步 Stage 5/6 文档：补记叙事前台闭环、隐藏层档案进度与 `CL1` 挑战层最小闭环，并明确剩余未完成项 |
+| 0.4.67 | 2026-03-24 | 新增 Stage 7 资产生产规范文档，明确可单独开发资产、Gemini 统一风格提示词、项目路径与文件格式要求 |
+| 0.4.68 | 2026-03-24 | 新增 Stage 7 Gemini 批量生成执行手册，并为新增资产目录补占位文件以固定版本控制结构 |
+| 0.4.69 | 2026-03-24 | 新增 Stage 7 首批 Gemini 生成任务清单，按背景、UI、图标与音频提示词拆成可直接执行的首批批次 |
+| 0.4.70 | 2026-03-24 | 新增 Stage 7 Gemini 可复制提示词包，并为首批关键资产目录补充 README 收稿说明 |
+| 0.4.71 | 2026-03-24 | 新增 effects/fonts/shaders 三类目录的 Gemini 提示词补充文档，覆盖通用 VFX、字体系统 brief 与 shader 设计草案任务 |
+| 0.4.72 | 2026-03-24 | 新增角色/敌人/武器三类精灵目录的资产生成策略文档，并补目录 README 与阶段性生成边界说明 |
+| 0.4.73 | 2026-03-24 | 新增 Stage 7 三档提示词总表，为背景、UI、音频、VFX、字体、shader、tiles、角色、敌人、武器与高耦合概念提供完整版/标准版/超短版口径 |
+| 0.4.74 | 2026-03-24 | 新增 Stage 7 资产筛选与落盘工作流，并补 `assets/README.md` 统一说明候选资产的筛选、状态与入库规则 |
+| 0.4.75 | 2026-03-24 | 新增 Stage 7 intake ledger 通用模板与首批批次收稿模板，补齐批次记录、主选/备选追踪与首轮验收表 |
