@@ -8,6 +8,9 @@ const AMBIENCE_BUS: StringName = &"Ambience"
 var _bgm_player: AudioStreamPlayer
 var _ambience_player: AudioStreamPlayer
 var _test_tone_stream: AudioStreamWAV
+var _tone_cache: Dictionary = {}
+var _last_boss_phase_cue: Dictionary = {}
+var _last_boss_support_cue: Dictionary = {}
 
 
 func _ready() -> void:
@@ -92,6 +95,75 @@ func play_test_tone() -> void:
     play_sfx(_test_tone_stream)
 
 
+func play_boss_phase_cue(boss_id: String, phase_index: int, pulse_count: int = 2, tempo: float = 0.12) -> void:
+    var family: String = "core"
+    var base_frequency: float = 700.0
+    if boss_id.find("frost") >= 0:
+        family = "frost"
+        base_frequency = 760.0
+    elif boss_id.find("void") >= 0:
+        family = "void"
+        base_frequency = 430.0
+
+    var frequency_step: float = 42.0
+    if family == "void":
+        frequency_step = 36.0
+
+    var frequency: float = base_frequency + frequency_step * clampf(float(phase_index), 0.0, 6.0)
+    var duration: float = clampf(tempo * (0.72 + 0.16 * float(maxi(1, pulse_count))), 0.05, 0.24)
+    _last_boss_phase_cue = {
+        "boss_id": boss_id,
+        "phase_index": phase_index,
+        "pulse_count": maxi(1, pulse_count),
+        "tempo": tempo,
+        "frequency": frequency,
+        "duration": duration,
+        "family": family,
+    }
+    play_sfx(_get_cached_tone(duration, frequency))
+
+
+func play_boss_support_cue(boss_id: String, phase_index: int, spawned_count: int, includes_miniboss: bool = false) -> void:
+    var base_frequency: float = 610.0
+    if boss_id.find("frost") >= 0:
+        base_frequency = 670.0
+    elif boss_id.find("void") >= 0:
+        base_frequency = 390.0
+
+    var frequency: float = base_frequency + 26.0 * clampf(float(spawned_count), 0.0, 8.0) + 18.0 * clampf(float(phase_index), 0.0, 6.0)
+    if includes_miniboss:
+        frequency += 58.0
+    var duration: float = 0.09
+    if includes_miniboss:
+        duration = 0.12
+    _last_boss_support_cue = {
+        "boss_id": boss_id,
+        "phase_index": phase_index,
+        "spawned_count": maxi(0, spawned_count),
+        "includes_miniboss": includes_miniboss,
+        "frequency": frequency,
+        "duration": duration,
+    }
+    play_sfx(_get_cached_tone(duration, frequency))
+
+
+func get_last_boss_phase_cue_snapshot() -> Dictionary:
+    return _last_boss_phase_cue.duplicate(true)
+
+
+func get_last_boss_support_cue_snapshot() -> Dictionary:
+    return _last_boss_support_cue.duplicate(true)
+
+
+func clear_boss_cue_snapshots() -> void:
+    _last_boss_phase_cue.clear()
+    _last_boss_support_cue.clear()
+
+
+func get_tone_cache_size() -> int:
+    return _tone_cache.size()
+
+
 func get_bus_peak_ratio(bus_name: StringName) -> float:
     var index: int = AudioServer.get_bus_index(String(bus_name))
     if index < 0:
@@ -125,3 +197,14 @@ func _build_test_tone_stream(duration: float, frequency: float) -> AudioStreamWA
     wav.stereo = false
     wav.data = bytes
     return wav
+
+
+func _get_cached_tone(duration: float, frequency: float) -> AudioStreamWAV:
+    var key: String = "%.3f_%.1f" % [duration, frequency]
+    var cached: Variant = _tone_cache.get(key)
+    if cached is AudioStreamWAV:
+        return cached
+
+    var tone: AudioStreamWAV = _build_test_tone_stream(duration, frequency)
+    _tone_cache[key] = tone
+    return tone

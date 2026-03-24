@@ -206,6 +206,527 @@ func generate_run_plan(config: Dictionary) -> Dictionary:
     }
 
 
+func get_hidden_layer_profiles(config: Dictionary = {}) -> Dictionary:
+    var source: Dictionary = config
+    if source.is_empty() and ConfigManager != null:
+        source = ConfigManager.get_config("map_generation", {})
+    var rows_var: Variant = source.get("hidden_layers", {})
+    if rows_var is Dictionary:
+        return (rows_var as Dictionary).duplicate(true)
+    return {}
+
+
+func get_hidden_layer_profile(layer_id: String, config: Dictionary = {}) -> Dictionary:
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    var rows: Dictionary = get_hidden_layer_profiles(config)
+    var row_var: Variant = rows.get(layer_key, {})
+    if not (row_var is Dictionary):
+        return {}
+
+    var row: Dictionary = (row_var as Dictionary).duplicate(true)
+    row["layer_id"] = layer_key
+    return row
+
+
+func generate_hidden_layer_stub_plan(layer_id: String, config: Dictionary = {}) -> Dictionary:
+    var profile: Dictionary = get_hidden_layer_profile(layer_id, config)
+    if profile.is_empty():
+        return {}
+
+    var map_profile_var: Variant = profile.get("map_profile", {})
+    if not (map_profile_var is Dictionary):
+        return {}
+    var map_profile: Dictionary = map_profile_var
+    var mode: String = str(map_profile.get("mode", "")).strip_edges().to_lower()
+    var room_count: int = int(map_profile.get("room_count", 0))
+    var entry_room_type: String = str(map_profile.get("entry_room_type", "hidden_entry")).strip_edges()
+    var encounter_room_type: String = str(map_profile.get("encounter_room_type", "hidden_room")).strip_edges()
+    var boss_room_type: String = str(map_profile.get("boss_room_type", encounter_room_type)).strip_edges()
+    var settlement_room_type: String = str(map_profile.get("settlement_room_type", "hidden_settlement")).strip_edges()
+    var rooms: Array[Dictionary] = []
+
+    match mode:
+        "survival":
+            rooms.append({
+                "index": 1,
+                "room_type": entry_room_type,
+                "room_role": "entry",
+                "next_rooms": [2],
+                "previous_rooms": []
+            })
+            rooms.append({
+                "index": 2,
+                "room_type": encounter_room_type,
+                "room_role": "survival_loop",
+                "next_rooms": [2, 3],
+                "previous_rooms": [1, 2],
+                "is_loop_anchor": true,
+                "boss_room_type": boss_room_type
+            })
+            rooms.append({
+                "index": 3,
+                "room_type": settlement_room_type,
+                "room_role": "settlement",
+                "next_rooms": [],
+                "previous_rooms": [2]
+            })
+        "trial_chain":
+            var room_roles: Array[String] = _as_string_array(map_profile.get("room_roles", []))
+            var safe_room_count: int = maxi(1, room_count)
+            for idx in range(safe_room_count):
+                var room_role: String = "trial_%d" % [idx + 1]
+                if idx < room_roles.size():
+                    room_role = room_roles[idx]
+                var room_type: String = encounter_room_type
+                if idx == safe_room_count - 1:
+                    room_type = boss_room_type
+                rooms.append({
+                    "index": idx + 1,
+                    "room_type": room_type,
+                    "room_role": room_role,
+                    "next_rooms": ([] if idx == safe_room_count - 1 else [idx + 2]),
+                    "previous_rooms": ([] if idx == 0 else [idx]),
+                    "entry_room_type": entry_room_type,
+                    "settlement_room_type": settlement_room_type
+                })
+        _:
+            return {}
+
+    return {
+        "layer_id": str(profile.get("layer_id", layer_id)).strip_edges().to_upper(),
+        "title": str(profile.get("title", layer_id)).strip_edges(),
+        "theme": str(profile.get("theme", "")).strip_edges(),
+        "map_mode": mode,
+        "room_count": room_count,
+        "room_count_label": str(map_profile.get("room_count_label", "")).strip_edges(),
+        "entry_hint": str(profile.get("entrance_hint", "")).strip_edges(),
+        "rooms": rooms,
+        "combat_profile": (profile.get("combat_profile", {}) as Dictionary).duplicate(true) if profile.get("combat_profile", {}) is Dictionary else {},
+        "reward_profile": (profile.get("reward_profile", {}) as Dictionary).duplicate(true) if profile.get("reward_profile", {}) is Dictionary else {},
+        "settlement_profile": (profile.get("settlement_profile", {}) as Dictionary).duplicate(true) if profile.get("settlement_profile", {}) is Dictionary else {}
+    }
+
+
+func generate_hidden_layer_run_plan(layer_id: String, config: Dictionary = {}) -> Dictionary:
+    var profile: Dictionary = get_hidden_layer_profile(layer_id, config)
+    if profile.is_empty():
+        return {}
+
+    var layer_key: String = str(profile.get("layer_id", layer_id)).strip_edges().to_upper()
+    match layer_key:
+        "FS1":
+            return _build_hidden_layer_run_plan_fs1(profile)
+        "FS2":
+            return _build_hidden_layer_run_plan_fs2(profile)
+        _:
+            return {}
+
+
+func generate_challenge_layer_run_plan(layer_id: String, _config: Dictionary = {}) -> Dictionary:
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    if layer_key != "CL1":
+        return {}
+
+    var chapter_id: String = "challenge_cl1"
+    var chapter_index: int = 7
+    var title: String = "Challenge Layer"
+    var rooms: Array[Dictionary] = [
+        _build_hidden_layer_room(1, ROOM_TYPE_SAFE_CAMP, chapter_id, chapter_index, 0, 0, [2], [], {
+            "challenge_layer_id": layer_key,
+            "challenge_layer_title": title,
+            "challenge_phase": "entry",
+            "title": "Challenge Layer Entry",
+            "objective": "Step into the challenge archive route and confirm the first checkpoint.",
+            "status_hint": "Press E to enter the first challenge combat ring.",
+            "checkpoint_label": "Challenge Gate",
+            "reward_summary": "Challenge archive sealed | Meta +40 | Sigil +1",
+            "settlement_summary": "The challenge archive opens a thin postgame loop for future layers."
+        }),
+        _build_hidden_layer_room(2, ROOM_TYPE_COMBAT, chapter_id, chapter_index, 1, 0, [3], [1], {
+            "challenge_layer_id": layer_key,
+            "challenge_layer_title": title,
+            "challenge_phase": "combat",
+            "title": "Challenge Combat Ring",
+            "objective": "Defeat the archive guardians and stabilize the settlement route.",
+            "status_hint": "A minimal combat proof before deeper challenge rooms arrive.",
+            "checkpoint_label": "Challenge Ring",
+            "clear_banner": "Challenge ring stabilized.",
+            "required_kills": 10,
+            "reward_mult": 1.2,
+            "reward_summary": "Challenge archive sealed | Meta +40 | Sigil +1",
+            "settlement_summary": "The challenge archive opens a thin postgame loop for future layers."
+        }),
+        _build_hidden_layer_room(3, ROOM_TYPE_SAFE_CAMP, chapter_id, chapter_index, 2, 0, [], [2], {
+            "challenge_layer_id": layer_key,
+            "challenge_layer_title": title,
+            "challenge_phase": "settlement",
+            "title": "Challenge Settlement",
+            "objective": "Archive the challenge clear and claim the first settlement reward.",
+            "status_hint": "Press E to archive the challenge and finish the run.",
+            "checkpoint_label": "Challenge Archive",
+            "reward_summary": "Challenge archive sealed | Meta +40 | Sigil +1",
+            "settlement_summary": "The settlement records this challenge clear for the next postgame step."
+        })
+    ]
+
+    var room_plan_map: Dictionary = {}
+    for row: Dictionary in rooms:
+        room_plan_map[int(row.get("index", 0))] = row.duplicate(true)
+
+    return {
+        "layer_id": layer_key,
+        "title": title,
+        "theme": "Late-game challenge archive shell.",
+        "map_mode": "challenge_entry",
+        "room_count": rooms.size(),
+        "layout_cols": 3,
+        "room_count_label": "Entry + combat + settlement",
+        "entry_hint": "Clear the full difficulty/meta-return chain to stabilize the first challenge layer.",
+        "reward_profile": {"summary": "Challenge archive sealed | Meta +40 | Sigil +1"},
+        "settlement_profile": {"summary": "Archive the challenge clear and prepare the next late-game route."},
+        "map_bounds": {"min_x": 0, "max_x": 2, "min_y": 0, "max_y": 0, "cols": 3, "rows": 1},
+        "chapter_order": [chapter_id],
+        "start_room": 1,
+        "rooms": rooms,
+        "room_plan_map": room_plan_map
+    }
+
+
+func _build_hidden_layer_run_plan_fs1(profile: Dictionary) -> Dictionary:
+    var layer_id: String = str(profile.get("layer_id", "FS1")).strip_edges().to_upper()
+    var title: String = str(profile.get("title", "Time Rift")).strip_edges()
+    var theme: String = str(profile.get("theme", "")).strip_edges()
+    var entry_hint: String = str(profile.get("entrance_hint", "")).strip_edges()
+    var reward_profile: Dictionary = profile.get("reward_profile", {}).duplicate(true) if profile.get("reward_profile", {}) is Dictionary else {}
+    var settlement_profile: Dictionary = profile.get("settlement_profile", {}).duplicate(true) if profile.get("settlement_profile", {}) is Dictionary else {}
+    var chapter_id: String = "hidden_fs1"
+    var chapter_index: int = 5
+    var rooms: Array[Dictionary] = [
+        _build_hidden_layer_room(1, ROOM_TYPE_COMBAT, chapter_id, chapter_index, 0, 0, [2], [], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": "entry",
+            "title": "Time Rift Threshold",
+            "objective": "Stabilize the fracture and survive the first echo wave",
+            "status_hint": "Echo pressure opens at 20.0x and tightens every five minutes.",
+            "route_tag": "RIFT_ENTRY",
+            "mainline_node": "Cross the altar seam and hold the split second open.",
+            "clear_banner": "Threshold stabilized.",
+            "checkpoint_label": "Rift Entry",
+            "required_kills": 16,
+            "runtime_spawn_rate_mult": 1.12,
+            "runtime_enemy_hp_mult": 1.08,
+            "runtime_enemy_damage_mult": 1.05,
+            "reward_mult": 1.15,
+            "pressure_label": "Threshold Pulse",
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(2, ROOM_TYPE_ELITE, chapter_id, chapter_index, 1, -1, [3], [1], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": "survival_loop",
+            "title": "Echo Surge",
+            "objective": "Break the accelerated echo pack before the rift folds shut",
+            "status_hint": "A boss echo forms once the surge collapses.",
+            "route_tag": "RIFT_SURGE",
+            "mainline_node": "The rift compacts the run's strongest ghosts into one wave.",
+            "clear_banner": "Echo surge broken.",
+            "checkpoint_label": "Loop Anchor",
+            "required_kills": 12,
+            "runtime_spawn_rate_mult": 1.18,
+            "runtime_enemy_hp_mult": 1.12,
+            "runtime_enemy_damage_mult": 1.08,
+            "reward_mult": 1.35,
+            "minimum_clear_seconds": 30.0,
+            "required_pressure_stage": 2,
+            "max_pressure_stage": 3,
+            "pressure_interval_seconds": 15.0,
+            "pressure_stage_spawn_step": 0.09,
+            "pressure_stage_hp_step": 0.07,
+            "pressure_stage_damage_step": 0.05,
+            "pressure_label": "Rift Surge",
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(3, ROOM_TYPE_BOSS, chapter_id, chapter_index, 2, 0, [4], [2], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": "boss_echo",
+            "title": "Echo Apex",
+            "objective": "Defeat the Void Lord echo and lock in the rift payout",
+            "status_hint": "Clearing this echo converts the fracture into a recoverable archive.",
+            "route_tag": "RIFT_BOSS",
+            "mainline_node": "A void echo descends to measure whether the run can persist.",
+            "clear_banner": "Echo apex broken.",
+            "checkpoint_label": "Boss Echo",
+            "boss_id": "boss_void_lord",
+            "boss_echo_pool": ["boss_rock_colossus", "boss_flame_lord", "boss_frost_king", "boss_void_lord"],
+            "is_boss_room": true,
+            "runtime_spawn_rate_mult": 1.24,
+            "runtime_enemy_hp_mult": 1.18,
+            "runtime_enemy_damage_mult": 1.12,
+            "pressure_label": "Echo Apex",
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(4, ROOM_TYPE_SAFE_CAMP, chapter_id, chapter_index, 3, 0, [], [3], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": "settlement",
+            "title": "Rift Settlement",
+            "objective": "Archive the fracture and claim the rewind reward",
+            "status_hint": "Press E to cash out the rift archive and finish the run.",
+            "route_tag": "RIFT_EXIT",
+            "mainline_node": "Seal the fracture before it collapses back into the campaign.",
+            "checkpoint_label": "Rift Archive",
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        })
+    ]
+    return _build_hidden_layer_runtime_plan(profile, rooms)
+
+
+func _build_hidden_layer_run_plan_fs2(profile: Dictionary) -> Dictionary:
+    var layer_id: String = str(profile.get("layer_id", "FS2")).strip_edges().to_upper()
+    var title: String = str(profile.get("title", "Genesis Forge")).strip_edges()
+    var entry_hint: String = str(profile.get("entrance_hint", "")).strip_edges()
+    var reward_profile: Dictionary = profile.get("reward_profile", {}).duplicate(true) if profile.get("reward_profile", {}) is Dictionary else {}
+    var settlement_profile: Dictionary = profile.get("settlement_profile", {}).duplicate(true) if profile.get("settlement_profile", {}) is Dictionary else {}
+    var room_roles: Array[String] = []
+    var map_profile_var: Variant = profile.get("map_profile", {})
+    if map_profile_var is Dictionary:
+        room_roles = _as_string_array((map_profile_var as Dictionary).get("room_roles", []))
+    var chapter_id: String = "hidden_fs2"
+    var chapter_index: int = 6
+    var rooms: Array[Dictionary] = [
+        _build_hidden_layer_room(1, ROOM_TYPE_COMBAT, chapter_id, chapter_index, 0, 0, [2], [], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": _resolve_hidden_room_role(room_roles, 0, "ore_tempering"),
+            "title": "Ore Tempering",
+            "objective": "Crack the first forge wave and stabilize the relic mold",
+            "status_hint": "Each forge trial locks in one step of the legendary pattern.",
+            "route_tag": "FORGE_1",
+            "mainline_node": "Raw relic ore enters the furnace under impossible pressure.",
+            "clear_banner": "Ore tempered.",
+            "checkpoint_label": "Forge Trial I",
+            "required_kills": 14,
+            "trial_depth": 1,
+            "trial_depth_max": 5,
+            "trial_label": "Forge Trial I: Ore Tempering",
+            "runtime_spawn_rate_mult": 1.08,
+            "runtime_enemy_hp_mult": 1.10,
+            "runtime_enemy_damage_mult": 1.04,
+            "reward_mult": 1.10,
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(2, ROOM_TYPE_ELITE, chapter_id, chapter_index, 1, -1, [3], [1], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": _resolve_hidden_room_role(room_roles, 1, "ember_fold"),
+            "title": "Ember Fold",
+            "objective": "Cut through the forge elites before the ember fold seals",
+            "status_hint": "The forge rewards clean, disciplined clears.",
+            "route_tag": "FORGE_2",
+            "mainline_node": "The ember fold compresses heat into a single lethal seam.",
+            "clear_banner": "Ember fold broken.",
+            "checkpoint_label": "Forge Trial II",
+            "required_kills": 10,
+            "trial_depth": 2,
+            "trial_depth_max": 5,
+            "trial_label": "Forge Trial II: Ember Fold",
+            "runtime_spawn_rate_mult": 1.14,
+            "runtime_enemy_hp_mult": 1.12,
+            "runtime_enemy_damage_mult": 1.08,
+            "reward_mult": 1.18,
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(3, ROOM_TYPE_COMBAT, chapter_id, chapter_index, 2, 0, [4], [2], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": _resolve_hidden_room_role(room_roles, 2, "frost_bind"),
+            "title": "Frost Bind",
+            "objective": "Hold formation while the forge cools the relic shell",
+            "status_hint": "The bind phase punishes drifting out of the core lane.",
+            "route_tag": "FORGE_3",
+            "mainline_node": "The forge flash-freezes the relic seam before the next fold.",
+            "clear_banner": "Frost bind stabilized.",
+            "checkpoint_label": "Forge Trial III",
+            "required_kills": 18,
+            "trial_depth": 3,
+            "trial_depth_max": 5,
+            "trial_label": "Forge Trial III: Frost Bind",
+            "runtime_spawn_rate_mult": 1.18,
+            "runtime_enemy_hp_mult": 1.16,
+            "runtime_enemy_damage_mult": 1.10,
+            "reward_mult": 1.22,
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(4, ROOM_TYPE_ELITE, chapter_id, chapter_index, 3, 1, [5], [3], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": _resolve_hidden_room_role(room_roles, 3, "void_sunder"),
+            "title": "Void Sunder",
+            "objective": "Break the void-tempered guardians and expose the genesis core",
+            "status_hint": "Only the last trial remains once the sunder collapses.",
+            "route_tag": "FORGE_4",
+            "mainline_node": "The forge sunder strips every false relic imprint away.",
+            "clear_banner": "Void sunder complete.",
+            "checkpoint_label": "Forge Trial IV",
+            "required_kills": 12,
+            "trial_depth": 4,
+            "trial_depth_max": 5,
+            "trial_label": "Forge Trial IV: Void Sunder",
+            "runtime_spawn_rate_mult": 1.22,
+            "runtime_enemy_hp_mult": 1.18,
+            "runtime_enemy_damage_mult": 1.12,
+            "reward_mult": 1.28,
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(5, ROOM_TYPE_BOSS, chapter_id, chapter_index, 4, 0, [6], [4], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": _resolve_hidden_room_role(room_roles, 4, "genesis_core"),
+            "title": "Genesis Core",
+            "objective": "Defeat the forge core and stabilize the legendary recipe chain",
+            "status_hint": "A clean forge clear unlocks the settlement archive.",
+            "route_tag": "FORGE_CORE",
+            "mainline_node": "The forge heart tests whether the relic chain can become legend.",
+            "clear_banner": "Genesis core extinguished.",
+            "checkpoint_label": "Forge Core",
+            "boss_id": "boss_flame_lord",
+            "is_boss_room": true,
+            "trial_depth": 5,
+            "trial_depth_max": 5,
+            "trial_label": "Forge Trial V: Genesis Core",
+            "runtime_spawn_rate_mult": 1.28,
+            "runtime_enemy_hp_mult": 1.22,
+            "runtime_enemy_damage_mult": 1.16,
+            "reward_mult": 1.35,
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        }),
+        _build_hidden_layer_room(6, ROOM_TYPE_SAFE_CAMP, chapter_id, chapter_index, 5, 0, [], [5], {
+            "hidden_layer_id": layer_id,
+            "hidden_layer_title": title,
+            "room_role": "settlement",
+            "title": "Forge Settlement",
+            "objective": "Archive the stabilized relic chain and claim the legendary draft",
+            "status_hint": "Press E to finalize the forge archive and finish the run.",
+            "route_tag": "FORGE_EXIT",
+            "mainline_node": "The forge settles into a usable pattern for future runs.",
+            "checkpoint_label": "Forge Archive",
+            "entry_hint": entry_hint,
+            "reward_summary": str(reward_profile.get("summary", "")),
+            "settlement_summary": str(settlement_profile.get("summary", ""))
+        })
+    ]
+    return _build_hidden_layer_runtime_plan(profile, rooms)
+
+
+func _build_hidden_layer_runtime_plan(profile: Dictionary, rooms: Array[Dictionary]) -> Dictionary:
+    var room_plan_map: Dictionary = {}
+    var min_x: int = 0
+    var max_x: int = 0
+    var min_y: int = 0
+    var max_y: int = 0
+    var first_coord: bool = true
+
+    for row: Dictionary in rooms:
+        var room_index: int = int(row.get("index", 0))
+        room_plan_map[room_index] = row.duplicate(true)
+        var map_x: int = int(row.get("map_x", 0))
+        var map_y: int = int(row.get("map_y", 0))
+        if first_coord:
+            min_x = map_x
+            max_x = map_x
+            min_y = map_y
+            max_y = map_y
+            first_coord = false
+        else:
+            min_x = mini(min_x, map_x)
+            max_x = maxi(max_x, map_x)
+            min_y = mini(min_y, map_y)
+            max_y = maxi(max_y, map_y)
+
+    var map_bounds: Dictionary = {
+        "min_x": min_x,
+        "max_x": max_x,
+        "min_y": min_y,
+        "max_y": max_y,
+        "cols": max_x - min_x + 1,
+        "rows": max_y - min_y + 1
+    }
+
+    var rebuilt_rooms: Array[Dictionary] = []
+    for room_id in range(1, rooms.size() + 1):
+        var room_row_var: Variant = room_plan_map.get(room_id, {})
+        if room_row_var is Dictionary:
+            rebuilt_rooms.append((room_row_var as Dictionary).duplicate(true))
+
+    var map_profile: Dictionary = profile.get("map_profile", {}).duplicate(true) if profile.get("map_profile", {}) is Dictionary else {}
+    var reward_profile: Dictionary = profile.get("reward_profile", {}).duplicate(true) if profile.get("reward_profile", {}) is Dictionary else {}
+    var settlement_profile: Dictionary = profile.get("settlement_profile", {}).duplicate(true) if profile.get("settlement_profile", {}) is Dictionary else {}
+    return {
+        "layer_id": str(profile.get("layer_id", "")).strip_edges().to_upper(),
+        "title": str(profile.get("title", "Hidden Layer")).strip_edges(),
+        "theme": str(profile.get("theme", "")).strip_edges(),
+        "map_mode": str(map_profile.get("mode", "")).strip_edges(),
+        "room_count": rooms.size(),
+        "layout_cols": maxi(3, int(map_bounds.get("cols", 3))),
+        "room_count_label": str(map_profile.get("room_count_label", "%d rooms" % rooms.size())).strip_edges(),
+        "entry_hint": str(profile.get("entrance_hint", "")).strip_edges(),
+        "reward_profile": reward_profile,
+        "settlement_profile": settlement_profile,
+        "map_bounds": map_bounds,
+        "chapter_order": [str(rebuilt_rooms[0].get("chapter_id", "hidden_layer"))] if not rebuilt_rooms.is_empty() else [],
+        "start_room": 1,
+        "rooms": rebuilt_rooms,
+        "room_plan_map": room_plan_map
+    }
+
+
+func _build_hidden_layer_room(index: int, room_type: String, chapter_id: String, chapter_index: int, map_x: int, map_y: int, next_rooms: Array[int], previous_rooms: Array[int], extras: Dictionary = {}) -> Dictionary:
+    var row: Dictionary = {
+        "index": index,
+        "room_type": room_type,
+        "chapter_id": chapter_id,
+        "chapter_index": chapter_index,
+        "show_intro": false,
+        "boss_id": "",
+        "is_boss_room": room_type == ROOM_TYPE_BOSS,
+        "next_rooms": next_rooms.duplicate(),
+        "previous_rooms": previous_rooms.duplicate(),
+        "map_x": map_x,
+        "map_y": map_y
+    }
+    for key_var: Variant in extras.keys():
+        row[str(key_var)] = extras.get(key_var)
+    return row
+
+
+func _resolve_hidden_room_role(room_roles: Array[String], index: int, fallback: String) -> String:
+    if index >= 0 and index < room_roles.size():
+        var room_role: String = room_roles[index]
+        if room_role != "":
+            return room_role
+    return fallback
+
+
 func _build_room_graph(room_plan_map: Dictionary, chapter_order: Array[String], chapters: Dictionary) -> Dictionary:
     var graph: Dictionary = {}
     for room_id_var: Variant in room_plan_map.keys():
@@ -493,6 +1014,17 @@ func _normalize_room_type_mins(raw_mins_var: Variant) -> Dictionary:
             continue
         output[room_type] = maxi(0, int(raw_mins.get(room_type, 0)))
     return output
+
+
+func _as_string_array(value: Variant) -> Array[String]:
+    var rows: Array[String] = []
+    if not (value is Array):
+        return rows
+    for item: Variant in value:
+        var text: String = str(item).strip_edges()
+        if text != "":
+            rows.append(text)
+    return rows
 
 
 func _build_chapter_rollable_slots(chapter_order: Array[String], chapters: Dictionary, room_count: int, fixed_room_types: Dictionary, avoid_shop_near_boss: bool, avoid_event_near_boss: bool) -> Dictionary:

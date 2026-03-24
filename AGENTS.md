@@ -401,3 +401,10 @@ MVP版本（v1.0）只包含：
 | [test-plan.md](spec-design/test-plan.md) | 105+测试用例 + 性能基准 + 平衡模拟 + CI流水线 |
 | [roadmap.md](spec-design/roadmap.md) | MVP 22周路线 + 后续v1.1/v1.2/v1.3 |
 | [supplement-updates.md](spec-design/supplement-updates.md) | 计划外实现增量与同步说明（含历史补录） |
+
+### 文档导航（优先阅读）
+
+- `spec-design/README.md` — 当前文档总索引与版本演进记录
+- `spec-design/full-game-content-plan-2026-03-22.md` — 完整版内容开发主计划与阶段推进状态
+- `spec-design/remaining-game-content-checklist-2026-03-22.md` — 当前仍待完成的游戏内容清单
+- `spec-design/full-development-remaining-checklist-2026-03-22.md` — 完整开发剩余事项总表（Stage 5~7）

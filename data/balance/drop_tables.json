@@ -21,5 +21,40 @@
       { "id": "ore_large", "weight": 35 },
       { "id": "accessory_drop", "weight": 25 }
     ]
+  },
+  "chapter_reward_profiles": {
+    "chapter_1": {
+      "xp_mult": 1.0,
+      "gold_mult": 0.95,
+      "ore_mult": 0.95,
+      "treasure_mult": 1.0
+    },
+    "chapter_2": {
+      "xp_mult": 1.08,
+      "gold_mult": 1.02,
+      "ore_mult": 1.06,
+      "treasure_mult": 1.08
+    },
+    "chapter_3": {
+      "xp_mult": 1.18,
+      "gold_mult": 1.12,
+      "ore_mult": 1.2,
+      "treasure_mult": 1.18
+    },
+    "chapter_4": {
+      "xp_mult": 1.32,
+      "gold_mult": 1.22,
+      "ore_mult": 1.34,
+      "treasure_mult": 1.3
+    }
+  },
+  "long_run_room_curve": {
+    "room_bonus_start": 5,
+    "room_bonus_per_room": 0.04,
+    "room_bonus_cap": 0.32,
+    "xp_weight": 1.0,
+    "gold_weight": 0.85,
+    "ore_weight": 0.95,
+    "treasure_weight": 1.1
   }
 }

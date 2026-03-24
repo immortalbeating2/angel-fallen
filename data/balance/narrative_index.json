@@ -11,7 +11,7 @@
     { "id": "nar_ending_balance", "resource_path": "res://resources/narrative/nar_ending_balance.tres" }
   ],
   "memory_fragments": {
-    "total": 33,
+    "total": 39,
     "categories": ["origin", "war", "fall", "redemption"]
   }
 }

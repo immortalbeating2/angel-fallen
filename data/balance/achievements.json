@@ -26,9 +26,54 @@
       "condition": "reach_level_12"
     },
     {
+      "id": "ach_guardian_200",
+      "title": "Guardian 200",
+      "condition": "kills_ge_200"
+    },
+    {
+      "id": "ach_vanguard_300",
+      "title": "Vanguard 300",
+      "condition": "kills_ge_300"
+    },
+    {
       "id": "ach_first_victory",
       "title": "Angel Fallen",
       "condition": "victory_once"
+    },
+    {
+      "id": "ach_fs1_archive",
+      "title": "Rift Archivist",
+      "condition": "hidden_layer_clear_fs1"
+    },
+    {
+      "id": "ach_fs1_mastery",
+      "title": "Echo Sovereign",
+      "condition": "hidden_layer_mastery_fs1"
+    },
+    {
+      "id": "ach_fs2_archive",
+      "title": "Forge Archivist",
+      "condition": "hidden_layer_clear_fs2"
+    },
+    {
+      "id": "ach_fs2_mastery",
+      "title": "Genesis Perfected",
+      "condition": "hidden_layer_mastery_fs2"
+    },
+    {
+      "id": "ach_hard_clear",
+      "title": "Steel Baptism",
+      "condition": "difficulty_clear_hard"
+    },
+    {
+      "id": "ach_nightmare_clear",
+      "title": "Nightmare Victor",
+      "condition": "difficulty_clear_nightmare"
+    },
+    {
+      "id": "ach_nightmare_hidden",
+      "title": "Abyss Crowned",
+      "condition": "difficulty_hidden_clear_nightmare"
     }
   ]
 }

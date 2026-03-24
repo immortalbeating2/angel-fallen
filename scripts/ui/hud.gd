@@ -44,6 +44,10 @@ func _ready() -> void:
             EventBus.accessory_acquired.connect(_on_accessory_acquired)
         if EventBus.has_signal("codex_unlocked"):
             EventBus.codex_unlocked.connect(_on_codex_unlocked)
+        if EventBus.has_signal("difficulty_unlocked"):
+            EventBus.difficulty_unlocked.connect(_on_difficulty_unlocked)
+        if EventBus.has_signal("meta_return_unlocked"):
+            EventBus.meta_return_unlocked.connect(_on_meta_return_unlocked)
 
     if _toast_panel != null:
         _toast_panel.visible = false
@@ -143,9 +147,20 @@ func _on_accessory_acquired(accessory_id: String) -> void:
 
 
 func _on_codex_unlocked(category: String, entry_id: String) -> void:
-    var category_name: String = category.capitalize()
-    var entry_name: String = _prettify_id(entry_id)
+    var category_name: String = _get_codex_category_name(category)
+    var entry_name: String = _get_codex_entry_title(category, entry_id)
     _enqueue_toast("Codex Updated: [%s] %s" % [category_name, entry_name], Color(0.86, 0.84, 1.0, 1.0))
+
+
+func _on_difficulty_unlocked(_tier: int, label: String) -> void:
+    _enqueue_toast("Difficulty Unlocked: %s" % label, Color(1.0, 0.78, 0.38, 1.0))
+
+
+func _on_meta_return_unlocked(_milestone_id: String, label: String, bonus_text: String) -> void:
+    var text: String = "Meta Return Unlocked: %s" % label
+    if bonus_text.strip_edges() != "":
+        text += " (%s)" % bonus_text
+    _enqueue_toast(text, Color(0.72, 1.0, 0.84, 1.0))
 
 
 func _get_fragment_title(fragment_id: String) -> String:
@@ -180,6 +195,60 @@ func _get_accessory_title(accessory_id: String) -> String:
             return "Void Eye"
         _:
             return accessory_id
+
+
+func _get_codex_category_name(category: String) -> String:
+    match category.strip_edges().to_lower():
+        "archives":
+            return "Archives"
+        _:
+            return category.capitalize()
+
+
+func _get_codex_entry_title(category: String, entry_id: String) -> String:
+    match category.strip_edges().to_lower():
+        "archives":
+            return _get_archive_codex_title(entry_id)
+        "accessories":
+            return _get_accessory_title(entry_id)
+        "enemies":
+            return _get_boss_echo_title(entry_id)
+        _:
+            return _prettify_id(entry_id)
+
+
+func _get_archive_codex_title(entry_id: String) -> String:
+    match entry_id.strip_edges():
+        "fs1_echo_archive":
+            return "Time Rift Archive"
+        "fs1_echo_mastery":
+            return "Time Rift Mastery"
+        "fs2_trial_archive":
+            return "Genesis Forge Archive"
+        "fs2_trial_mastery":
+            return "Genesis Forge Mastery"
+        "hard_clear_archive":
+            return "Hard Archive"
+        "nightmare_clear_archive":
+            return "Nightmare Archive"
+        "nightmare_hidden_archive":
+            return "Nightmare Hidden Archive"
+        _:
+            return _prettify_id(entry_id)
+
+
+func _get_boss_echo_title(boss_id: String) -> String:
+    match boss_id.strip_edges():
+        "boss_rock_colossus":
+            return "Rock Colossus"
+        "boss_flame_lord":
+            return "Flame Lord"
+        "boss_frost_king":
+            return "Frost King"
+        "boss_void_lord":
+            return "Void Lord"
+        _:
+            return _prettify_id(boss_id)
 
 
 func _prettify_id(raw_id: String) -> String:

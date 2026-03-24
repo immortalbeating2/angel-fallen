@@ -92,6 +92,258 @@ func get_fragment_data(fragment_id: String) -> Dictionary:
     return {}
 
 
+func get_route_arc_summary(alignment: float, route_style: String = "neutral") -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var arc_rows_var: Variant = config.get("route_arc_profiles", {})
+    if not (arc_rows_var is Dictionary):
+        return {}
+
+    var arc_id: String = _resolve_route_arc_id(alignment)
+    var row_var: Variant = (arc_rows_var as Dictionary).get(arc_id, {})
+    if not (row_var is Dictionary):
+        return {}
+
+    var row: Dictionary = (row_var as Dictionary).duplicate(true)
+    row["arc_id"] = arc_id
+    row["style"] = route_style
+    row["style_echo"] = _get_route_style_echo(route_style)
+    return row
+
+
+func get_camp_reflection(chapter_id: String, alignment: float = 0.0, route_style: String = "neutral", unlocked_fragments: Array[String] = []) -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var reflection_rows_var: Variant = config.get("camp_reflections", {})
+    if not (reflection_rows_var is Dictionary):
+        return {}
+
+    var chapter_row_var: Variant = (reflection_rows_var as Dictionary).get(chapter_id, {})
+    if not (chapter_row_var is Dictionary):
+        return {}
+
+    var arc_id: String = _resolve_route_arc_id(alignment)
+    var row_var: Variant = (chapter_row_var as Dictionary).get(arc_id, {})
+    if not (row_var is Dictionary):
+        return {}
+
+    var row: Dictionary = (row_var as Dictionary).duplicate(true)
+    row["arc_id"] = arc_id
+    row["style"] = route_style
+    row["style_echo"] = _get_route_style_echo(route_style)
+    row["fragment_progress"] = _build_fragment_progress_text(unlocked_fragments)
+    row["recent_choice_summary"] = get_recent_choice_summary(chapter_id)
+    return row
+
+
+func get_recent_choice_summary(chapter_id: String = "", limit: int = 3) -> String:
+    var rows: Array[String] = []
+    var safe_limit: int = maxi(1, limit)
+    for i in range(_run_choices.size() - 1, -1, -1):
+        var row_var: Variant = _run_choices[i]
+        if not (row_var is Dictionary):
+            continue
+        var row: Dictionary = row_var
+        var row_chapter: String = str(row.get("chapter_id", ""))
+        if chapter_id != "" and row_chapter != chapter_id:
+            continue
+        var choice_id: String = str(row.get("choice_id", "")).replace("_", " ")
+        if choice_id == "":
+            continue
+        rows.append(choice_id.capitalize())
+        if rows.size() >= safe_limit:
+            break
+
+    rows.reverse()
+    if rows.is_empty():
+        return "No recent vows recorded yet."
+    return "Recent vows: %s" % " -> ".join(PackedStringArray(rows))
+
+
+func get_ending_payoff(ending_id: String, alignment: float = 0.0, route_style: String = "neutral") -> Dictionary:
+    if ending_id == "":
+        return {}
+
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var payoff_rows_var: Variant = config.get("ending_payoff_profiles", {})
+    if not (payoff_rows_var is Dictionary):
+        return {}
+
+    var row_var: Variant = (payoff_rows_var as Dictionary).get(ending_id, {})
+    if not (row_var is Dictionary):
+        return {}
+
+    var row: Dictionary = (row_var as Dictionary).duplicate(true)
+    row["ending_id"] = ending_id
+    row["arc_id"] = _resolve_route_arc_id(alignment)
+    row["style"] = route_style
+    row["style_echo"] = _get_route_style_echo(route_style)
+    return row
+
+
+func get_epilogue_chain(ending_id: String) -> Array[String]:
+    if ending_id == "":
+        return []
+
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var chain_rows_var: Variant = config.get("epilogue_chains", {})
+    if not (chain_rows_var is Dictionary):
+        return []
+
+    var row_var: Variant = (chain_rows_var as Dictionary).get(ending_id, [])
+    var rows: Array[String] = []
+    if row_var is Array:
+        for item: Variant in row_var:
+            var text: String = str(item).strip_edges()
+            if text != "":
+                rows.append(text)
+    return rows
+
+
+func get_fragment_trigger_payload(chapter_id: String, trigger_type: String, alignment: float = 0.0, route_style: String = "neutral") -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var trigger_rows_var: Variant = config.get("fragment_trigger_profiles", {})
+    if not (trigger_rows_var is Dictionary):
+        return {}
+
+    var chapter_row_var: Variant = (trigger_rows_var as Dictionary).get(chapter_id, {})
+    if not (chapter_row_var is Dictionary):
+        return {}
+
+    var trigger_row_var: Variant = (chapter_row_var as Dictionary).get(trigger_type, {})
+    if not (trigger_row_var is Dictionary):
+        return {}
+
+    var arc_id: String = _resolve_route_arc_id(alignment)
+    var fragment_id: String = str((trigger_row_var as Dictionary).get(arc_id, "")).strip_edges()
+    if fragment_id == "":
+        return {}
+
+    var fragment_data: Dictionary = get_fragment_data(fragment_id)
+    return {
+        "chapter_id": chapter_id,
+        "trigger_type": trigger_type,
+        "arc_id": arc_id,
+        "style": route_style,
+        "fragment_id": fragment_id,
+        "fragment_title": str(fragment_data.get("title", fragment_id)),
+        "fragment_text": str(fragment_data.get("text", ""))
+    }
+
+
+func get_epilogue_branch_summary(ending_id: String, newly_unlocked: bool, route_style: String = "neutral") -> Dictionary:
+    if ending_id == "":
+        return {}
+
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var rows_var: Variant = config.get("epilogue_branch_profiles", {})
+    if not (rows_var is Dictionary):
+        return {}
+
+    var ending_row_var: Variant = (rows_var as Dictionary).get(ending_id, {})
+    if not (ending_row_var is Dictionary):
+        return {}
+
+    var branch_key: String = "first_unlock" if newly_unlocked else "repeat_unlock"
+    var branch_row_var: Variant = (ending_row_var as Dictionary).get(branch_key, {})
+    if not (branch_row_var is Dictionary):
+        return {}
+
+    var row: Dictionary = (branch_row_var as Dictionary).duplicate(true)
+    row["ending_id"] = ending_id
+    row["branch_key"] = branch_key
+    row["archive_hook"] = str((ending_row_var as Dictionary).get("archive_hook", ""))
+    row["style"] = route_style
+    row["style_echo"] = _get_route_style_echo(route_style)
+    return row
+
+
+func get_fragment_recap_summary(fragment_triggers: Array[Dictionary], alignment: float = 0.0, route_style: String = "neutral") -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var rows_var: Variant = config.get("fragment_recap_profiles", {})
+    if not (rows_var is Dictionary):
+        return {}
+
+    var arc_id: String = _resolve_route_arc_id(alignment)
+    var row_var: Variant = (rows_var as Dictionary).get(arc_id, {})
+    if not (row_var is Dictionary):
+        return {}
+
+    var trigger_count: int = 0
+    var newly_unlocked_count: int = 0
+    var trigger_types: Array[String] = []
+    for item: Dictionary in fragment_triggers:
+        trigger_count += 1
+        if bool(item.get("newly_unlocked", false)):
+            newly_unlocked_count += 1
+        var trigger_type: String = str(item.get("trigger_type", "")).strip_edges()
+        if trigger_type != "" and not trigger_types.has(trigger_type):
+            trigger_types.append(trigger_type)
+
+    var row: Dictionary = (row_var as Dictionary).duplicate(true)
+    row["arc_id"] = arc_id
+    row["style"] = route_style
+    row["style_echo"] = _get_route_style_echo(route_style)
+    row["trigger_count"] = trigger_count
+    row["new_unlock_count"] = newly_unlocked_count
+    row["trigger_types"] = trigger_types
+    return row
+
+
+func get_hidden_layer_hook(alignment: float = 0.0, route_style: String = "neutral", unlocked_endings: Array[String] = []) -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var rows_var: Variant = config.get("hidden_layer_hooks", {})
+    if not (rows_var is Dictionary):
+        return {}
+
+    var arc_id: String = _resolve_route_arc_id(alignment)
+    var row_var: Variant = (rows_var as Dictionary).get(arc_id, {})
+    if not (row_var is Dictionary):
+        return {}
+
+    var row: Dictionary = (row_var as Dictionary).duplicate(true)
+    row["arc_id"] = arc_id
+    row["style"] = route_style
+    row["style_echo"] = _get_route_style_echo(route_style)
+    row["unlocked_endings"] = unlocked_endings.duplicate()
+    row["ready"] = unlocked_endings.has("nar_ending_%s" % arc_id)
+    return row
+
+
+func get_hidden_layer_story_payload(layer_id: String, alignment: float = 0.0, route_style: String = "neutral", unlocked_endings: Array = []) -> Dictionary:
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    if layer_key == "":
+        return {}
+
+    var config: Dictionary = ConfigManager.get_config("narrative_content", {})
+    var rows_var: Variant = config.get("hidden_layer_story_profiles", {})
+    if not (rows_var is Dictionary):
+        return {}
+
+    var layer_row_var: Variant = (rows_var as Dictionary).get(layer_key, {})
+    if not (layer_row_var is Dictionary):
+        return {}
+
+    var arc_id: String = _resolve_route_arc_id(alignment)
+    var row_var: Variant = (layer_row_var as Dictionary).get(arc_id, {})
+    if not (row_var is Dictionary):
+        return {}
+
+    var row: Dictionary = (row_var as Dictionary).duplicate(true)
+    var ending_id: String = str(row.get("ending_link", row.get("ending_id", ""))).strip_edges()
+    var fragment_id: String = str(row.get("fragment_id", "")).strip_edges()
+    var fragment_data: Dictionary = get_fragment_data(fragment_id)
+    row["layer_id"] = layer_key
+    row["arc_id"] = arc_id
+    row["style"] = route_style
+    row["style_echo"] = _get_route_style_echo(route_style)
+    row["ending_id"] = ending_id
+    row["ending_link"] = ending_id
+    row["ending_ready"] = ending_id != "" and unlocked_endings.has(ending_id)
+    row["fragment_id"] = fragment_id
+    row["fragment_title"] = str(fragment_data.get("title", fragment_id))
+    row["fragment_text"] = str(fragment_data.get("text", ""))
+    return row
+
+
 func is_registered_narrative_id(segment_id: String) -> bool:
     var index_data: Dictionary = ConfigManager.get_config("narrative_index", {})
     var rows: Variant = index_data.get("segments", [])
@@ -187,3 +439,28 @@ func _record_event_history(chapter_id: String, event_id: String) -> void:
         history.remove_at(0)
 
     _chapter_event_history[chapter_id] = history
+
+
+func _resolve_route_arc_id(alignment: float) -> String:
+    if alignment >= 60.0:
+        return "redeem"
+    if alignment <= -60.0:
+        return "fall"
+    return "balance"
+
+
+func _get_route_style_echo(route_style: String) -> String:
+    match route_style:
+        "vanguard":
+            return "Vanguard routes favor safer pressure and disciplined pacing."
+        "raider":
+            return "Raider routes trade stability for burst rewards and sharper pressure."
+        _:
+            return "Neutral routes keep both ending paths open while you shape the run."
+
+
+func _build_fragment_progress_text(unlocked_fragments: Array[String]) -> String:
+    var index_data: Dictionary = ConfigManager.get_config("narrative_index", {})
+    var fragment_meta: Dictionary = index_data.get("memory_fragments", {})
+    var total: int = maxi(1, int(fragment_meta.get("total", 0)))
+    return "Fragment progress: %d / %d" % [unlocked_fragments.size(), total]

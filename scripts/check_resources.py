@@ -579,14 +579,29 @@ def main() -> int:
     approval_history_archive = visual_snapshot_targets.get("approval_history_archive", {})
     approval_threshold_templates = visual_snapshot_targets.get("approval_threshold_templates", {})
     release_candidate_tracking = visual_snapshot_targets.get("release_candidate_tracking", {})
+    stability_scoring = visual_snapshot_targets.get("stability_scoring", {})
+    stability_tiers = visual_snapshot_targets.get("stability_tiers", {})
+    convergence_dashboard = visual_snapshot_targets.get("convergence_dashboard", {})
+    ci_signal_contract = visual_snapshot_targets.get("ci_signal_contract", {})
+    convergence_trend_reinforcement = visual_snapshot_targets.get("convergence_trend_reinforcement", {})
+    exception_lifecycle_linkage = visual_snapshot_targets.get("exception_lifecycle_linkage", {})
+    visual_performance_cogate = visual_snapshot_targets.get("visual_performance_cogate", {})
+    cogate_threshold_templates = visual_snapshot_targets.get("cogate_threshold_templates", {})
+    cross_platform_alignment = visual_snapshot_targets.get("cross_platform_alignment", {})
+    pressure_scenario_standardization = visual_snapshot_targets.get("pressure_scenario_standardization", {})
+    alignment_dashboard_refinement = visual_snapshot_targets.get("alignment_dashboard_refinement", {})
+    pressure_alignment_convergence_gate = visual_snapshot_targets.get("pressure_alignment_convergence_gate", {})
+    regression_cycle_window_governance = visual_snapshot_targets.get("regression_cycle_window_governance", {})
+    multi_cycle_adaptive_gate = visual_snapshot_targets.get("multi_cycle_adaptive_gate", {})
+    release_feedback_governance = visual_snapshot_targets.get("release_feedback_governance", {})
     report_layers = visual_snapshot_targets.get("report_layers", {})
     cross_version_baseline = visual_snapshot_targets.get("cross_version_baseline", {})
 
     if not isinstance(channel, str) or not channel:
         print("visual_snapshot_targets.json channel must be non-empty string")
         return 1
-    if channel != "chapter_snapshot_v12":
-        print("visual_snapshot_targets.json channel must be chapter_snapshot_v12")
+    if channel != "chapter_snapshot_v19":
+        print("visual_snapshot_targets.json channel must be chapter_snapshot_v19")
         return 1
     if not isinstance(snapshots, dict) or not snapshots:
         print("visual_snapshot_targets.json snapshots must be non-empty object")
@@ -1037,6 +1052,20 @@ def main() -> int:
         "Approval History Archive",
         "Approval Template",
         "Release Candidate Tracking",
+        "Stability Scoring",
+        "Convergence Dashboard",
+        "CI Signal Contract",
+        "Convergence Trend Reinforcement",
+        "Exception Lifecycle Linkage",
+        "Visual-Performance Co-Gate",
+        "Co-Gate Threshold Template",
+        "Cross-Platform Alignment",
+        "Pressure Scenario Standardization",
+        "Alignment Dashboard Refinement",
+        "Pressure Alignment Convergence Gate",
+        "Regression Cycle Window Governance",
+        "Multi-Cycle Adaptive Gate",
+        "Release Feedback Governance",
     }
     if not isinstance(required_report_sections, list) or not required_report_sections:
         print("visual_snapshot_targets.json approval_workflow.required_report_sections must be non-empty array")
@@ -1289,6 +1318,884 @@ def main() -> int:
     if not isinstance(tracking_max_failures, int) or tracking_max_failures < 0:
         print("visual_snapshot_targets.json release_candidate_tracking.max_tracking_failures must be int >= 0")
         return 1
+
+    if not isinstance(stability_scoring, dict) or not stability_scoring:
+        print("visual_snapshot_targets.json stability_scoring must be non-empty object")
+        return 1
+    scoring_weights = stability_scoring.get("weights", {})
+    scoring_caps = stability_scoring.get("failure_caps", {})
+    scoring_confidence = stability_scoring.get("confidence", {})
+    score_round_digits = stability_scoring.get("score_round_digits")
+    if not isinstance(scoring_weights, dict) or not scoring_weights:
+        print("visual_snapshot_targets.json stability_scoring.weights must be non-empty object")
+        return 1
+    weight_sum = 0.0
+    for key in ("matching_runs", "avg_warnings", "total_blockers", "tracking_failures"):
+        value = scoring_weights.get(key)
+        if not isinstance(value, (int, float)) or value < 0.0 or value > 1.0:
+            print(f"visual_snapshot_targets.json stability_scoring.weights.{key} must be within [0.0, 1.0]")
+            return 1
+        weight_sum += float(value)
+    if weight_sum <= 0.0:
+        print("visual_snapshot_targets.json stability_scoring.weights sum must be > 0")
+        return 1
+
+    if not isinstance(scoring_caps, dict) or not scoring_caps:
+        print("visual_snapshot_targets.json stability_scoring.failure_caps must be non-empty object")
+        return 1
+    max_avg_warnings_cap = scoring_caps.get("max_avg_warnings")
+    max_total_blockers_cap = scoring_caps.get("max_total_blockers")
+    max_tracking_failures_cap = scoring_caps.get("max_tracking_failures")
+    if not isinstance(max_avg_warnings_cap, (int, float)) or max_avg_warnings_cap <= 0.0:
+        print("visual_snapshot_targets.json stability_scoring.failure_caps.max_avg_warnings must be float > 0.0")
+        return 1
+    if not isinstance(max_total_blockers_cap, int) or max_total_blockers_cap < 0:
+        print("visual_snapshot_targets.json stability_scoring.failure_caps.max_total_blockers must be int >= 0")
+        return 1
+    if not isinstance(max_tracking_failures_cap, int) or max_tracking_failures_cap < 0:
+        print("visual_snapshot_targets.json stability_scoring.failure_caps.max_tracking_failures must be int >= 0")
+        return 1
+
+    if not isinstance(scoring_confidence, dict) or not scoring_confidence:
+        print("visual_snapshot_targets.json stability_scoring.confidence must be non-empty object")
+        return 1
+    reference_runs = scoring_confidence.get("reference_runs")
+    min_confidence = scoring_confidence.get("min_confidence")
+    if not isinstance(reference_runs, int) or reference_runs < 1:
+        print("visual_snapshot_targets.json stability_scoring.confidence.reference_runs must be int >= 1")
+        return 1
+    if not isinstance(min_confidence, (int, float)) or min_confidence < 0.0 or min_confidence > 1.0:
+        print("visual_snapshot_targets.json stability_scoring.confidence.min_confidence must be within [0.0, 1.0]")
+        return 1
+
+    if not isinstance(score_round_digits, int) or score_round_digits < 0 or score_round_digits > 5:
+        print("visual_snapshot_targets.json stability_scoring.score_round_digits must be int within [0, 5]")
+        return 1
+
+    if not isinstance(stability_tiers, dict) or not stability_tiers:
+        print("visual_snapshot_targets.json stability_tiers must be non-empty object")
+        return 1
+    default_tier = stability_tiers.get("default_tier")
+    tiers = stability_tiers.get("tiers", [])
+    if not isinstance(default_tier, str) or not default_tier:
+        print("visual_snapshot_targets.json stability_tiers.default_tier must be non-empty string")
+        return 1
+    if not isinstance(tiers, list) or not tiers:
+        print("visual_snapshot_targets.json stability_tiers.tiers must be non-empty array")
+        return 1
+    tier_names = set()
+    for idx, tier_row in enumerate(tiers):
+        if not isinstance(tier_row, dict) or not tier_row:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}] must be non-empty object")
+            return 1
+        tier_name = tier_row.get("name")
+        tier_min_score = tier_row.get("min_score")
+        tier_max_avg_warnings = tier_row.get("max_avg_warnings")
+        tier_max_total_blockers = tier_row.get("max_total_blockers")
+        tier_max_tracking_failures = tier_row.get("max_tracking_failures")
+        tier_min_confidence = tier_row.get("min_confidence")
+        if not isinstance(tier_name, str) or not tier_name:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].name must be non-empty string")
+            return 1
+        if tier_name in tier_names:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].name must be unique ({tier_name})")
+            return 1
+        tier_names.add(tier_name)
+        if not isinstance(tier_min_score, (int, float)) or tier_min_score < 0.0 or tier_min_score > 100.0:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].min_score must be within [0.0, 100.0]")
+            return 1
+        if not isinstance(tier_max_avg_warnings, (int, float)) or tier_max_avg_warnings < 0.0:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].max_avg_warnings must be float >= 0.0")
+            return 1
+        if not isinstance(tier_max_total_blockers, int) or tier_max_total_blockers < 0:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].max_total_blockers must be int >= 0")
+            return 1
+        if not isinstance(tier_max_tracking_failures, int) or tier_max_tracking_failures < 0:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].max_tracking_failures must be int >= 0")
+            return 1
+        if not isinstance(tier_min_confidence, (int, float)) or tier_min_confidence < 0.0 or tier_min_confidence > 1.0:
+            print(f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].min_confidence must be within [0.0, 1.0]")
+            return 1
+    if default_tier not in tier_names:
+        print("visual_snapshot_targets.json stability_tiers.default_tier must reference tiers.name")
+        return 1
+
+    if not isinstance(convergence_dashboard, dict) or not convergence_dashboard:
+        print("visual_snapshot_targets.json convergence_dashboard must be non-empty object")
+        return 1
+    for key in (
+        "max_approval_failures",
+        "max_tracking_failures",
+        "max_trace_failures",
+        "max_manifest_failures",
+        "max_blockers",
+        "max_warnings",
+        "max_dashboard_failures",
+    ):
+        value = convergence_dashboard.get(key)
+        if not isinstance(value, int) or value < 0:
+            print(f"visual_snapshot_targets.json convergence_dashboard.{key} must be int >= 0")
+            return 1
+
+    if not isinstance(ci_signal_contract, dict) or not ci_signal_contract:
+        print("visual_snapshot_targets.json ci_signal_contract must be non-empty object")
+        return 1
+    required_fields = ci_signal_contract.get("required_fields", [])
+    tier_requirements = ci_signal_contract.get("tier_requirements", {})
+    max_contract_failures = ci_signal_contract.get("max_contract_failures")
+    if not isinstance(required_fields, list) or not required_fields:
+        print("visual_snapshot_targets.json ci_signal_contract.required_fields must be non-empty array")
+        return 1
+    for idx, field_name in enumerate(required_fields):
+        if not isinstance(field_name, str) or not field_name:
+            print(f"visual_snapshot_targets.json ci_signal_contract.required_fields[{idx}] must be non-empty string")
+            return 1
+    if not isinstance(tier_requirements, dict) or not tier_requirements:
+        print("visual_snapshot_targets.json ci_signal_contract.tier_requirements must be non-empty object")
+        return 1
+    for mode_name, tier_name in tier_requirements.items():
+        if not isinstance(mode_name, str) or not mode_name:
+            print("visual_snapshot_targets.json ci_signal_contract.tier_requirements key must be non-empty string")
+            return 1
+        if not isinstance(tier_name, str) or not tier_name:
+            print(f"visual_snapshot_targets.json ci_signal_contract.tier_requirements.{mode_name} must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for ci_signal_contract")
+            return 1
+        if tier_name not in tier_names:
+            print(f"visual_snapshot_targets.json ci_signal_contract.tier_requirements.{mode_name} must reference stability_tiers.tiers.name")
+            return 1
+    if not isinstance(max_contract_failures, int) or max_contract_failures < 0:
+        print("visual_snapshot_targets.json ci_signal_contract.max_contract_failures must be int >= 0")
+        return 1
+
+    if not isinstance(convergence_trend_reinforcement, dict) or not convergence_trend_reinforcement:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement must be non-empty object")
+        return 1
+    trend_history_file = convergence_trend_reinforcement.get("history_file")
+    trend_long_window = convergence_trend_reinforcement.get("long_window")
+    trend_short_window = convergence_trend_reinforcement.get("short_window")
+    trend_min_samples = convergence_trend_reinforcement.get("min_samples")
+    trend_required_metrics = convergence_trend_reinforcement.get("required_metrics", [])
+    trend_max_worsening_metrics = convergence_trend_reinforcement.get("max_worsening_metrics")
+    trend_max_worsening_delta = convergence_trend_reinforcement.get("max_worsening_delta")
+    trend_min_improving_metrics = convergence_trend_reinforcement.get("min_improving_metrics")
+    trend_min_improvement_delta = convergence_trend_reinforcement.get("min_improvement_delta")
+    trend_max_trend_failures = convergence_trend_reinforcement.get("max_trend_failures")
+
+    if not isinstance(trend_history_file, str) or not trend_history_file.startswith("user://"):
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.history_file must be non-empty user:// path")
+        return 1
+    if isinstance(archive_file, str) and archive_file and trend_history_file != archive_file:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.history_file must match approval_history_archive.archive_file")
+        return 1
+    if not isinstance(trend_long_window, int) or trend_long_window < 5:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.long_window must be int >= 5")
+        return 1
+    if not isinstance(trend_short_window, int) or trend_short_window < 3:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.short_window must be int >= 3")
+        return 1
+    if trend_short_window > trend_long_window:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.short_window cannot exceed long_window")
+        return 1
+    if not isinstance(trend_min_samples, int) or trend_min_samples < 1:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.min_samples must be int >= 1")
+        return 1
+    if trend_min_samples > trend_short_window:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.min_samples cannot exceed short_window")
+        return 1
+    if not isinstance(trend_required_metrics, list) or not trend_required_metrics:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.required_metrics must be non-empty array")
+        return 1
+    allowed_trend_metrics = {
+        "warnings",
+        "blockers",
+        "approval_failures",
+        "tracking_failures",
+        "dashboard_failures",
+        "contract_failures",
+        "stability_score",
+    }
+    for idx, metric_name in enumerate(trend_required_metrics):
+        if not isinstance(metric_name, str) or not metric_name:
+            print(f"visual_snapshot_targets.json convergence_trend_reinforcement.required_metrics[{idx}] must be non-empty string")
+            return 1
+        if metric_name not in allowed_trend_metrics:
+            print(f"visual_snapshot_targets.json convergence_trend_reinforcement.required_metrics[{idx}] is not supported")
+            return 1
+
+    if not isinstance(trend_max_worsening_metrics, int) or trend_max_worsening_metrics < 0:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.max_worsening_metrics must be int >= 0")
+        return 1
+    if trend_max_worsening_metrics > len(trend_required_metrics):
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.max_worsening_metrics cannot exceed required_metrics size")
+        return 1
+    if not isinstance(trend_max_worsening_delta, (int, float)) or float(trend_max_worsening_delta) < 0.0:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.max_worsening_delta must be float >= 0.0")
+        return 1
+    if not isinstance(trend_min_improving_metrics, int) or trend_min_improving_metrics < 0:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.min_improving_metrics must be int >= 0")
+        return 1
+    if trend_min_improving_metrics > len(trend_required_metrics):
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.min_improving_metrics cannot exceed required_metrics size")
+        return 1
+    if not isinstance(trend_min_improvement_delta, (int, float)) or float(trend_min_improvement_delta) < 0.0:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.min_improvement_delta must be float >= 0.0")
+        return 1
+    if not isinstance(trend_max_trend_failures, int) or trend_max_trend_failures < 0:
+        print("visual_snapshot_targets.json convergence_trend_reinforcement.max_trend_failures must be int >= 0")
+        return 1
+
+    if not isinstance(exception_lifecycle_linkage, dict) or not exception_lifecycle_linkage:
+        print("visual_snapshot_targets.json exception_lifecycle_linkage must be non-empty object")
+        return 1
+    linkage_required_states = exception_lifecycle_linkage.get("required_states", [])
+    linkage_stale_idle_runs = exception_lifecycle_linkage.get("stale_idle_runs")
+    linkage_min_transition_count = exception_lifecycle_linkage.get("min_transition_count")
+    linkage_max_orphan_entries = exception_lifecycle_linkage.get("max_orphan_entries")
+    linkage_max_unlinked_reclaims = exception_lifecycle_linkage.get("max_unlinked_reclaims")
+    linkage_max_unlinked_expired = exception_lifecycle_linkage.get("max_unlinked_expired")
+    linkage_max_linkage_failures = exception_lifecycle_linkage.get("max_linkage_failures")
+
+    if not isinstance(linkage_required_states, list):
+        print("visual_snapshot_targets.json exception_lifecycle_linkage.required_states must be array")
+        return 1
+    allowed_lifecycle_states = {"active", "stale", "reclaim_candidate", "expired"}
+    for idx, state_name in enumerate(linkage_required_states):
+        if not isinstance(state_name, str) or not state_name:
+            print(f"visual_snapshot_targets.json exception_lifecycle_linkage.required_states[{idx}] must be non-empty string")
+            return 1
+        if state_name not in allowed_lifecycle_states:
+            print(f"visual_snapshot_targets.json exception_lifecycle_linkage.required_states[{idx}] is not supported")
+            return 1
+    if not isinstance(linkage_stale_idle_runs, int) or linkage_stale_idle_runs < 1:
+        print("visual_snapshot_targets.json exception_lifecycle_linkage.stale_idle_runs must be int >= 1")
+        return 1
+    if isinstance(expire_idle_runs, int) and linkage_stale_idle_runs >= expire_idle_runs:
+        print("visual_snapshot_targets.json exception_lifecycle_linkage.stale_idle_runs must be < exception_lifecycle.expire_idle_runs")
+        return 1
+    if not isinstance(linkage_min_transition_count, int) or linkage_min_transition_count < 0:
+        print("visual_snapshot_targets.json exception_lifecycle_linkage.min_transition_count must be int >= 0")
+        return 1
+    if isinstance(max_expired_entries, int) and isinstance(max_reclaim_candidates, int):
+        if linkage_min_transition_count > (max_expired_entries + max_reclaim_candidates):
+            print("visual_snapshot_targets.json exception_lifecycle_linkage.min_transition_count cannot exceed exception_lifecycle capacity")
+            return 1
+    for key_name, key_value in (
+        ("max_orphan_entries", linkage_max_orphan_entries),
+        ("max_unlinked_reclaims", linkage_max_unlinked_reclaims),
+        ("max_unlinked_expired", linkage_max_unlinked_expired),
+        ("max_linkage_failures", linkage_max_linkage_failures),
+    ):
+        if not isinstance(key_value, int) or key_value < 0:
+            print(f"visual_snapshot_targets.json exception_lifecycle_linkage.{key_name} must be int >= 0")
+            return 1
+
+    if not isinstance(visual_performance_cogate, dict) or not visual_performance_cogate:
+        print("visual_snapshot_targets.json visual_performance_cogate must be non-empty object")
+        return 1
+    cogate_baseline_report = visual_performance_cogate.get("baseline_report")
+    cogate_required_run_modes = visual_performance_cogate.get("required_run_modes", [])
+    cogate_max_alert_total = visual_performance_cogate.get("max_alert_total")
+    cogate_max_alert_critical = visual_performance_cogate.get("max_alert_critical")
+    cogate_max_alert_warning = visual_performance_cogate.get("max_alert_warning")
+    cogate_max_scenario_failures = visual_performance_cogate.get("max_scenario_failures")
+    cogate_required_scenarios = visual_performance_cogate.get("required_scenarios", [])
+    cogate_max_frame_ms_ratio = visual_performance_cogate.get("max_frame_ms_ratio")
+    cogate_max_memory_mb_ratio = visual_performance_cogate.get("max_memory_mb_ratio")
+    cogate_max_failures = visual_performance_cogate.get("max_cogate_failures")
+
+    if not isinstance(cogate_baseline_report, str) or not cogate_baseline_report.startswith("user://"):
+        print("visual_snapshot_targets.json visual_performance_cogate.baseline_report must be non-empty user:// path")
+        return 1
+    if isinstance(required_reports, list) and cogate_baseline_report not in required_reports:
+        print("visual_snapshot_targets.json visual_performance_cogate.baseline_report must be listed in release_gate_templates.release_checklist.required_reports")
+        return 1
+
+    if not isinstance(cogate_required_run_modes, list) or not cogate_required_run_modes:
+        print("visual_snapshot_targets.json visual_performance_cogate.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(cogate_required_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json visual_performance_cogate.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for visual_performance_cogate")
+            return 1
+
+    if not isinstance(cogate_max_alert_total, int) or cogate_max_alert_total < 0:
+        print("visual_snapshot_targets.json visual_performance_cogate.max_alert_total must be int >= 0")
+        return 1
+    if not isinstance(cogate_max_alert_critical, int) or cogate_max_alert_critical < 0:
+        print("visual_snapshot_targets.json visual_performance_cogate.max_alert_critical must be int >= 0")
+        return 1
+    if not isinstance(cogate_max_alert_warning, int) or cogate_max_alert_warning < 0:
+        print("visual_snapshot_targets.json visual_performance_cogate.max_alert_warning must be int >= 0")
+        return 1
+    if not isinstance(cogate_max_scenario_failures, int) or cogate_max_scenario_failures < 0:
+        print("visual_snapshot_targets.json visual_performance_cogate.max_scenario_failures must be int >= 0")
+        return 1
+
+    if not isinstance(cogate_required_scenarios, list):
+        print("visual_snapshot_targets.json visual_performance_cogate.required_scenarios must be array")
+        return 1
+    for idx, scenario_id in enumerate(cogate_required_scenarios):
+        if not isinstance(scenario_id, str) or not scenario_id:
+            print(f"visual_snapshot_targets.json visual_performance_cogate.required_scenarios[{idx}] must be non-empty string")
+            return 1
+
+    if not isinstance(cogate_max_frame_ms_ratio, (int, float)) or float(cogate_max_frame_ms_ratio) < 1.0 or float(cogate_max_frame_ms_ratio) > 3.0:
+        print("visual_snapshot_targets.json visual_performance_cogate.max_frame_ms_ratio must be within [1.0, 3.0]")
+        return 1
+    if not isinstance(cogate_max_memory_mb_ratio, (int, float)) or float(cogate_max_memory_mb_ratio) < 1.0 or float(cogate_max_memory_mb_ratio) > 3.0:
+        print("visual_snapshot_targets.json visual_performance_cogate.max_memory_mb_ratio must be within [1.0, 3.0]")
+        return 1
+    if not isinstance(cogate_max_failures, int) or cogate_max_failures < 0:
+        print("visual_snapshot_targets.json visual_performance_cogate.max_cogate_failures must be int >= 0")
+        return 1
+
+    if not isinstance(cogate_threshold_templates, dict) or not cogate_threshold_templates:
+        print("visual_snapshot_targets.json cogate_threshold_templates must be non-empty object")
+        return 1
+    cogate_default_template = cogate_threshold_templates.get("default_template")
+    cogate_run_mode_templates = cogate_threshold_templates.get("run_mode_templates", {})
+    cogate_templates = cogate_threshold_templates.get("templates", {})
+    if not isinstance(cogate_default_template, str) or not cogate_default_template:
+        print("visual_snapshot_targets.json cogate_threshold_templates.default_template must be non-empty string")
+        return 1
+    if not isinstance(cogate_templates, dict) or not cogate_templates:
+        print("visual_snapshot_targets.json cogate_threshold_templates.templates must be non-empty object")
+        return 1
+    if cogate_default_template not in cogate_templates:
+        print("visual_snapshot_targets.json cogate_threshold_templates.default_template must exist in templates")
+        return 1
+    for template_name, template_row in cogate_templates.items():
+        if not isinstance(template_name, str) or not template_name:
+            print("visual_snapshot_targets.json cogate_threshold_templates.templates key must be non-empty string")
+            return 1
+        if not isinstance(template_row, dict) or not template_row:
+            print(f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name} must be non-empty object")
+            return 1
+        for key in (
+            "max_alert_total",
+            "max_alert_critical",
+            "max_alert_warning",
+            "max_scenario_failures",
+            "max_cogate_failures",
+        ):
+            value = template_row.get(key)
+            if not isinstance(value, int) or value < 0:
+                print(f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name}.{key} must be int >= 0")
+                return 1
+        frame_ratio = template_row.get("max_frame_ms_ratio")
+        memory_ratio = template_row.get("max_memory_mb_ratio")
+        if not isinstance(frame_ratio, (int, float)) or float(frame_ratio) < 1.0 or float(frame_ratio) > 3.0:
+            print(f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name}.max_frame_ms_ratio must be within [1.0, 3.0]")
+            return 1
+        if not isinstance(memory_ratio, (int, float)) or float(memory_ratio) < 1.0 or float(memory_ratio) > 3.0:
+            print(f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name}.max_memory_mb_ratio must be within [1.0, 3.0]")
+            return 1
+
+    if not isinstance(cogate_run_mode_templates, dict) or not cogate_run_mode_templates:
+        print("visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates must be non-empty object")
+        return 1
+    for mode_name, template_name in cogate_run_mode_templates.items():
+        if not isinstance(mode_name, str) or not mode_name:
+            print("visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates key must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for cogate_threshold_templates")
+            return 1
+        if not isinstance(template_name, str) or not template_name:
+            print(f"visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates.{mode_name} must be non-empty string")
+            return 1
+        if template_name not in cogate_templates:
+            print(f"visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates.{mode_name} must reference templates key")
+            return 1
+    for mode_name in cogate_required_run_modes:
+        if mode_name not in cogate_run_mode_templates:
+            print(f"visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates must include '{mode_name}' from visual_performance_cogate.required_run_modes")
+            return 1
+
+    if not isinstance(cross_platform_alignment, dict) or not cross_platform_alignment:
+        print("visual_snapshot_targets.json cross_platform_alignment must be non-empty object")
+        return 1
+    alignment_history_file = cross_platform_alignment.get("history_file")
+    alignment_window = cross_platform_alignment.get("aggregation_window")
+    alignment_run_modes = cross_platform_alignment.get("required_run_modes", [])
+    alignment_backends = cross_platform_alignment.get("required_backends", [])
+    alignment_metric_limits = cross_platform_alignment.get("metric_limits", {})
+    alignment_max_missing_backends = cross_platform_alignment.get("max_missing_backends")
+    alignment_max_missing_run_modes = cross_platform_alignment.get("max_missing_run_modes")
+    alignment_max_failures = cross_platform_alignment.get("max_alignment_failures")
+    if not isinstance(alignment_history_file, str) or not alignment_history_file.startswith("user://"):
+        print("visual_snapshot_targets.json cross_platform_alignment.history_file must be non-empty user:// path")
+        return 1
+    if alignment_history_file != archive_file:
+        print("visual_snapshot_targets.json cross_platform_alignment.history_file must match approval_history_archive.archive_file")
+        return 1
+    if not isinstance(alignment_window, int) or alignment_window < 10:
+        print("visual_snapshot_targets.json cross_platform_alignment.aggregation_window must be int >= 10")
+        return 1
+    if not isinstance(alignment_run_modes, list) or not alignment_run_modes:
+        print("visual_snapshot_targets.json cross_platform_alignment.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(alignment_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json cross_platform_alignment.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for cross_platform_alignment")
+            return 1
+    if not isinstance(alignment_backends, list) or not alignment_backends:
+        print("visual_snapshot_targets.json cross_platform_alignment.required_backends must be non-empty array")
+        return 1
+    for idx, backend_name in enumerate(alignment_backends):
+        if not isinstance(backend_name, str) or not backend_name:
+            print(f"visual_snapshot_targets.json cross_platform_alignment.required_backends[{idx}] must be non-empty string")
+            return 1
+    if not isinstance(alignment_metric_limits, dict) or not alignment_metric_limits:
+        print("visual_snapshot_targets.json cross_platform_alignment.metric_limits must be non-empty object")
+        return 1
+    allowed_alignment_metrics = {
+        "performance_alert_total",
+        "performance_alert_critical",
+        "performance_alert_warning",
+        "performance_scenario_failures",
+        "performance_cogate_failures",
+    }
+    for metric_name, metric_limit in alignment_metric_limits.items():
+        if not isinstance(metric_name, str) or not metric_name:
+            print("visual_snapshot_targets.json cross_platform_alignment.metric_limits key must be non-empty string")
+            return 1
+        if metric_name not in allowed_alignment_metrics:
+            print(f"visual_snapshot_targets.json cross_platform_alignment.metric_limits.{metric_name} is not supported")
+            return 1
+        if not isinstance(metric_limit, int) or metric_limit < 0:
+            print(f"visual_snapshot_targets.json cross_platform_alignment.metric_limits.{metric_name} must be int >= 0")
+            return 1
+    for key_name, key_value in (
+        ("max_missing_backends", alignment_max_missing_backends),
+        ("max_missing_run_modes", alignment_max_missing_run_modes),
+        ("max_alignment_failures", alignment_max_failures),
+    ):
+        if not isinstance(key_value, int) or key_value < 0:
+            print(f"visual_snapshot_targets.json cross_platform_alignment.{key_name} must be int >= 0")
+            return 1
+
+    if not isinstance(pressure_scenario_standardization, dict) or not pressure_scenario_standardization:
+        print("visual_snapshot_targets.json pressure_scenario_standardization must be non-empty object")
+        return 1
+    standardization_targets_file = pressure_scenario_standardization.get("baseline_targets_file")
+    standardization_report_file = pressure_scenario_standardization.get("baseline_report")
+    standardization_run_modes = pressure_scenario_standardization.get("required_run_modes", [])
+    standardization_scenarios = pressure_scenario_standardization.get("required_scenarios", [])
+    standardization_avg_ratio = pressure_scenario_standardization.get("max_avg_frame_ms_ratio")
+    standardization_p95_ratio = pressure_scenario_standardization.get("max_p95_frame_ms_ratio")
+    standardization_memory_ratio = pressure_scenario_standardization.get("max_peak_memory_mb_ratio")
+    standardization_max_failures = pressure_scenario_standardization.get("max_standardization_failures")
+
+    if not isinstance(standardization_targets_file, str) or not standardization_targets_file.startswith("res://"):
+        print("visual_snapshot_targets.json pressure_scenario_standardization.baseline_targets_file must be non-empty res:// path")
+        return 1
+    if not isinstance(standardization_report_file, str) or not standardization_report_file.startswith("user://"):
+        print("visual_snapshot_targets.json pressure_scenario_standardization.baseline_report must be non-empty user:// path")
+        return 1
+    if isinstance(required_reports, list) and standardization_report_file not in required_reports:
+        print("visual_snapshot_targets.json pressure_scenario_standardization.baseline_report must be listed in release_gate_templates.release_checklist.required_reports")
+        return 1
+
+    if not isinstance(standardization_run_modes, list) or not standardization_run_modes:
+        print("visual_snapshot_targets.json pressure_scenario_standardization.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(standardization_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json pressure_scenario_standardization.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for pressure_scenario_standardization")
+            return 1
+
+    if not isinstance(standardization_scenarios, list) or not standardization_scenarios:
+        print("visual_snapshot_targets.json pressure_scenario_standardization.required_scenarios must be non-empty array")
+        return 1
+    for idx, scenario_id in enumerate(standardization_scenarios):
+        if not isinstance(scenario_id, str) or not scenario_id:
+            print(f"visual_snapshot_targets.json pressure_scenario_standardization.required_scenarios[{idx}] must be non-empty string")
+            return 1
+
+    for key_name, key_value in (
+        ("max_avg_frame_ms_ratio", standardization_avg_ratio),
+        ("max_p95_frame_ms_ratio", standardization_p95_ratio),
+        ("max_peak_memory_mb_ratio", standardization_memory_ratio),
+    ):
+        if not isinstance(key_value, (int, float)) or float(key_value) < 1.0 or float(key_value) > 3.0:
+            print(f"visual_snapshot_targets.json pressure_scenario_standardization.{key_name} must be within [1.0, 3.0]")
+            return 1
+    if not isinstance(standardization_max_failures, int) or standardization_max_failures < 0:
+        print("visual_snapshot_targets.json pressure_scenario_standardization.max_standardization_failures must be int >= 0")
+        return 1
+
+    if not isinstance(alignment_dashboard_refinement, dict) or not alignment_dashboard_refinement:
+        print("visual_snapshot_targets.json alignment_dashboard_refinement must be non-empty object")
+        return 1
+    refinement_run_modes = alignment_dashboard_refinement.get("required_run_modes", [])
+    refinement_metric_weights = alignment_dashboard_refinement.get("metric_weights", {})
+    refinement_missing_backend_weight = alignment_dashboard_refinement.get("missing_backend_weight")
+    refinement_missing_run_mode_weight = alignment_dashboard_refinement.get("missing_run_mode_weight")
+    refinement_watch_score = alignment_dashboard_refinement.get("watch_score_threshold")
+    refinement_critical_score = alignment_dashboard_refinement.get("critical_score_threshold")
+    refinement_max_failures = alignment_dashboard_refinement.get("max_dashboard_failures")
+
+    if not isinstance(refinement_run_modes, list) or not refinement_run_modes:
+        print("visual_snapshot_targets.json alignment_dashboard_refinement.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(refinement_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json alignment_dashboard_refinement.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for alignment_dashboard_refinement")
+            return 1
+
+    if not isinstance(refinement_metric_weights, dict) or not refinement_metric_weights:
+        print("visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights must be non-empty object")
+        return 1
+    allowed_dashboard_metrics = {
+        "performance_alert_total",
+        "performance_alert_critical",
+        "performance_alert_warning",
+        "performance_scenario_failures",
+        "performance_cogate_failures",
+    }
+    metric_limits_keys = set(alignment_metric_limits.keys()) if isinstance(alignment_metric_limits, dict) else set()
+    for metric_name, metric_weight in refinement_metric_weights.items():
+        if not isinstance(metric_name, str) or not metric_name:
+            print("visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights key must be non-empty string")
+            return 1
+        if metric_name not in allowed_dashboard_metrics:
+            print(f"visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights.{metric_name} is not supported")
+            return 1
+        if metric_name not in metric_limits_keys:
+            print(f"visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights.{metric_name} must exist in cross_platform_alignment.metric_limits")
+            return 1
+        if not isinstance(metric_weight, (int, float)) or float(metric_weight) < 0.0 or float(metric_weight) > 5.0:
+            print(f"visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights.{metric_name} must be within [0.0, 5.0]")
+            return 1
+
+    for key_name, key_value in (
+        ("missing_backend_weight", refinement_missing_backend_weight),
+        ("missing_run_mode_weight", refinement_missing_run_mode_weight),
+    ):
+        if not isinstance(key_value, (int, float)) or float(key_value) < 0.0 or float(key_value) > 5.0:
+            print(f"visual_snapshot_targets.json alignment_dashboard_refinement.{key_name} must be within [0.0, 5.0]")
+            return 1
+
+    if not isinstance(refinement_watch_score, (int, float)) or float(refinement_watch_score) < 0.0:
+        print("visual_snapshot_targets.json alignment_dashboard_refinement.watch_score_threshold must be float >= 0.0")
+        return 1
+    if not isinstance(refinement_critical_score, (int, float)) or float(refinement_critical_score) < 0.0:
+        print("visual_snapshot_targets.json alignment_dashboard_refinement.critical_score_threshold must be float >= 0.0")
+        return 1
+    if float(refinement_critical_score) < float(refinement_watch_score):
+        print("visual_snapshot_targets.json alignment_dashboard_refinement.critical_score_threshold must be >= watch_score_threshold")
+        return 1
+    if not isinstance(refinement_max_failures, int) or refinement_max_failures < 0:
+        print("visual_snapshot_targets.json alignment_dashboard_refinement.max_dashboard_failures must be int >= 0")
+        return 1
+
+    if not isinstance(pressure_alignment_convergence_gate, dict) or not pressure_alignment_convergence_gate:
+        print("visual_snapshot_targets.json pressure_alignment_convergence_gate must be non-empty object")
+        return 1
+    convergence_run_modes = pressure_alignment_convergence_gate.get("required_run_modes", [])
+    convergence_backends = pressure_alignment_convergence_gate.get("required_backends", [])
+    convergence_max_standardization_failures = pressure_alignment_convergence_gate.get("max_standardization_failures")
+    convergence_max_alignment_failures = pressure_alignment_convergence_gate.get("max_alignment_failures")
+    convergence_max_dashboard_failures = pressure_alignment_convergence_gate.get("max_dashboard_failures")
+    convergence_max_critical_severity_count = pressure_alignment_convergence_gate.get("max_critical_severity_count")
+    convergence_max_failures = pressure_alignment_convergence_gate.get("max_convergence_failures")
+
+    if not isinstance(convergence_run_modes, list) or not convergence_run_modes:
+        print("visual_snapshot_targets.json pressure_alignment_convergence_gate.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(convergence_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json pressure_alignment_convergence_gate.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for pressure_alignment_convergence_gate")
+            return 1
+
+    if not isinstance(convergence_backends, list) or not convergence_backends:
+        print("visual_snapshot_targets.json pressure_alignment_convergence_gate.required_backends must be non-empty array")
+        return 1
+    for idx, backend_name in enumerate(convergence_backends):
+        if not isinstance(backend_name, str) or not backend_name:
+            print(f"visual_snapshot_targets.json pressure_alignment_convergence_gate.required_backends[{idx}] must be non-empty string")
+            return 1
+        if backend_name not in backend_matrix_set:
+            print(f"visual_snapshot_targets.json pressure_alignment_convergence_gate.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+            return 1
+
+    for key_name, key_value in (
+        ("max_standardization_failures", convergence_max_standardization_failures),
+        ("max_alignment_failures", convergence_max_alignment_failures),
+        ("max_dashboard_failures", convergence_max_dashboard_failures),
+        ("max_critical_severity_count", convergence_max_critical_severity_count),
+        ("max_convergence_failures", convergence_max_failures),
+    ):
+        if not isinstance(key_value, int) or key_value < 0:
+            print(f"visual_snapshot_targets.json pressure_alignment_convergence_gate.{key_name} must be int >= 0")
+            return 1
+
+    if not isinstance(regression_cycle_window_governance, dict) or not regression_cycle_window_governance:
+        print("visual_snapshot_targets.json regression_cycle_window_governance must be non-empty object")
+        return 1
+    cycle_history_file = regression_cycle_window_governance.get("history_file")
+    cycle_window_size = regression_cycle_window_governance.get("cycle_window_size")
+    cycle_min_entries = regression_cycle_window_governance.get("min_cycle_entries")
+    cycle_run_modes = regression_cycle_window_governance.get("required_run_modes", [])
+    cycle_backends = regression_cycle_window_governance.get("required_backends", [])
+    cycle_max_warning_delta = regression_cycle_window_governance.get("max_warning_delta")
+    cycle_max_blocker_delta = regression_cycle_window_governance.get("max_blocker_delta")
+    cycle_max_alignment_score_delta = regression_cycle_window_governance.get("max_alignment_score_delta")
+    cycle_max_failures = regression_cycle_window_governance.get("max_cycle_failures")
+
+    if not isinstance(cycle_history_file, str) or not cycle_history_file.startswith("user://"):
+        print("visual_snapshot_targets.json regression_cycle_window_governance.history_file must be non-empty user:// path")
+        return 1
+    if cycle_history_file != archive_file:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.history_file must match approval_history_archive.archive_file")
+        return 1
+    if not isinstance(cycle_window_size, int) or cycle_window_size < 10:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.cycle_window_size must be int >= 10")
+        return 1
+    if not isinstance(cycle_min_entries, int) or cycle_min_entries < 1:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.min_cycle_entries must be int >= 1")
+        return 1
+    if cycle_min_entries > cycle_window_size:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.min_cycle_entries must be <= cycle_window_size")
+        return 1
+
+    if not isinstance(cycle_run_modes, list) or not cycle_run_modes:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(cycle_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json regression_cycle_window_governance.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for regression_cycle_window_governance")
+            return 1
+
+    if not isinstance(cycle_backends, list) or not cycle_backends:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.required_backends must be non-empty array")
+        return 1
+    for idx, backend_name in enumerate(cycle_backends):
+        if not isinstance(backend_name, str) or not backend_name:
+            print(f"visual_snapshot_targets.json regression_cycle_window_governance.required_backends[{idx}] must be non-empty string")
+            return 1
+        if backend_name not in backend_matrix_set:
+            print(f"visual_snapshot_targets.json regression_cycle_window_governance.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+            return 1
+
+    if not isinstance(cycle_max_warning_delta, int) or cycle_max_warning_delta < 0:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.max_warning_delta must be int >= 0")
+        return 1
+    if not isinstance(cycle_max_blocker_delta, int) or cycle_max_blocker_delta < 0:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.max_blocker_delta must be int >= 0")
+        return 1
+    if not isinstance(cycle_max_alignment_score_delta, (int, float)) or float(cycle_max_alignment_score_delta) < 0.0 or float(cycle_max_alignment_score_delta) > 5.0:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.max_alignment_score_delta must be within [0.0, 5.0]")
+        return 1
+    if not isinstance(cycle_max_failures, int) or cycle_max_failures < 0:
+        print("visual_snapshot_targets.json regression_cycle_window_governance.max_cycle_failures must be int >= 0")
+        return 1
+
+    if not isinstance(multi_cycle_adaptive_gate, dict) or not multi_cycle_adaptive_gate:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate must be non-empty object")
+        return 1
+    adaptive_history_file = multi_cycle_adaptive_gate.get("history_file")
+    adaptive_window_sizes = multi_cycle_adaptive_gate.get("window_sizes", {})
+    adaptive_min_window_entries = multi_cycle_adaptive_gate.get("min_window_entries")
+    adaptive_run_modes = multi_cycle_adaptive_gate.get("required_run_modes", [])
+    adaptive_backends = multi_cycle_adaptive_gate.get("required_backends", [])
+    adaptive_warning_slopes = multi_cycle_adaptive_gate.get("max_warning_slopes", {})
+    adaptive_blocker_slopes = multi_cycle_adaptive_gate.get("max_blocker_slopes", {})
+    adaptive_max_missing_run_modes = multi_cycle_adaptive_gate.get("max_missing_run_modes")
+    adaptive_max_missing_backends = multi_cycle_adaptive_gate.get("max_missing_backends")
+    adaptive_max_failures = multi_cycle_adaptive_gate.get("max_adaptive_failures")
+
+    if not isinstance(adaptive_history_file, str) or not adaptive_history_file.startswith("user://"):
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.history_file must be non-empty user:// path")
+        return 1
+    if adaptive_history_file != archive_file:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.history_file must match approval_history_archive.archive_file")
+        return 1
+
+    if not isinstance(adaptive_window_sizes, dict) or not adaptive_window_sizes:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes must be non-empty object")
+        return 1
+    adaptive_short_window = adaptive_window_sizes.get("short")
+    adaptive_mid_window = adaptive_window_sizes.get("mid")
+    adaptive_long_window = adaptive_window_sizes.get("long")
+    if not isinstance(adaptive_short_window, int) or adaptive_short_window < 4:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.short must be int >= 4")
+        return 1
+    if not isinstance(adaptive_mid_window, int) or adaptive_mid_window < 4:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.mid must be int >= 4")
+        return 1
+    if not isinstance(adaptive_long_window, int) or adaptive_long_window < 4:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.long must be int >= 4")
+        return 1
+    if adaptive_mid_window < adaptive_short_window:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.mid must be >= short")
+        return 1
+    if adaptive_long_window < adaptive_mid_window:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.long must be >= mid")
+        return 1
+
+    if not isinstance(adaptive_min_window_entries, int) or adaptive_min_window_entries < 1:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.min_window_entries must be int >= 1")
+        return 1
+    if adaptive_min_window_entries > adaptive_short_window:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.min_window_entries must be <= window_sizes.short")
+        return 1
+
+    if not isinstance(adaptive_run_modes, list) or not adaptive_run_modes:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(adaptive_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json multi_cycle_adaptive_gate.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for multi_cycle_adaptive_gate")
+            return 1
+
+    if not isinstance(adaptive_backends, list) or not adaptive_backends:
+        print("visual_snapshot_targets.json multi_cycle_adaptive_gate.required_backends must be non-empty array")
+        return 1
+    for idx, backend_name in enumerate(adaptive_backends):
+        if not isinstance(backend_name, str) or not backend_name:
+            print(f"visual_snapshot_targets.json multi_cycle_adaptive_gate.required_backends[{idx}] must be non-empty string")
+            return 1
+        if backend_name not in backend_matrix_set:
+            print(f"visual_snapshot_targets.json multi_cycle_adaptive_gate.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+            return 1
+
+    for key_name, slope_row in (
+        ("max_warning_slopes", adaptive_warning_slopes),
+        ("max_blocker_slopes", adaptive_blocker_slopes),
+    ):
+        if not isinstance(slope_row, dict) or not slope_row:
+            print(f"visual_snapshot_targets.json multi_cycle_adaptive_gate.{key_name} must be non-empty object")
+            return 1
+        for window_name in ("short", "mid", "long"):
+            slope_value = slope_row.get(window_name)
+            if not isinstance(slope_value, (int, float)) or float(slope_value) < 0.0 or float(slope_value) > 10.0:
+                print(f"visual_snapshot_targets.json multi_cycle_adaptive_gate.{key_name}.{window_name} must be within [0.0, 10.0]")
+                return 1
+
+    for key_name, key_value in (
+        ("max_missing_run_modes", adaptive_max_missing_run_modes),
+        ("max_missing_backends", adaptive_max_missing_backends),
+        ("max_adaptive_failures", adaptive_max_failures),
+    ):
+        if not isinstance(key_value, int) or key_value < 0:
+            print(f"visual_snapshot_targets.json multi_cycle_adaptive_gate.{key_name} must be int >= 0")
+            return 1
+
+    if not isinstance(release_feedback_governance, dict) or not release_feedback_governance:
+        print("visual_snapshot_targets.json release_feedback_governance must be non-empty object")
+        return 1
+    feedback_history_file = release_feedback_governance.get("history_file")
+    feedback_window_size = release_feedback_governance.get("feedback_window_size")
+    min_feedback_entries = release_feedback_governance.get("min_feedback_entries")
+    feedback_run_modes = release_feedback_governance.get("required_run_modes", [])
+    feedback_backends = release_feedback_governance.get("required_backends", [])
+    issue_metrics = release_feedback_governance.get("issue_metrics", [])
+    min_closure_rate = release_feedback_governance.get("min_closure_rate")
+    max_unresolved_issues = release_feedback_governance.get("max_unresolved_issues")
+    feedback_max_missing_run_modes = release_feedback_governance.get("max_missing_run_modes")
+    feedback_max_missing_backends = release_feedback_governance.get("max_missing_backends")
+    feedback_max_failures = release_feedback_governance.get("max_feedback_failures")
+
+    if not isinstance(feedback_history_file, str) or not feedback_history_file.startswith("user://"):
+        print("visual_snapshot_targets.json release_feedback_governance.history_file must be non-empty user:// path")
+        return 1
+    if feedback_history_file != archive_file:
+        print("visual_snapshot_targets.json release_feedback_governance.history_file must match approval_history_archive.archive_file")
+        return 1
+    if not isinstance(feedback_window_size, int) or feedback_window_size < 5:
+        print("visual_snapshot_targets.json release_feedback_governance.feedback_window_size must be int >= 5")
+        return 1
+    if not isinstance(min_feedback_entries, int) or min_feedback_entries < 1:
+        print("visual_snapshot_targets.json release_feedback_governance.min_feedback_entries must be int >= 1")
+        return 1
+    if min_feedback_entries > feedback_window_size:
+        print("visual_snapshot_targets.json release_feedback_governance.min_feedback_entries must be <= feedback_window_size")
+        return 1
+
+    if not isinstance(feedback_run_modes, list) or not feedback_run_modes:
+        print("visual_snapshot_targets.json release_feedback_governance.required_run_modes must be non-empty array")
+        return 1
+    for idx, mode_name in enumerate(feedback_run_modes):
+        if not isinstance(mode_name, str) or not mode_name:
+            print(f"visual_snapshot_targets.json release_feedback_governance.required_run_modes[{idx}] must be non-empty string")
+            return 1
+        if mode_name not in ci_mode_bindings:
+            print(f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for release_feedback_governance")
+            return 1
+
+    if not isinstance(feedback_backends, list) or not feedback_backends:
+        print("visual_snapshot_targets.json release_feedback_governance.required_backends must be non-empty array")
+        return 1
+    for idx, backend_name in enumerate(feedback_backends):
+        if not isinstance(backend_name, str) or not backend_name:
+            print(f"visual_snapshot_targets.json release_feedback_governance.required_backends[{idx}] must be non-empty string")
+            return 1
+        if backend_name not in backend_matrix_set:
+            print(f"visual_snapshot_targets.json release_feedback_governance.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+            return 1
+
+    allowed_issue_metrics = {
+        "blockers",
+        "warnings",
+        "approval_failures",
+        "tracking_failures",
+        "dashboard_failures",
+        "contract_failures",
+        "performance_cogate_failures",
+        "performance_scenario_failures",
+        "pressure_standardization_failures",
+        "alignment_dashboard_failures",
+    }
+    if not isinstance(issue_metrics, list) or not issue_metrics:
+        print("visual_snapshot_targets.json release_feedback_governance.issue_metrics must be non-empty array")
+        return 1
+    for idx, metric_name in enumerate(issue_metrics):
+        if not isinstance(metric_name, str) or not metric_name:
+            print(f"visual_snapshot_targets.json release_feedback_governance.issue_metrics[{idx}] must be non-empty string")
+            return 1
+        if metric_name not in allowed_issue_metrics:
+            print(f"visual_snapshot_targets.json release_feedback_governance.issue_metrics[{idx}] is not supported")
+            return 1
+
+    if not isinstance(min_closure_rate, (int, float)) or float(min_closure_rate) < 0.0 or float(min_closure_rate) > 1.0:
+        print("visual_snapshot_targets.json release_feedback_governance.min_closure_rate must be within [0.0, 1.0]")
+        return 1
+
+    for key_name, key_value in (
+        ("max_unresolved_issues", max_unresolved_issues),
+        ("max_missing_run_modes", feedback_max_missing_run_modes),
+        ("max_missing_backends", feedback_max_missing_backends),
+        ("max_feedback_failures", feedback_max_failures),
+    ):
+        if not isinstance(key_value, int) or key_value < 0:
+            print(f"visual_snapshot_targets.json release_feedback_governance.{key_name} must be int >= 0")
+            return 1
 
     if not isinstance(report_layers, dict) or not report_layers:
         print("visual_snapshot_targets.json report_layers must be non-empty object")

@@ -53,6 +53,82 @@ def _add_error(errors: list[str], message: str) -> None:
     errors.append(message)
 
 
+def _validate_environment_visual_profile(profile: dict[str, Any], prefix: str, errors: list[str]) -> None:
+    detail_tint = profile.get("detail_tint", "#FFFFFF")
+    if not _is_hex_color(detail_tint):
+        _add_error(errors, f"{prefix}.detail_tint must be hex color string")
+
+    detail_alpha = _to_float(profile.get("detail_alpha", 0.65))
+    if detail_alpha is None or detail_alpha < 0.20 or detail_alpha > 1.00:
+        _add_error(errors, f"{prefix}.detail_alpha must be within [0.20, 1.00]")
+
+    detail_pulse_speed = _to_float(profile.get("detail_pulse_speed", 0.0))
+    if detail_pulse_speed is None or detail_pulse_speed < 0.0 or detail_pulse_speed > 6.0:
+        _add_error(errors, f"{prefix}.detail_pulse_speed must be within [0.0, 6.0]")
+
+    detail_pulse_amplitude = _to_float(profile.get("detail_pulse_amplitude", 0.0))
+    if detail_pulse_amplitude is None or detail_pulse_amplitude < 0.0 or detail_pulse_amplitude > 0.25:
+        _add_error(errors, f"{prefix}.detail_pulse_amplitude must be within [0.0, 0.25]")
+
+    hazard_alpha_mult = _to_float(profile.get("hazard_alpha_mult", 1.0))
+    if hazard_alpha_mult is None or hazard_alpha_mult < 0.40 or hazard_alpha_mult > 1.60:
+        _add_error(errors, f"{prefix}.hazard_alpha_mult must be within [0.40, 1.60]")
+
+    ambient_alpha_mult = _to_float(profile.get("ambient_alpha_mult", 1.0))
+    if ambient_alpha_mult is None or ambient_alpha_mult < 0.40 or ambient_alpha_mult > 1.60:
+        _add_error(errors, f"{prefix}.ambient_alpha_mult must be within [0.40, 1.60]")
+
+    ambient_wave_speed = _to_float(profile.get("ambient_wave_speed", 0.0))
+    if ambient_wave_speed is None or ambient_wave_speed < 0.0 or ambient_wave_speed > 6.0:
+        _add_error(errors, f"{prefix}.ambient_wave_speed must be within [0.0, 6.0]")
+
+    ambient_wave_amplitude = _to_float(profile.get("ambient_wave_amplitude", 0.0))
+    if ambient_wave_amplitude is None or ambient_wave_amplitude < 0.0 or ambient_wave_amplitude > 0.25:
+        _add_error(errors, f"{prefix}.ambient_wave_amplitude must be within [0.0, 0.25]")
+
+    ambient_scroll_speed_x = _to_float(profile.get("ambient_scroll_speed_x", 0.0))
+    if ambient_scroll_speed_x is None or ambient_scroll_speed_x < -8.0 or ambient_scroll_speed_x > 8.0:
+        _add_error(errors, f"{prefix}.ambient_scroll_speed_x must be within [-8.0, 8.0]")
+
+    ambient_scroll_speed_y = _to_float(profile.get("ambient_scroll_speed_y", 0.0))
+    if ambient_scroll_speed_y is None or ambient_scroll_speed_y < -8.0 or ambient_scroll_speed_y > 8.0:
+        _add_error(errors, f"{prefix}.ambient_scroll_speed_y must be within [-8.0, 8.0]")
+
+
+def _validate_environment_room_profiles(chapter_key: str, row: dict[str, Any], errors: list[str]) -> None:
+    room_profiles = row.get("room_profiles", {})
+    if not isinstance(room_profiles, dict):
+        _add_error(errors, f"environment_config.json {chapter_key}.room_profiles must be object")
+        return
+
+    required_room_types = ("combat", "elite", "boss", "safe_camp")
+    for room_type in required_room_types:
+        room_profile = room_profiles.get(room_type)
+        if not isinstance(room_profile, dict):
+            _add_error(errors, f"environment_config.json {chapter_key}.room_profiles.{room_type} must be object")
+            continue
+
+        profile_hazards = room_profile.get("hazards")
+        if not isinstance(profile_hazards, list):
+            _add_error(errors, f"environment_config.json {chapter_key}.room_profiles.{room_type}.hazards must be array")
+        elif room_type != "safe_camp" and not profile_hazards:
+            _add_error(errors, f"environment_config.json {chapter_key}.room_profiles.{room_type}.hazards must not be empty")
+
+        hazard_pressure = _to_float(room_profile.get("hazard_pressure", 1.0))
+        if hazard_pressure is None or hazard_pressure < 0.0 or hazard_pressure > 2.5:
+            _add_error(errors, f"environment_config.json {chapter_key}.room_profiles.{room_type}.hazard_pressure must be within [0.0, 2.5]")
+
+        overrides = room_profile.get("visual_profile_overrides", {})
+        if not isinstance(overrides, dict):
+            _add_error(errors, f"environment_config.json {chapter_key}.room_profiles.{room_type}.visual_profile_overrides must be object")
+        else:
+            _validate_environment_visual_profile(
+                overrides,
+                f"environment_config.json {chapter_key}.room_profiles.{room_type}.visual_profile_overrides",
+                errors,
+            )
+
+
 def _validate_required_files(parsed: dict[str, Any], errors: list[str]) -> None:
     existing = set(parsed.keys())
     missing = sorted(REQUIRED_FILES - existing)
@@ -238,6 +314,9 @@ def _validate_map_generation(data: dict[str, Any], errors: list[str]) -> None:
     fixed_rooms = data.get("fixed_rooms")
     base_weights = data.get("base_room_weights")
     chapter_mult = data.get("chapter_room_weight_mult")
+    chapter_profiles = data.get("chapter_room_profiles")
+    chapter_progression_profiles = data.get("chapter_progression_profiles")
+    hidden_layers = data.get("hidden_layers")
     treasure_challenge = data.get("treasure_challenge")
     constraints = data.get("constraints")
 
@@ -345,6 +424,10 @@ def _validate_map_generation(data: dict[str, Any], errors: list[str]) -> None:
                 value = _to_float(row.get(key))
                 if value is None or value < 0.0 or value > 3.0:
                     _add_error(errors, f"map_generation.json chapter_room_weight_mult.{chapter_id}.{key} must be within [0, 3]")
+
+    _validate_map_generation_room_profiles(chapter_order, chapter_profiles, errors)
+    _validate_map_generation_progression_profiles(chapter_order, chapter_progression_profiles, errors)
+    _validate_map_generation_hidden_layers(hidden_layers, errors)
 
     if treasure_challenge is not None:
         if not isinstance(treasure_challenge, dict):
@@ -561,6 +644,42 @@ def _validate_drop_tables(data: dict[str, Any], errors: list[str]) -> None:
             elif weight_f <= 0:
                 _add_error(errors, f"drop_tables.json {table_name}.weighted[{i}].weight must be > 0")
 
+    chapter_profiles = data.get("chapter_reward_profiles")
+    if not isinstance(chapter_profiles, dict) or not chapter_profiles:
+        _add_error(errors, "drop_tables.json chapter_reward_profiles must be non-empty object")
+    else:
+        for chapter_id in ("chapter_1", "chapter_2", "chapter_3", "chapter_4"):
+            row = chapter_profiles.get(chapter_id)
+            prefix = f"drop_tables.json chapter_reward_profiles.{chapter_id}"
+            if not isinstance(row, dict):
+                _add_error(errors, f"{prefix} must be object")
+                continue
+            for field_name in ("xp_mult", "gold_mult", "ore_mult", "treasure_mult"):
+                value = _to_float(row.get(field_name))
+                if value is None or value < 0.6 or value > 2.5:
+                    _add_error(errors, f"{prefix}.{field_name} must be within [0.6, 2.5]")
+
+    long_run_curve = data.get("long_run_room_curve")
+    if not isinstance(long_run_curve, dict) or not long_run_curve:
+        _add_error(errors, "drop_tables.json long_run_room_curve must be non-empty object")
+    else:
+        room_bonus_start = long_run_curve.get("room_bonus_start")
+        if not isinstance(room_bonus_start, int) or room_bonus_start < 1 or room_bonus_start > 20:
+            _add_error(errors, "drop_tables.json long_run_room_curve.room_bonus_start must be int within [1, 20]")
+
+        room_bonus_per_room = _to_float(long_run_curve.get("room_bonus_per_room"))
+        if room_bonus_per_room is None or room_bonus_per_room < 0.0 or room_bonus_per_room > 0.25:
+            _add_error(errors, "drop_tables.json long_run_room_curve.room_bonus_per_room must be within [0.0, 0.25]")
+
+        room_bonus_cap = _to_float(long_run_curve.get("room_bonus_cap"))
+        if room_bonus_cap is None or room_bonus_cap < 0.0 or room_bonus_cap > 1.0:
+            _add_error(errors, "drop_tables.json long_run_room_curve.room_bonus_cap must be within [0.0, 1.0]")
+
+        for field_name in ("xp_weight", "gold_weight", "ore_weight", "treasure_weight"):
+            value = _to_float(long_run_curve.get(field_name))
+            if value is None or value < 0.0 or value > 2.0:
+                _add_error(errors, f"drop_tables.json long_run_room_curve.{field_name} must be within [0.0, 2.0]")
+
 
 def _validate_shop_items(data: dict[str, Any], errors: list[str]) -> None:
     slots = data.get("slots")
@@ -574,6 +693,7 @@ def _validate_shop_items(data: dict[str, Any], errors: list[str]) -> None:
     quality_weights = data.get("quality_weights")
     category_weights = data.get("category_weights")
     pools = data.get("pools")
+    forge_recipes = data.get("forge_recipes")
 
     if not isinstance(slots, int) or slots < 1:
         _add_error(errors, "shop_items.json slots must be int >= 1")
@@ -710,6 +830,72 @@ def _validate_shop_items(data: dict[str, Any], errors: list[str]) -> None:
                         if not isinstance(row, str) or not row:
                             _add_error(errors, f"shop_items.json chapter_overrides.{chapter_id}.pool_overrides['{category_key}'] entries must be non-empty strings")
 
+    if not isinstance(forge_recipes, dict) or not forge_recipes:
+        _add_error(errors, "shop_items.json forge_recipes must be non-empty object")
+    else:
+        for recipe_key in ("damage", "speed"):
+            recipe_row = forge_recipes.get(recipe_key)
+            if not isinstance(recipe_row, dict):
+                _add_error(errors, f"shop_items.json forge_recipes.{recipe_key} must be object")
+                continue
+
+            ore_cost = recipe_row.get("ore_cost")
+            if not isinstance(ore_cost, int) or ore_cost < 1 or ore_cost > 20:
+                _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.ore_cost must be int within [1, 20]")
+
+            success_text = recipe_row.get("success_text")
+            if not isinstance(success_text, str) or not success_text.strip():
+                _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.success_text must be non-empty string")
+
+            anchor = recipe_row.get("anchor")
+            if not isinstance(anchor, str) or not anchor.strip():
+                _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.anchor must be non-empty string")
+
+            anchor_amount = _to_float(recipe_row.get("anchor_amount"))
+            if anchor_amount is None or anchor_amount < 0.0 or anchor_amount > 3.0:
+                _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.anchor_amount must be within [0.0, 3.0]")
+
+            effect_present = False
+
+            damage_mult = _to_float(recipe_row.get("damage_mult"))
+            if damage_mult is not None:
+                effect_present = True
+                if damage_mult < 0.9 or damage_mult > 2.0:
+                    _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.damage_mult must be within [0.9, 2.0]")
+
+            interval_mult = _to_float(recipe_row.get("interval_mult"))
+            if interval_mult is not None:
+                effect_present = True
+                if interval_mult < 0.6 or interval_mult > 1.1:
+                    _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.interval_mult must be within [0.6, 1.1]")
+
+            crit_chance_add = _to_float(recipe_row.get("crit_chance_add"))
+            if crit_chance_add is not None:
+                effect_present = True
+                if crit_chance_add < 0.0 or crit_chance_add > 0.25:
+                    _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.crit_chance_add must be within [0.0, 0.25]")
+
+            crit_multiplier_add = _to_float(recipe_row.get("crit_multiplier_add"))
+            if crit_multiplier_add is not None:
+                effect_present = True
+                if crit_multiplier_add < 0.0 or crit_multiplier_add > 0.8:
+                    _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.crit_multiplier_add must be within [0.0, 0.8]")
+
+            max_hp_add = recipe_row.get("max_hp_add")
+            if max_hp_add is not None:
+                effect_present = True
+                if not isinstance(max_hp_add, int) or max_hp_add < 0 or max_hp_add > 120:
+                    _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.max_hp_add must be int within [0, 120]")
+
+            heal_flat = _to_float(recipe_row.get("heal_flat"))
+            if heal_flat is not None:
+                effect_present = True
+                if heal_flat < 0.0 or heal_flat > 120.0:
+                    _add_error(errors, f"shop_items.json forge_recipes.{recipe_key}.heal_flat must be within [0.0, 120.0]")
+
+            if not effect_present:
+                _add_error(errors, f"shop_items.json forge_recipes.{recipe_key} must define at least one forge effect field")
+
     if not isinstance(route_style_overrides, dict) or not route_style_overrides:
         _add_error(errors, "shop_items.json route_style_overrides must be non-empty object")
     else:
@@ -814,47 +1000,230 @@ def _validate_environment_config(data: dict[str, Any], errors: list[str]) -> Non
         visual_profile = row.get("visual_profile", {})
         if not isinstance(visual_profile, dict):
             _add_error(errors, f"environment_config.json {chapter_key}.visual_profile must be object")
+        else:
+            _validate_environment_visual_profile(visual_profile, f"environment_config.json {chapter_key}.visual_profile", errors)
+
+        _validate_environment_room_profiles(chapter_key, row, errors)
+
+
+def _validate_map_generation_room_profiles(chapter_order: list[Any], chapter_profiles: Any, errors: list[str]) -> None:
+    required_room_types = ("combat", "elite", "boss", "event", "treasure", "shop", "safe_camp")
+    if not isinstance(chapter_profiles, dict) or not chapter_profiles:
+        _add_error(errors, "map_generation.json chapter_room_profiles must be non-empty object")
+        return
+
+    for chapter_id in chapter_order:
+        chapter_key = str(chapter_id)
+        row = chapter_profiles.get(chapter_key)
+        if not isinstance(row, dict):
+            _add_error(errors, f"map_generation.json chapter_room_profiles missing '{chapter_key}'")
             continue
 
-        detail_tint = visual_profile.get("detail_tint", "#FFFFFF")
-        if not _is_hex_color(detail_tint):
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_tint must be hex color string")
+        for room_type in required_room_types:
+            profile = row.get(room_type)
+            prefix = f"map_generation.json chapter_room_profiles.{chapter_key}.{room_type}"
+            if not isinstance(profile, dict):
+                _add_error(errors, f"{prefix} must be object")
+                continue
 
-        detail_alpha = _to_float(visual_profile.get("detail_alpha", 0.65))
-        if detail_alpha is None or detail_alpha < 0.20 or detail_alpha > 1.00:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_alpha must be within [0.20, 1.00]")
+            for field_name in ("title", "objective", "route_tag", "status_hint"):
+                value = profile.get(field_name)
+                if not isinstance(value, str) or not value.strip():
+                    _add_error(errors, f"{prefix}.{field_name} must be non-empty string")
 
-        detail_pulse_speed = _to_float(visual_profile.get("detail_pulse_speed", 0.0))
-        if detail_pulse_speed is None or detail_pulse_speed < 0.0 or detail_pulse_speed > 6.0:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_pulse_speed must be within [0.0, 6.0]")
+            route_tag = profile.get("route_tag")
+            if isinstance(route_tag, str) and len(route_tag) > 18:
+                _add_error(errors, f"{prefix}.route_tag should be <= 18 characters")
 
-        detail_pulse_amplitude = _to_float(visual_profile.get("detail_pulse_amplitude", 0.0))
-        if detail_pulse_amplitude is None or detail_pulse_amplitude < 0.0 or detail_pulse_amplitude > 0.25:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.detail_pulse_amplitude must be within [0.0, 0.25]")
+            required_kills_mult = _to_float(profile.get("required_kills_mult", 1.0))
+            if required_kills_mult is None or required_kills_mult < 0.5 or required_kills_mult > 2.5:
+                _add_error(errors, f"{prefix}.required_kills_mult must be within [0.5, 2.5]")
 
-        hazard_alpha_mult = _to_float(visual_profile.get("hazard_alpha_mult", 1.0))
-        if hazard_alpha_mult is None or hazard_alpha_mult < 0.40 or hazard_alpha_mult > 1.60:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.hazard_alpha_mult must be within [0.40, 1.60]")
+            required_kills_add = profile.get("required_kills_add")
+            if not isinstance(required_kills_add, int) or required_kills_add < -4 or required_kills_add > 8:
+                _add_error(errors, f"{prefix}.required_kills_add must be int within [-4, 8]")
 
-        ambient_alpha_mult = _to_float(visual_profile.get("ambient_alpha_mult", 1.0))
-        if ambient_alpha_mult is None or ambient_alpha_mult < 0.40 or ambient_alpha_mult > 1.60:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_alpha_mult must be within [0.40, 1.60]")
+            reward_mult = _to_float(profile.get("reward_mult", 1.0))
+            if reward_mult is None or reward_mult < 0.5 or reward_mult > 2.5:
+                _add_error(errors, f"{prefix}.reward_mult must be within [0.5, 2.5]")
 
-        ambient_wave_speed = _to_float(visual_profile.get("ambient_wave_speed", 0.0))
-        if ambient_wave_speed is None or ambient_wave_speed < 0.0 or ambient_wave_speed > 6.0:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_wave_speed must be within [0.0, 6.0]")
 
-        ambient_wave_amplitude = _to_float(visual_profile.get("ambient_wave_amplitude", 0.0))
-        if ambient_wave_amplitude is None or ambient_wave_amplitude < 0.0 or ambient_wave_amplitude > 0.25:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_wave_amplitude must be within [0.0, 0.25]")
+def _validate_map_generation_progression_profiles(chapter_order: list[Any], chapter_profiles: Any, errors: list[str]) -> None:
+    required_room_types = ("combat", "elite", "boss", "event", "treasure", "shop", "safe_camp")
+    if not isinstance(chapter_profiles, dict) or not chapter_profiles:
+        _add_error(errors, "map_generation.json chapter_progression_profiles must be non-empty object")
+        return
 
-        ambient_scroll_speed_x = _to_float(visual_profile.get("ambient_scroll_speed_x", 0.0))
-        if ambient_scroll_speed_x is None or ambient_scroll_speed_x < -8.0 or ambient_scroll_speed_x > 8.0:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_scroll_speed_x must be within [-8.0, 8.0]")
+    for chapter_id in chapter_order:
+        chapter_key = str(chapter_id)
+        row = chapter_profiles.get(chapter_key)
+        prefix = f"map_generation.json chapter_progression_profiles.{chapter_key}"
+        if not isinstance(row, dict):
+            _add_error(errors, f"map_generation.json chapter_progression_profiles missing '{chapter_key}'")
+            continue
 
-        ambient_scroll_speed_y = _to_float(visual_profile.get("ambient_scroll_speed_y", 0.0))
-        if ambient_scroll_speed_y is None or ambient_scroll_speed_y < -8.0 or ambient_scroll_speed_y > 8.0:
-            _add_error(errors, f"environment_config.json {chapter_key}.visual_profile.ambient_scroll_speed_y must be within [-8.0, 8.0]")
+        for field_name in ("clear_banner", "transition_intro", "transition_resolved", "event_resolved", "camp_recovery_note", "checkpoint_label"):
+            value = row.get(field_name)
+            if not isinstance(value, str) or not value.strip():
+                _add_error(errors, f"{prefix}.{field_name} must be non-empty string")
+
+        history_recap_prefix = row.get("history_recap_prefix")
+        if not isinstance(history_recap_prefix, str) or not history_recap_prefix.strip():
+            _add_error(errors, f"{prefix}.history_recap_prefix must be non-empty string")
+        elif len(history_recap_prefix) > 64:
+            _add_error(errors, f"{prefix}.history_recap_prefix should be <= 64 characters")
+
+        history_recap_limit = row.get("history_recap_limit")
+        if not isinstance(history_recap_limit, int) or history_recap_limit < 1 or history_recap_limit > 8:
+            _add_error(errors, f"{prefix}.history_recap_limit must be int within [1, 8]")
+
+        checkpoint_label = row.get("checkpoint_label")
+        if isinstance(checkpoint_label, str) and len(checkpoint_label) > 24:
+            _add_error(errors, f"{prefix}.checkpoint_label should be <= 24 characters")
+
+        mainline_nodes = row.get("mainline_nodes")
+        if not isinstance(mainline_nodes, dict) or not mainline_nodes:
+            _add_error(errors, f"{prefix}.mainline_nodes must be non-empty object")
+        else:
+            for room_type in required_room_types:
+                node_value = mainline_nodes.get(room_type)
+                if not isinstance(node_value, str) or not node_value.strip():
+                    _add_error(errors, f"{prefix}.mainline_nodes.{room_type} must be non-empty string")
+                    continue
+                if len(node_value) > 72:
+                    _add_error(errors, f"{prefix}.mainline_nodes.{room_type} should be <= 72 characters")
+
+        pace_tags = row.get("history_pace_tags")
+        if not isinstance(pace_tags, dict) or not pace_tags:
+            _add_error(errors, f"{prefix}.history_pace_tags must be non-empty object")
+            continue
+
+        for room_type in required_room_types:
+            tag_value = pace_tags.get(room_type)
+            if not isinstance(tag_value, str) or not tag_value.strip():
+                _add_error(errors, f"{prefix}.history_pace_tags.{room_type} must be non-empty string")
+                continue
+            if len(tag_value) > 32:
+                _add_error(errors, f"{prefix}.history_pace_tags.{room_type} should be <= 32 characters")
+
+
+def _validate_map_generation_hidden_layers(hidden_layers: Any, errors: list[str]) -> None:
+    if not isinstance(hidden_layers, dict) or not hidden_layers:
+        _add_error(errors, "map_generation.json hidden_layers must be non-empty object")
+        return
+
+    for layer_id in ("FS1", "FS2"):
+        row = hidden_layers.get(layer_id)
+        prefix = f"map_generation.json hidden_layers.{layer_id}"
+        if not isinstance(row, dict):
+            _add_error(errors, f"{prefix} must be object")
+            continue
+
+        for field_name in ("title", "theme", "unlock_rule", "entrance_hint"):
+            value = row.get(field_name)
+            if not isinstance(value, str) or not value.strip():
+                _add_error(errors, f"{prefix}.{field_name} must be non-empty string")
+
+        map_profile = row.get("map_profile")
+        if not isinstance(map_profile, dict):
+            _add_error(errors, f"{prefix}.map_profile must be object")
+        else:
+            mode = map_profile.get("mode")
+            room_count = map_profile.get("room_count")
+            room_count_label = map_profile.get("room_count_label")
+            entry_room_type = map_profile.get("entry_room_type")
+            encounter_room_type = map_profile.get("encounter_room_type")
+            boss_room_type = map_profile.get("boss_room_type")
+            settlement_room_type = map_profile.get("settlement_room_type")
+            room_roles = map_profile.get("room_roles", [])
+
+            if not isinstance(mode, str) or mode not in {"survival", "trial_chain"}:
+                _add_error(errors, f"{prefix}.map_profile.mode must be 'survival' or 'trial_chain'")
+            if not isinstance(room_count, int) or room_count < -1 or room_count == 0 or room_count > 12:
+                _add_error(errors, f"{prefix}.map_profile.room_count must be int within [-1, 12] excluding 0")
+            if not isinstance(room_count_label, str) or not room_count_label.strip():
+                _add_error(errors, f"{prefix}.map_profile.room_count_label must be non-empty string")
+            if not isinstance(entry_room_type, str) or not entry_room_type.strip():
+                _add_error(errors, f"{prefix}.map_profile.entry_room_type must be non-empty string")
+            if not isinstance(encounter_room_type, str) or not encounter_room_type.strip():
+                _add_error(errors, f"{prefix}.map_profile.encounter_room_type must be non-empty string")
+            if not isinstance(boss_room_type, str) or not boss_room_type.strip():
+                _add_error(errors, f"{prefix}.map_profile.boss_room_type must be non-empty string")
+            if not isinstance(settlement_room_type, str) or not settlement_room_type.strip():
+                _add_error(errors, f"{prefix}.map_profile.settlement_room_type must be non-empty string")
+
+            if mode == "survival" and room_count != -1:
+                _add_error(errors, f"{prefix}.map_profile.room_count must be -1 for survival layers")
+            if mode == "trial_chain" and (not isinstance(room_count, int) or room_count < 1):
+                _add_error(errors, f"{prefix}.map_profile.room_count must be >= 1 for trial_chain layers")
+
+            if mode == "trial_chain":
+                expected_room_count = room_count if isinstance(room_count, int) else -1
+                if not isinstance(room_roles, list) or len(room_roles) != expected_room_count:
+                    _add_error(errors, f"{prefix}.map_profile.room_roles must match room_count for trial_chain layers")
+                else:
+                    for idx, role in enumerate(room_roles):
+                        if not isinstance(role, str) or not role.strip():
+                            _add_error(errors, f"{prefix}.map_profile.room_roles[{idx}] must be non-empty string")
+
+        combat_profile = row.get("combat_profile")
+        if not isinstance(combat_profile, dict):
+            _add_error(errors, f"{prefix}.combat_profile must be object")
+        else:
+            enemy_multiplier_base = _to_float(combat_profile.get("enemy_multiplier_base"))
+            enemy_multiplier_step = _to_float(combat_profile.get("enemy_multiplier_step"))
+            enemy_step_minutes = combat_profile.get("enemy_step_minutes")
+            boss_cycle_minutes = combat_profile.get("boss_cycle_minutes")
+            enemy_pool_tags = combat_profile.get("enemy_pool_tags")
+            boss_pool_tags = combat_profile.get("boss_pool_tags")
+
+            if enemy_multiplier_base is None or enemy_multiplier_base < 10.0 or enemy_multiplier_base > 50.0:
+                _add_error(errors, f"{prefix}.combat_profile.enemy_multiplier_base must be within [10.0, 50.0]")
+            if enemy_multiplier_step is None or enemy_multiplier_step < 0.0 or enemy_multiplier_step > 10.0:
+                _add_error(errors, f"{prefix}.combat_profile.enemy_multiplier_step must be within [0.0, 10.0]")
+            if not isinstance(enemy_step_minutes, int) or enemy_step_minutes < 0 or enemy_step_minutes > 20:
+                _add_error(errors, f"{prefix}.combat_profile.enemy_step_minutes must be int within [0, 20]")
+            if not isinstance(boss_cycle_minutes, int) or boss_cycle_minutes < 0 or boss_cycle_minutes > 20:
+                _add_error(errors, f"{prefix}.combat_profile.boss_cycle_minutes must be int within [0, 20]")
+            if not isinstance(enemy_pool_tags, list) or not enemy_pool_tags:
+                _add_error(errors, f"{prefix}.combat_profile.enemy_pool_tags must be non-empty array")
+            else:
+                for idx, tag in enumerate(enemy_pool_tags):
+                    if not isinstance(tag, str) or not tag.strip():
+                        _add_error(errors, f"{prefix}.combat_profile.enemy_pool_tags[{idx}] must be non-empty string")
+            if not isinstance(boss_pool_tags, list) or not boss_pool_tags:
+                _add_error(errors, f"{prefix}.combat_profile.boss_pool_tags must be non-empty array")
+            else:
+                for idx, tag in enumerate(boss_pool_tags):
+                    if not isinstance(tag, str) or not tag.strip():
+                        _add_error(errors, f"{prefix}.combat_profile.boss_pool_tags[{idx}] must be non-empty string")
+
+            mode = str(row.get("map_profile", {}).get("mode", "")) if isinstance(row.get("map_profile"), dict) else ""
+            if mode == "survival":
+                if enemy_multiplier_step is not None and enemy_multiplier_step <= 0.0:
+                    _add_error(errors, f"{prefix}.combat_profile.enemy_multiplier_step must be > 0 for survival layers")
+                if isinstance(enemy_step_minutes, int) and enemy_step_minutes <= 0:
+                    _add_error(errors, f"{prefix}.combat_profile.enemy_step_minutes must be > 0 for survival layers")
+                if isinstance(boss_cycle_minutes, int) and boss_cycle_minutes <= 0:
+                    _add_error(errors, f"{prefix}.combat_profile.boss_cycle_minutes must be > 0 for survival layers")
+
+        reward_profile = row.get("reward_profile")
+        if not isinstance(reward_profile, dict):
+            _add_error(errors, f"{prefix}.reward_profile must be object")
+        else:
+            for field_name in ("track", "summary", "repeat_motivation"):
+                value = reward_profile.get(field_name)
+                if not isinstance(value, str) or not value.strip():
+                    _add_error(errors, f"{prefix}.reward_profile.{field_name} must be non-empty string")
+
+        settlement_profile = row.get("settlement_profile")
+        if not isinstance(settlement_profile, dict):
+            _add_error(errors, f"{prefix}.settlement_profile must be object")
+        else:
+            for field_name in ("mode", "summary"):
+                value = settlement_profile.get(field_name)
+                if not isinstance(value, str) or not value.strip():
+                    _add_error(errors, f"{prefix}.settlement_profile.{field_name} must be non-empty string")
 
 
 def _validate_boss_phases(data: dict[str, Any], errors: list[str]) -> None:
@@ -862,6 +1231,20 @@ def _validate_boss_phases(data: dict[str, Any], errors: list[str]) -> None:
     if not isinstance(bosses, dict) or not bosses:
         _add_error(errors, "boss_phases.json bosses must be non-empty object")
         return
+
+    required_bosses: dict[str, int] = {
+        "enemy_rock_colossus": 3,
+        "enemy_flame_lord": 3,
+        "enemy_frost_king": 3,
+        "enemy_void_lord": 4,
+    }
+    for boss_id, min_thresholds in required_bosses.items():
+        thresholds_var = bosses.get(boss_id)
+        if not isinstance(thresholds_var, list):
+            _add_error(errors, f"boss_phases.json missing required boss thresholds '{boss_id}'")
+            continue
+        if len(thresholds_var) < min_thresholds:
+            _add_error(errors, f"boss_phases.json {boss_id} must contain at least {min_thresholds} thresholds")
 
     for boss_id, thresholds in bosses.items():
         if not isinstance(thresholds, list) or len(thresholds) < 2:
@@ -922,12 +1305,35 @@ def _validate_narrative_index(root: Path, data: dict[str, Any], errors: list[str
     if not isinstance(categories, list) or not categories:
         _add_error(errors, "narrative_index.json memory_fragments.categories must be non-empty array")
 
+    content_path = root / "data" / "balance" / "narrative_content.json"
+    if content_path.exists():
+        try:
+            narrative_content = json.loads(content_path.read_text(encoding="utf-8"))
+            fragment_rows = narrative_content.get("memory_fragments") if isinstance(narrative_content, dict) else None
+            if isinstance(total, int) and isinstance(fragment_rows, dict) and total != len(fragment_rows):
+                _add_error(
+                    errors,
+                    "narrative_index.json memory_fragments.total must match narrative_content.json memory_fragments count",
+                )
+        except Exception as exc:
+            warnings.append(f"narrative_index.json could not cross-check fragment total -> {exc}")
+
 
 def _validate_narrative_content(data: dict[str, Any], errors: list[str]) -> None:
     transitions = data.get("chapter_transitions")
     events = data.get("chapter_events")
     endings = data.get("endings")
     route_styles = data.get("route_styles")
+    route_arc_profiles = data.get("route_arc_profiles")
+    camp_reflections = data.get("camp_reflections")
+    ending_payoff_profiles = data.get("ending_payoff_profiles")
+    epilogue_chains = data.get("epilogue_chains")
+    epilogue_branch_profiles = data.get("epilogue_branch_profiles")
+    fragment_recap_profiles = data.get("fragment_recap_profiles")
+    hidden_layer_hooks = data.get("hidden_layer_hooks")
+    hidden_layer_story_profiles = data.get("hidden_layer_story_profiles")
+    fragment_trigger_profiles = data.get("fragment_trigger_profiles")
+    memory_fragments = data.get("memory_fragments")
 
     if not isinstance(transitions, dict):
         _add_error(errors, "narrative_content.json chapter_transitions must be object")
@@ -1024,8 +1430,198 @@ def _validate_narrative_content(data: dict[str, Any], errors: list[str]) -> None
             if not isinstance(boss_color, str) or not boss_color:
                 _add_error(errors, f"narrative_content.json route_styles.{style_id}.boss_color must be non-empty string")
 
+    if not isinstance(route_arc_profiles, dict) or not route_arc_profiles:
+        _add_error(errors, "narrative_content.json route_arc_profiles must be non-empty object")
+    else:
+        _validate_route_arc_profiles(route_arc_profiles, errors)
+
+    if not isinstance(camp_reflections, dict) or not camp_reflections:
+        _add_error(errors, "narrative_content.json camp_reflections must be non-empty object")
+    else:
+        _validate_camp_reflections(camp_reflections, errors)
+
+    _validate_ending_payoff_profiles(ending_payoff_profiles, errors)
+    _validate_epilogue_chains(epilogue_chains, errors)
+    _validate_stage5_batch3_profiles(epilogue_branch_profiles, fragment_recap_profiles, hidden_layer_hooks, errors)
+    _validate_hidden_layer_story_profiles(hidden_layer_story_profiles, memory_fragments, errors)
+    _validate_fragment_trigger_profiles(fragment_trigger_profiles, errors)
+
     if not isinstance(endings, dict) or not endings:
         _add_error(errors, "narrative_content.json endings must be non-empty object")
+
+
+def _validate_route_arc_profiles(route_arc_profiles: dict[str, Any], errors: list[str]) -> None:
+    for arc_id in ("balance", "redeem", "fall"):
+        row = route_arc_profiles.get(arc_id)
+        if not isinstance(row, dict):
+            _add_error(errors, f"narrative_content.json route_arc_profiles.{arc_id} must be object")
+            continue
+        for field_name in ("title", "summary", "camp_focus", "fragment_hint"):
+            value = row.get(field_name)
+            if not isinstance(value, str) or not value.strip():
+                _add_error(errors, f"narrative_content.json route_arc_profiles.{arc_id}.{field_name} must be non-empty string")
+
+
+def _validate_camp_reflections(camp_reflections: dict[str, Any], errors: list[str]) -> None:
+    for chapter_key in ("chapter_1", "chapter_2", "chapter_3", "chapter_4"):
+        chapter_row = camp_reflections.get(chapter_key)
+        if not isinstance(chapter_row, dict):
+            _add_error(errors, f"narrative_content.json camp_reflections.{chapter_key} must be object")
+            continue
+        for arc_id in ("balance", "redeem", "fall"):
+            row = chapter_row.get(arc_id)
+            if not isinstance(row, dict):
+                _add_error(errors, f"narrative_content.json camp_reflections.{chapter_key}.{arc_id} must be object")
+                continue
+            for field_name in ("title", "body", "fragment_hint"):
+                value = row.get(field_name)
+                if not isinstance(value, str) or not value.strip():
+                    _add_error(errors, f"narrative_content.json camp_reflections.{chapter_key}.{arc_id}.{field_name} must be non-empty string")
+
+
+def _validate_ending_payoff_profiles(ending_payoff_profiles: Any, errors: list[str]) -> None:
+    if not isinstance(ending_payoff_profiles, dict) or not ending_payoff_profiles:
+        _add_error(errors, "narrative_content.json ending_payoff_profiles must be non-empty object")
+        return
+    for ending_id in ("nar_ending_redeem", "nar_ending_fall", "nar_ending_balance"):
+        row = ending_payoff_profiles.get(ending_id)
+        if not isinstance(row, dict):
+            _add_error(errors, f"narrative_content.json ending_payoff_profiles.{ending_id} must be object")
+            continue
+        for field_name in ("title", "summary", "legacy", "fragment_hook"):
+            value = row.get(field_name)
+            if not isinstance(value, str) or not value.strip():
+                _add_error(errors, f"narrative_content.json ending_payoff_profiles.{ending_id}.{field_name} must be non-empty string")
+
+
+def _validate_epilogue_chains(epilogue_chains: Any, errors: list[str]) -> None:
+    if not isinstance(epilogue_chains, dict) or not epilogue_chains:
+        _add_error(errors, "narrative_content.json epilogue_chains must be non-empty object")
+        return
+    for ending_id in ("nar_ending_redeem", "nar_ending_fall", "nar_ending_balance"):
+        chain = epilogue_chains.get(ending_id)
+        if not isinstance(chain, list) or len(chain) < 3:
+            _add_error(errors, f"narrative_content.json epilogue_chains.{ending_id} must be array with at least 3 steps")
+            continue
+        for i, text in enumerate(chain):
+            if not isinstance(text, str) or not text.strip():
+                _add_error(errors, f"narrative_content.json epilogue_chains.{ending_id}[{i}] must be non-empty string")
+
+
+def _validate_stage5_batch3_profiles(
+    epilogue_branch_profiles: Any,
+    fragment_recap_profiles: Any,
+    hidden_layer_hooks: Any,
+    errors: list[str],
+) -> None:
+    _validate_epilogue_branch_profiles(epilogue_branch_profiles, errors)
+    _validate_fragment_recap_profiles(fragment_recap_profiles, errors)
+    _validate_hidden_layer_hooks(hidden_layer_hooks, errors)
+
+
+def _validate_epilogue_branch_profiles(epilogue_branch_profiles: Any, errors: list[str]) -> None:
+    if not isinstance(epilogue_branch_profiles, dict) or not epilogue_branch_profiles:
+        _add_error(errors, "narrative_content.json epilogue_branch_profiles must be non-empty object")
+        return
+    for ending_id in ("nar_ending_redeem", "nar_ending_fall", "nar_ending_balance"):
+        row = epilogue_branch_profiles.get(ending_id)
+        if not isinstance(row, dict):
+            _add_error(errors, f"narrative_content.json epilogue_branch_profiles.{ending_id} must be object")
+            continue
+        for branch_key in ("first_unlock", "repeat_unlock"):
+            branch_row = row.get(branch_key)
+            if not isinstance(branch_row, dict):
+                _add_error(errors, f"narrative_content.json epilogue_branch_profiles.{ending_id}.{branch_key} must be object")
+                continue
+            for field_name in ("title", "body"):
+                value = branch_row.get(field_name)
+                if not isinstance(value, str) or not value.strip():
+                    _add_error(errors, f"narrative_content.json epilogue_branch_profiles.{ending_id}.{branch_key}.{field_name} must be non-empty string")
+        archive_hook = row.get("archive_hook")
+        if not isinstance(archive_hook, str) or not archive_hook.strip():
+            _add_error(errors, f"narrative_content.json epilogue_branch_profiles.{ending_id}.archive_hook must be non-empty string")
+
+
+def _validate_fragment_recap_profiles(fragment_recap_profiles: Any, errors: list[str]) -> None:
+    if not isinstance(fragment_recap_profiles, dict) or not fragment_recap_profiles:
+        _add_error(errors, "narrative_content.json fragment_recap_profiles must be non-empty object")
+        return
+    for arc_id in ("balance", "redeem", "fall"):
+        row = fragment_recap_profiles.get(arc_id)
+        if not isinstance(row, dict):
+            _add_error(errors, f"narrative_content.json fragment_recap_profiles.{arc_id} must be object")
+            continue
+        for field_name in ("title", "summary", "pace_hint"):
+            value = row.get(field_name)
+            if not isinstance(value, str) or not value.strip():
+                _add_error(errors, f"narrative_content.json fragment_recap_profiles.{arc_id}.{field_name} must be non-empty string")
+
+
+def _validate_hidden_layer_hooks(hidden_layer_hooks: Any, errors: list[str]) -> None:
+    if not isinstance(hidden_layer_hooks, dict) or not hidden_layer_hooks:
+        _add_error(errors, "narrative_content.json hidden_layer_hooks must be non-empty object")
+        return
+    for arc_id in ("balance", "redeem", "fall"):
+        row = hidden_layer_hooks.get(arc_id)
+        if not isinstance(row, dict):
+            _add_error(errors, f"narrative_content.json hidden_layer_hooks.{arc_id} must be object")
+            continue
+        target_layer = row.get("target_layer")
+        if not isinstance(target_layer, str) or target_layer not in {"FS1", "FS2"}:
+            _add_error(errors, f"narrative_content.json hidden_layer_hooks.{arc_id}.target_layer must be 'FS1' or 'FS2'")
+        for field_name in ("title", "teaser", "unlock_hint"):
+            value = row.get(field_name)
+            if not isinstance(value, str) or not value.strip():
+                _add_error(errors, f"narrative_content.json hidden_layer_hooks.{arc_id}.{field_name} must be non-empty string")
+
+
+def _validate_hidden_layer_story_profiles(hidden_layer_story_profiles: Any, memory_fragments: Any, errors: list[str]) -> None:
+    if not isinstance(hidden_layer_story_profiles, dict) or not hidden_layer_story_profiles:
+        _add_error(errors, "narrative_content.json hidden_layer_story_profiles must be non-empty object")
+        return
+
+    fragment_rows: dict[str, Any] = memory_fragments if isinstance(memory_fragments, dict) else {}
+    allowed_endings = {"nar_ending_balance", "nar_ending_redeem", "nar_ending_fall"}
+    for layer_id in ("FS1", "FS2"):
+        layer_row = hidden_layer_story_profiles.get(layer_id)
+        if not isinstance(layer_row, dict):
+            _add_error(errors, f"narrative_content.json hidden_layer_story_profiles.{layer_id} must be object")
+            continue
+        for arc_id in ("balance", "redeem", "fall"):
+            row = layer_row.get(arc_id)
+            if not isinstance(row, dict):
+                _add_error(errors, f"narrative_content.json hidden_layer_story_profiles.{layer_id}.{arc_id} must be object")
+                continue
+            for field_name in ("title", "body", "archive_echo", "ending_link", "fragment_id"):
+                value = row.get(field_name)
+                if not isinstance(value, str) or not value.strip():
+                    _add_error(errors, f"narrative_content.json hidden_layer_story_profiles.{layer_id}.{arc_id}.{field_name} must be non-empty string")
+            ending_link = row.get("ending_link")
+            if isinstance(ending_link, str) and ending_link not in allowed_endings:
+                _add_error(errors, f"narrative_content.json hidden_layer_story_profiles.{layer_id}.{arc_id}.ending_link must target a main ending id")
+            fragment_id = row.get("fragment_id")
+            if isinstance(fragment_id, str) and fragment_id not in fragment_rows:
+                _add_error(errors, f"narrative_content.json hidden_layer_story_profiles.{layer_id}.{arc_id}.fragment_id must exist in memory_fragments")
+
+
+def _validate_fragment_trigger_profiles(fragment_trigger_profiles: Any, errors: list[str]) -> None:
+    if not isinstance(fragment_trigger_profiles, dict) or not fragment_trigger_profiles:
+        _add_error(errors, "narrative_content.json fragment_trigger_profiles must be non-empty object")
+        return
+    for chapter_key in ("chapter_1", "chapter_2", "chapter_3", "chapter_4"):
+        chapter_row = fragment_trigger_profiles.get(chapter_key)
+        if not isinstance(chapter_row, dict):
+            _add_error(errors, f"narrative_content.json fragment_trigger_profiles.{chapter_key} must be object")
+            continue
+        for trigger_type in ("camp", "event", "transition"):
+            trigger_row = chapter_row.get(trigger_type)
+            if not isinstance(trigger_row, dict):
+                _add_error(errors, f"narrative_content.json fragment_trigger_profiles.{chapter_key}.{trigger_type} must be object")
+                continue
+            for arc_id in ("balance", "redeem", "fall"):
+                fragment_id = trigger_row.get(arc_id)
+                if not isinstance(fragment_id, str) or not fragment_id.strip():
+                    _add_error(errors, f"narrative_content.json fragment_trigger_profiles.{chapter_key}.{trigger_type}.{arc_id} must be non-empty string")
 
 
 def _validate_achievements(data: dict[str, Any], errors: list[str]) -> None:
@@ -1036,6 +1632,16 @@ def _validate_achievements(data: dict[str, Any], errors: list[str]) -> None:
 
     seen: set[str] = set()
     prefixes = ("clear_floor_", "alignment_ge_", "alignment_le_", "kills_ge_", "reach_level_")
+    exact_conditions = {
+        "victory_once",
+        "hidden_layer_clear_fs1",
+        "hidden_layer_mastery_fs1",
+        "hidden_layer_clear_fs2",
+        "hidden_layer_mastery_fs2",
+        "difficulty_clear_hard",
+        "difficulty_clear_nightmare",
+        "difficulty_hidden_clear_nightmare",
+    }
     for i, row in enumerate(rows):
         if not isinstance(row, dict):
             _add_error(errors, f"achievements.json achievements[{i}] must be object")
@@ -1051,7 +1657,7 @@ def _validate_achievements(data: dict[str, Any], errors: list[str]) -> None:
         if not isinstance(condition, str) or not condition:
             _add_error(errors, f"achievements.json achievements[{i}].condition invalid")
             continue
-        if condition != "victory_once" and not condition.startswith(prefixes):
+        if condition not in exact_conditions and not condition.startswith(prefixes):
             _add_error(errors, f"achievements.json achievements[{i}] unsupported condition '{condition}'")
 
 
@@ -1699,13 +2305,28 @@ def _validate_visual_snapshot_targets(data: dict[str, Any], errors: list[str]) -
     approval_history_archive = data.get("approval_history_archive")
     approval_threshold_templates = data.get("approval_threshold_templates")
     release_candidate_tracking = data.get("release_candidate_tracking")
+    stability_scoring = data.get("stability_scoring")
+    stability_tiers = data.get("stability_tiers")
+    convergence_dashboard = data.get("convergence_dashboard")
+    ci_signal_contract = data.get("ci_signal_contract")
+    convergence_trend_reinforcement = data.get("convergence_trend_reinforcement")
+    exception_lifecycle_linkage = data.get("exception_lifecycle_linkage")
+    visual_performance_cogate = data.get("visual_performance_cogate")
+    cogate_threshold_templates = data.get("cogate_threshold_templates")
+    cross_platform_alignment = data.get("cross_platform_alignment")
+    pressure_scenario_standardization = data.get("pressure_scenario_standardization")
+    alignment_dashboard_refinement = data.get("alignment_dashboard_refinement")
+    pressure_alignment_convergence_gate = data.get("pressure_alignment_convergence_gate")
+    regression_cycle_window_governance = data.get("regression_cycle_window_governance")
+    multi_cycle_adaptive_gate = data.get("multi_cycle_adaptive_gate")
+    release_feedback_governance = data.get("release_feedback_governance")
     report_layers = data.get("report_layers")
     cross_version_baseline = data.get("cross_version_baseline")
 
     if not isinstance(channel, str) or not channel.strip():
         _add_error(errors, "visual_snapshot_targets.json channel must be non-empty string")
-    elif channel != "chapter_snapshot_v12":
-        _add_error(errors, "visual_snapshot_targets.json channel must be chapter_snapshot_v12")
+    elif channel != "chapter_snapshot_v19":
+        _add_error(errors, "visual_snapshot_targets.json channel must be chapter_snapshot_v19")
 
     if not isinstance(snapshots, dict) or not snapshots:
         _add_error(errors, "visual_snapshot_targets.json snapshots must be a non-empty object")
@@ -2157,6 +2778,20 @@ def _validate_visual_snapshot_targets(data: dict[str, Any], errors: list[str]) -
             "Approval History Archive",
             "Approval Template",
             "Release Candidate Tracking",
+            "Stability Scoring",
+            "Convergence Dashboard",
+            "CI Signal Contract",
+            "Convergence Trend Reinforcement",
+            "Exception Lifecycle Linkage",
+            "Visual-Performance Co-Gate",
+            "Co-Gate Threshold Template",
+            "Cross-Platform Alignment",
+            "Pressure Scenario Standardization",
+            "Alignment Dashboard Refinement",
+            "Pressure Alignment Convergence Gate",
+            "Regression Cycle Window Governance",
+            "Multi-Cycle Adaptive Gate",
+            "Release Feedback Governance",
         }
 
         if not isinstance(required_report_sections, list) or not required_report_sections:
@@ -2403,6 +3038,827 @@ def _validate_visual_snapshot_targets(data: dict[str, Any], errors: list[str]) -
             _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.max_total_blockers must be int >= 0")
         if not isinstance(max_tracking_failures, int) or max_tracking_failures < 0:
             _add_error(errors, "visual_snapshot_targets.json release_candidate_tracking.max_tracking_failures must be int >= 0")
+
+    tier_names: set[str] = set()
+    if not isinstance(stability_scoring, dict) or not stability_scoring:
+        _add_error(errors, "visual_snapshot_targets.json stability_scoring must be non-empty object")
+    else:
+        weights = stability_scoring.get("weights")
+        failure_caps = stability_scoring.get("failure_caps")
+        confidence = stability_scoring.get("confidence")
+        score_round_digits = stability_scoring.get("score_round_digits")
+
+        if not isinstance(weights, dict) or not weights:
+            _add_error(errors, "visual_snapshot_targets.json stability_scoring.weights must be non-empty object")
+        else:
+            required_weight_keys = ("matching_runs", "avg_warnings", "total_blockers", "tracking_failures")
+            weight_sum = 0.0
+            for key in required_weight_keys:
+                value = _to_float(weights.get(key))
+                if value is None or value < 0.0 or value > 1.0:
+                    _add_error(errors, f"visual_snapshot_targets.json stability_scoring.weights.{key} must be within [0.0, 1.0]")
+                else:
+                    weight_sum += value
+            if weight_sum <= 0.0:
+                _add_error(errors, "visual_snapshot_targets.json stability_scoring.weights sum must be > 0")
+
+        if not isinstance(failure_caps, dict) or not failure_caps:
+            _add_error(errors, "visual_snapshot_targets.json stability_scoring.failure_caps must be non-empty object")
+        else:
+            max_avg_warnings_cap = _to_float(failure_caps.get("max_avg_warnings"))
+            max_total_blockers_cap = failure_caps.get("max_total_blockers")
+            max_tracking_failures_cap = failure_caps.get("max_tracking_failures")
+            if max_avg_warnings_cap is None or max_avg_warnings_cap <= 0.0:
+                _add_error(errors, "visual_snapshot_targets.json stability_scoring.failure_caps.max_avg_warnings must be float > 0.0")
+            if not isinstance(max_total_blockers_cap, int) or max_total_blockers_cap < 0:
+                _add_error(errors, "visual_snapshot_targets.json stability_scoring.failure_caps.max_total_blockers must be int >= 0")
+            if not isinstance(max_tracking_failures_cap, int) or max_tracking_failures_cap < 0:
+                _add_error(errors, "visual_snapshot_targets.json stability_scoring.failure_caps.max_tracking_failures must be int >= 0")
+
+        if not isinstance(confidence, dict) or not confidence:
+            _add_error(errors, "visual_snapshot_targets.json stability_scoring.confidence must be non-empty object")
+        else:
+            reference_runs = confidence.get("reference_runs")
+            min_confidence = _to_float(confidence.get("min_confidence"))
+            if not isinstance(reference_runs, int) or reference_runs < 1:
+                _add_error(errors, "visual_snapshot_targets.json stability_scoring.confidence.reference_runs must be int >= 1")
+            if min_confidence is None or min_confidence < 0.0 or min_confidence > 1.0:
+                _add_error(errors, "visual_snapshot_targets.json stability_scoring.confidence.min_confidence must be within [0.0, 1.0]")
+
+        if not isinstance(score_round_digits, int) or score_round_digits < 0 or score_round_digits > 5:
+            _add_error(errors, "visual_snapshot_targets.json stability_scoring.score_round_digits must be int within [0, 5]")
+
+    if not isinstance(stability_tiers, dict) or not stability_tiers:
+        _add_error(errors, "visual_snapshot_targets.json stability_tiers must be non-empty object")
+    else:
+        default_tier = stability_tiers.get("default_tier")
+        tiers = stability_tiers.get("tiers")
+
+        if not isinstance(default_tier, str) or not default_tier.strip():
+            _add_error(errors, "visual_snapshot_targets.json stability_tiers.default_tier must be non-empty string")
+        if not isinstance(tiers, list) or not tiers:
+            _add_error(errors, "visual_snapshot_targets.json stability_tiers.tiers must be non-empty array")
+        else:
+            for idx, tier_row in enumerate(tiers):
+                if not isinstance(tier_row, dict) or not tier_row:
+                    _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}] must be non-empty object")
+                    continue
+                tier_name = tier_row.get("name")
+                min_score = _to_float(tier_row.get("min_score"))
+                max_avg_warnings = _to_float(tier_row.get("max_avg_warnings"))
+                max_total_blockers = tier_row.get("max_total_blockers")
+                max_tracking_failures = tier_row.get("max_tracking_failures")
+                min_confidence = _to_float(tier_row.get("min_confidence"))
+
+                if not isinstance(tier_name, str) or not tier_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].name must be non-empty string")
+                else:
+                    if tier_name in tier_names:
+                        _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].name must be unique ({tier_name})")
+                    tier_names.add(tier_name)
+
+                if min_score is None or min_score < 0.0 or min_score > 100.0:
+                    _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].min_score must be within [0.0, 100.0]")
+                if max_avg_warnings is None or max_avg_warnings < 0.0:
+                    _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].max_avg_warnings must be float >= 0.0")
+                if not isinstance(max_total_blockers, int) or max_total_blockers < 0:
+                    _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].max_total_blockers must be int >= 0")
+                if not isinstance(max_tracking_failures, int) or max_tracking_failures < 0:
+                    _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].max_tracking_failures must be int >= 0")
+                if min_confidence is None or min_confidence < 0.0 or min_confidence > 1.0:
+                    _add_error(errors, f"visual_snapshot_targets.json stability_tiers.tiers[{idx}].min_confidence must be within [0.0, 1.0]")
+
+        if isinstance(default_tier, str) and default_tier and tier_names and default_tier not in tier_names:
+            _add_error(errors, "visual_snapshot_targets.json stability_tiers.default_tier must reference tiers.name")
+
+    if not isinstance(convergence_dashboard, dict) or not convergence_dashboard:
+        _add_error(errors, "visual_snapshot_targets.json convergence_dashboard must be non-empty object")
+    else:
+        for key in (
+            "max_approval_failures",
+            "max_tracking_failures",
+            "max_trace_failures",
+            "max_manifest_failures",
+            "max_blockers",
+            "max_warnings",
+            "max_dashboard_failures",
+        ):
+            value = convergence_dashboard.get(key)
+            if not isinstance(value, int) or value < 0:
+                _add_error(errors, f"visual_snapshot_targets.json convergence_dashboard.{key} must be int >= 0")
+
+    if not isinstance(ci_signal_contract, dict) or not ci_signal_contract:
+        _add_error(errors, "visual_snapshot_targets.json ci_signal_contract must be non-empty object")
+    else:
+        required_fields = ci_signal_contract.get("required_fields")
+        tier_requirements = ci_signal_contract.get("tier_requirements")
+        max_contract_failures = ci_signal_contract.get("max_contract_failures")
+
+        if not isinstance(required_fields, list) or not required_fields:
+            _add_error(errors, "visual_snapshot_targets.json ci_signal_contract.required_fields must be non-empty array")
+        else:
+            for idx, field_name in enumerate(required_fields):
+                if not isinstance(field_name, str) or not field_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json ci_signal_contract.required_fields[{idx}] must be non-empty string")
+
+        if not isinstance(tier_requirements, dict) or not tier_requirements:
+            _add_error(errors, "visual_snapshot_targets.json ci_signal_contract.tier_requirements must be non-empty object")
+        else:
+            ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+            for mode_name, tier_name in tier_requirements.items():
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json ci_signal_contract.tier_requirements key must be non-empty string")
+                    continue
+                if not isinstance(tier_name, str) or not tier_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json ci_signal_contract.tier_requirements.{mode_name} must be non-empty string")
+                    continue
+                if tier_names and tier_name not in tier_names:
+                    _add_error(errors, f"visual_snapshot_targets.json ci_signal_contract.tier_requirements.{mode_name} must reference stability_tiers.tiers.name")
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for ci_signal_contract.tier_requirements")
+
+        if not isinstance(max_contract_failures, int) or max_contract_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json ci_signal_contract.max_contract_failures must be int >= 0")
+
+    if not isinstance(convergence_trend_reinforcement, dict) or not convergence_trend_reinforcement:
+        _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement must be non-empty object")
+    else:
+        history_file = convergence_trend_reinforcement.get("history_file")
+        long_window = convergence_trend_reinforcement.get("long_window")
+        short_window = convergence_trend_reinforcement.get("short_window")
+        min_samples = convergence_trend_reinforcement.get("min_samples")
+        required_metrics = convergence_trend_reinforcement.get("required_metrics")
+        max_worsening_metrics = convergence_trend_reinforcement.get("max_worsening_metrics")
+        max_worsening_delta = _to_float(convergence_trend_reinforcement.get("max_worsening_delta"))
+        min_improving_metrics = convergence_trend_reinforcement.get("min_improving_metrics")
+        min_improvement_delta = _to_float(convergence_trend_reinforcement.get("min_improvement_delta"))
+        max_trend_failures = convergence_trend_reinforcement.get("max_trend_failures")
+
+        if not isinstance(history_file, str) or not history_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.history_file must be non-empty user:// path")
+        archive_file_row = approval_history_archive.get("archive_file") if isinstance(approval_history_archive, dict) else None
+        if isinstance(history_file, str) and isinstance(archive_file_row, str) and archive_file_row and history_file != archive_file_row:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.history_file must match approval_history_archive.archive_file")
+
+        if not isinstance(long_window, int) or long_window < 5:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.long_window must be int >= 5")
+        if not isinstance(short_window, int) or short_window < 3:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.short_window must be int >= 3")
+        if isinstance(long_window, int) and isinstance(short_window, int) and short_window > long_window:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.short_window cannot exceed long_window")
+        if not isinstance(min_samples, int) or min_samples < 1:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.min_samples must be int >= 1")
+        if isinstance(short_window, int) and isinstance(min_samples, int) and min_samples > short_window:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.min_samples cannot exceed short_window")
+
+        allowed_metrics = {
+            "warnings",
+            "blockers",
+            "approval_failures",
+            "tracking_failures",
+            "dashboard_failures",
+            "contract_failures",
+            "stability_score",
+        }
+        if not isinstance(required_metrics, list) or not required_metrics:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.required_metrics must be non-empty array")
+            required_metrics = []
+        else:
+            for idx, metric_name in enumerate(required_metrics):
+                if not isinstance(metric_name, str) or not metric_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json convergence_trend_reinforcement.required_metrics[{idx}] must be non-empty string")
+                    continue
+                if metric_name not in allowed_metrics:
+                    _add_error(errors, f"visual_snapshot_targets.json convergence_trend_reinforcement.required_metrics[{idx}] is not supported")
+
+        if not isinstance(max_worsening_metrics, int) or max_worsening_metrics < 0:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.max_worsening_metrics must be int >= 0")
+        elif isinstance(required_metrics, list) and max_worsening_metrics > len(required_metrics):
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.max_worsening_metrics cannot exceed required_metrics size")
+
+        if max_worsening_delta is None or max_worsening_delta < 0.0:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.max_worsening_delta must be float >= 0.0")
+
+        if not isinstance(min_improving_metrics, int) or min_improving_metrics < 0:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.min_improving_metrics must be int >= 0")
+        elif isinstance(required_metrics, list) and min_improving_metrics > len(required_metrics):
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.min_improving_metrics cannot exceed required_metrics size")
+
+        if min_improvement_delta is None or min_improvement_delta < 0.0:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.min_improvement_delta must be float >= 0.0")
+        if not isinstance(max_trend_failures, int) or max_trend_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json convergence_trend_reinforcement.max_trend_failures must be int >= 0")
+
+    if not isinstance(exception_lifecycle_linkage, dict) or not exception_lifecycle_linkage:
+        _add_error(errors, "visual_snapshot_targets.json exception_lifecycle_linkage must be non-empty object")
+    else:
+        required_states = exception_lifecycle_linkage.get("required_states")
+        stale_idle_runs = exception_lifecycle_linkage.get("stale_idle_runs")
+        min_transition_count = exception_lifecycle_linkage.get("min_transition_count")
+        max_orphan_entries = exception_lifecycle_linkage.get("max_orphan_entries")
+        max_unlinked_reclaims = exception_lifecycle_linkage.get("max_unlinked_reclaims")
+        max_unlinked_expired = exception_lifecycle_linkage.get("max_unlinked_expired")
+        max_linkage_failures = exception_lifecycle_linkage.get("max_linkage_failures")
+
+        allowed_states = {"active", "stale", "reclaim_candidate", "expired"}
+        if not isinstance(required_states, list):
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle_linkage.required_states must be array")
+        else:
+            for idx, state_name in enumerate(required_states):
+                if not isinstance(state_name, str) or not state_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json exception_lifecycle_linkage.required_states[{idx}] must be non-empty string")
+                    continue
+                if state_name not in allowed_states:
+                    _add_error(errors, f"visual_snapshot_targets.json exception_lifecycle_linkage.required_states[{idx}] is not supported")
+
+        if not isinstance(stale_idle_runs, int) or stale_idle_runs < 1:
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle_linkage.stale_idle_runs must be int >= 1")
+        expire_idle_runs = exception_lifecycle.get("expire_idle_runs") if isinstance(exception_lifecycle, dict) else None
+        if isinstance(stale_idle_runs, int) and isinstance(expire_idle_runs, int) and stale_idle_runs >= expire_idle_runs:
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle_linkage.stale_idle_runs must be < exception_lifecycle.expire_idle_runs")
+
+        if not isinstance(min_transition_count, int) or min_transition_count < 0:
+            _add_error(errors, "visual_snapshot_targets.json exception_lifecycle_linkage.min_transition_count must be int >= 0")
+        else:
+            max_expired = exception_lifecycle.get("max_expired_entries") if isinstance(exception_lifecycle, dict) else None
+            max_reclaims = exception_lifecycle.get("max_reclaim_candidates") if isinstance(exception_lifecycle, dict) else None
+            if isinstance(max_expired, int) and isinstance(max_reclaims, int):
+                if min_transition_count > (max_expired + max_reclaims):
+                    _add_error(errors, "visual_snapshot_targets.json exception_lifecycle_linkage.min_transition_count cannot exceed exception_lifecycle capacity")
+
+        for key, value in {
+            "max_orphan_entries": max_orphan_entries,
+            "max_unlinked_reclaims": max_unlinked_reclaims,
+            "max_unlinked_expired": max_unlinked_expired,
+            "max_linkage_failures": max_linkage_failures,
+        }.items():
+            if not isinstance(value, int) or value < 0:
+                _add_error(errors, f"visual_snapshot_targets.json exception_lifecycle_linkage.{key} must be int >= 0")
+
+    if not isinstance(visual_performance_cogate, dict) or not visual_performance_cogate:
+        _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate must be non-empty object")
+    else:
+        baseline_report = visual_performance_cogate.get("baseline_report")
+        required_run_modes = visual_performance_cogate.get("required_run_modes")
+        max_alert_total = visual_performance_cogate.get("max_alert_total")
+        max_alert_critical = visual_performance_cogate.get("max_alert_critical")
+        max_alert_warning = visual_performance_cogate.get("max_alert_warning")
+        max_scenario_failures = visual_performance_cogate.get("max_scenario_failures")
+        required_scenarios = visual_performance_cogate.get("required_scenarios")
+        max_frame_ms_ratio = _to_float(visual_performance_cogate.get("max_frame_ms_ratio"))
+        max_memory_mb_ratio = _to_float(visual_performance_cogate.get("max_memory_mb_ratio"))
+        max_cogate_failures = visual_performance_cogate.get("max_cogate_failures")
+
+        if not isinstance(baseline_report, str) or not baseline_report.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.baseline_report must be non-empty user:// path")
+
+        release_checklist_row = release_gate_templates.get("release_checklist", {}) if isinstance(release_gate_templates, dict) else {}
+        required_reports_row = release_checklist_row.get("required_reports", []) if isinstance(release_checklist_row, dict) else []
+        if isinstance(baseline_report, str) and isinstance(required_reports_row, list) and baseline_report not in required_reports_row:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.baseline_report must be listed in release_gate_templates.release_checklist.required_reports")
+
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.required_run_modes must be non-empty array")
+        else:
+            ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json visual_performance_cogate.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for visual_performance_cogate.required_run_modes")
+
+        if not isinstance(max_alert_total, int) or max_alert_total < 0:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.max_alert_total must be int >= 0")
+        if not isinstance(max_alert_critical, int) or max_alert_critical < 0:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.max_alert_critical must be int >= 0")
+        if not isinstance(max_alert_warning, int) or max_alert_warning < 0:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.max_alert_warning must be int >= 0")
+        if not isinstance(max_scenario_failures, int) or max_scenario_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.max_scenario_failures must be int >= 0")
+
+        if not isinstance(required_scenarios, list):
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.required_scenarios must be array")
+        else:
+            for idx, scenario_id in enumerate(required_scenarios):
+                if not isinstance(scenario_id, str) or not scenario_id.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json visual_performance_cogate.required_scenarios[{idx}] must be non-empty string")
+
+        if max_frame_ms_ratio is None or max_frame_ms_ratio < 1.0 or max_frame_ms_ratio > 3.0:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.max_frame_ms_ratio must be within [1.0, 3.0]")
+        if max_memory_mb_ratio is None or max_memory_mb_ratio < 1.0 or max_memory_mb_ratio > 3.0:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.max_memory_mb_ratio must be within [1.0, 3.0]")
+        if not isinstance(max_cogate_failures, int) or max_cogate_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json visual_performance_cogate.max_cogate_failures must be int >= 0")
+
+    if not isinstance(cogate_threshold_templates, dict) or not cogate_threshold_templates:
+        _add_error(errors, "visual_snapshot_targets.json cogate_threshold_templates must be non-empty object")
+    else:
+        default_template = cogate_threshold_templates.get("default_template")
+        run_mode_templates = cogate_threshold_templates.get("run_mode_templates")
+        templates = cogate_threshold_templates.get("templates")
+
+        if not isinstance(default_template, str) or not default_template.strip():
+            _add_error(errors, "visual_snapshot_targets.json cogate_threshold_templates.default_template must be non-empty string")
+
+        template_names = set()
+        if not isinstance(templates, dict) or not templates:
+            _add_error(errors, "visual_snapshot_targets.json cogate_threshold_templates.templates must be non-empty object")
+        else:
+            for template_name, template_row in templates.items():
+                if not isinstance(template_name, str) or not template_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json cogate_threshold_templates.templates key must be non-empty string")
+                    continue
+                template_names.add(template_name)
+                if not isinstance(template_row, dict) or not template_row:
+                    _add_error(errors, f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name} must be non-empty object")
+                    continue
+
+                for key in [
+                    "max_alert_total",
+                    "max_alert_critical",
+                    "max_alert_warning",
+                    "max_scenario_failures",
+                    "max_cogate_failures",
+                ]:
+                    value = template_row.get(key)
+                    if not isinstance(value, int) or value < 0:
+                        _add_error(errors, f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name}.{key} must be int >= 0")
+
+                frame_ratio = _to_float(template_row.get("max_frame_ms_ratio"))
+                memory_ratio = _to_float(template_row.get("max_memory_mb_ratio"))
+                if frame_ratio is None or frame_ratio < 1.0 or frame_ratio > 3.0:
+                    _add_error(errors, f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name}.max_frame_ms_ratio must be within [1.0, 3.0]")
+                if memory_ratio is None or memory_ratio < 1.0 or memory_ratio > 3.0:
+                    _add_error(errors, f"visual_snapshot_targets.json cogate_threshold_templates.templates.{template_name}.max_memory_mb_ratio must be within [1.0, 3.0]")
+
+        if isinstance(default_template, str) and default_template and template_names and default_template not in template_names:
+            _add_error(errors, "visual_snapshot_targets.json cogate_threshold_templates.default_template must exist in templates")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(run_mode_templates, dict) or not run_mode_templates:
+            _add_error(errors, "visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates must be non-empty object")
+        else:
+            for run_mode_name, template_name in run_mode_templates.items():
+                if not isinstance(run_mode_name, str) or not run_mode_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates key must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and run_mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{run_mode_name}' for cogate_threshold_templates.run_mode_templates")
+                if not isinstance(template_name, str) or not template_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates.{run_mode_name} must be non-empty string")
+                    continue
+                if template_names and template_name not in template_names:
+                    _add_error(errors, f"visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates.{run_mode_name} must reference templates key")
+
+            cogate_run_modes = visual_performance_cogate.get("required_run_modes", []) if isinstance(visual_performance_cogate, dict) else []
+            for mode_name in cogate_run_modes if isinstance(cogate_run_modes, list) else []:
+                if isinstance(mode_name, str) and mode_name and mode_name not in run_mode_templates:
+                    _add_error(errors, f"visual_snapshot_targets.json cogate_threshold_templates.run_mode_templates must include '{mode_name}' from visual_performance_cogate.required_run_modes")
+
+    if not isinstance(cross_platform_alignment, dict) or not cross_platform_alignment:
+        _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment must be non-empty object")
+    else:
+        history_file = cross_platform_alignment.get("history_file")
+        aggregation_window = cross_platform_alignment.get("aggregation_window")
+        required_run_modes = cross_platform_alignment.get("required_run_modes")
+        required_backends = cross_platform_alignment.get("required_backends")
+        metric_limits = cross_platform_alignment.get("metric_limits")
+        max_missing_backends = cross_platform_alignment.get("max_missing_backends")
+        max_missing_run_modes = cross_platform_alignment.get("max_missing_run_modes")
+        max_alignment_failures = cross_platform_alignment.get("max_alignment_failures")
+
+        if not isinstance(history_file, str) or not history_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment.history_file must be non-empty user:// path")
+        archive_file_row = approval_history_archive.get("archive_file") if isinstance(approval_history_archive, dict) else None
+        if isinstance(history_file, str) and isinstance(archive_file_row, str) and archive_file_row and history_file != archive_file_row:
+            _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment.history_file must match approval_history_archive.archive_file")
+
+        if not isinstance(aggregation_window, int) or aggregation_window < 10:
+            _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment.aggregation_window must be int >= 10")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json cross_platform_alignment.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for cross_platform_alignment.required_run_modes")
+
+        if not isinstance(required_backends, list) or not required_backends:
+            _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment.required_backends must be non-empty array")
+        else:
+            for idx, backend_name in enumerate(required_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json cross_platform_alignment.required_backends[{idx}] must be non-empty string")
+
+        if not isinstance(metric_limits, dict) or not metric_limits:
+            _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment.metric_limits must be non-empty object")
+        else:
+            allowed_metrics = {
+                "performance_alert_total",
+                "performance_alert_critical",
+                "performance_alert_warning",
+                "performance_scenario_failures",
+                "performance_cogate_failures",
+            }
+            for metric_name, limit_value in metric_limits.items():
+                if not isinstance(metric_name, str) or not metric_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json cross_platform_alignment.metric_limits key must be non-empty string")
+                    continue
+                if metric_name not in allowed_metrics:
+                    _add_error(errors, f"visual_snapshot_targets.json cross_platform_alignment.metric_limits.{metric_name} is not supported")
+                    continue
+                if not isinstance(limit_value, int) or limit_value < 0:
+                    _add_error(errors, f"visual_snapshot_targets.json cross_platform_alignment.metric_limits.{metric_name} must be int >= 0")
+
+        for key, value in {
+            "max_missing_backends": max_missing_backends,
+            "max_missing_run_modes": max_missing_run_modes,
+            "max_alignment_failures": max_alignment_failures,
+        }.items():
+            if not isinstance(value, int) or value < 0:
+                _add_error(errors, f"visual_snapshot_targets.json cross_platform_alignment.{key} must be int >= 0")
+
+    if not isinstance(pressure_scenario_standardization, dict) or not pressure_scenario_standardization:
+        _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization must be non-empty object")
+    else:
+        baseline_targets_file = pressure_scenario_standardization.get("baseline_targets_file")
+        baseline_report = pressure_scenario_standardization.get("baseline_report")
+        required_run_modes = pressure_scenario_standardization.get("required_run_modes")
+        required_scenarios = pressure_scenario_standardization.get("required_scenarios")
+        max_avg_frame_ms_ratio = _to_float(pressure_scenario_standardization.get("max_avg_frame_ms_ratio"))
+        max_p95_frame_ms_ratio = _to_float(pressure_scenario_standardization.get("max_p95_frame_ms_ratio"))
+        max_peak_memory_mb_ratio = _to_float(pressure_scenario_standardization.get("max_peak_memory_mb_ratio"))
+        max_standardization_failures = pressure_scenario_standardization.get("max_standardization_failures")
+
+        if not isinstance(baseline_targets_file, str) or not baseline_targets_file.startswith("res://"):
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.baseline_targets_file must be non-empty res:// path")
+        if not isinstance(baseline_report, str) or not baseline_report.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.baseline_report must be non-empty user:// path")
+
+        release_checklist_row = release_gate_templates.get("release_checklist", {}) if isinstance(release_gate_templates, dict) else {}
+        required_reports_row = release_checklist_row.get("required_reports", []) if isinstance(release_checklist_row, dict) else []
+        if isinstance(baseline_report, str) and isinstance(required_reports_row, list) and baseline_report not in required_reports_row:
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.baseline_report must be listed in release_gate_templates.release_checklist.required_reports")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json pressure_scenario_standardization.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for pressure_scenario_standardization.required_run_modes")
+
+        if not isinstance(required_scenarios, list) or not required_scenarios:
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.required_scenarios must be non-empty array")
+        else:
+            for idx, scenario_name in enumerate(required_scenarios):
+                if not isinstance(scenario_name, str) or not scenario_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json pressure_scenario_standardization.required_scenarios[{idx}] must be non-empty string")
+
+        if max_avg_frame_ms_ratio is None or max_avg_frame_ms_ratio < 1.0 or max_avg_frame_ms_ratio > 3.0:
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.max_avg_frame_ms_ratio must be within [1.0, 3.0]")
+        if max_p95_frame_ms_ratio is None or max_p95_frame_ms_ratio < 1.0 or max_p95_frame_ms_ratio > 3.0:
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.max_p95_frame_ms_ratio must be within [1.0, 3.0]")
+        if max_peak_memory_mb_ratio is None or max_peak_memory_mb_ratio < 1.0 or max_peak_memory_mb_ratio > 3.0:
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.max_peak_memory_mb_ratio must be within [1.0, 3.0]")
+        if not isinstance(max_standardization_failures, int) or max_standardization_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json pressure_scenario_standardization.max_standardization_failures must be int >= 0")
+
+    if not isinstance(alignment_dashboard_refinement, dict) or not alignment_dashboard_refinement:
+        _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement must be non-empty object")
+    else:
+        required_run_modes = alignment_dashboard_refinement.get("required_run_modes")
+        metric_weights = alignment_dashboard_refinement.get("metric_weights")
+        missing_backend_weight = _to_float(alignment_dashboard_refinement.get("missing_backend_weight"))
+        missing_run_mode_weight = _to_float(alignment_dashboard_refinement.get("missing_run_mode_weight"))
+        watch_score_threshold = _to_float(alignment_dashboard_refinement.get("watch_score_threshold"))
+        critical_score_threshold = _to_float(alignment_dashboard_refinement.get("critical_score_threshold"))
+        max_dashboard_failures = alignment_dashboard_refinement.get("max_dashboard_failures")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json alignment_dashboard_refinement.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for alignment_dashboard_refinement.required_run_modes")
+
+        allowed_dashboard_metrics = {
+            "performance_alert_total",
+            "performance_alert_critical",
+            "performance_alert_warning",
+            "performance_scenario_failures",
+            "performance_cogate_failures",
+        }
+        metric_limits_row = cross_platform_alignment.get("metric_limits", {}) if isinstance(cross_platform_alignment, dict) else {}
+        if not isinstance(metric_weights, dict) or not metric_weights:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights must be non-empty object")
+        else:
+            for metric_name, weight_value in metric_weights.items():
+                if not isinstance(metric_name, str) or not metric_name.strip():
+                    _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights key must be non-empty string")
+                    continue
+                if metric_name not in allowed_dashboard_metrics:
+                    _add_error(errors, f"visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights.{metric_name} is not supported")
+                    continue
+                if isinstance(metric_limits_row, dict) and metric_name not in metric_limits_row:
+                    _add_error(errors, f"visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights.{metric_name} must exist in cross_platform_alignment.metric_limits")
+                weight_float = _to_float(weight_value)
+                if weight_float is None or weight_float < 0.0 or weight_float > 5.0:
+                    _add_error(errors, f"visual_snapshot_targets.json alignment_dashboard_refinement.metric_weights.{metric_name} must be within [0.0, 5.0]")
+
+        if missing_backend_weight is None or missing_backend_weight < 0.0 or missing_backend_weight > 5.0:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.missing_backend_weight must be within [0.0, 5.0]")
+        if missing_run_mode_weight is None or missing_run_mode_weight < 0.0 or missing_run_mode_weight > 5.0:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.missing_run_mode_weight must be within [0.0, 5.0]")
+        if watch_score_threshold is None or watch_score_threshold < 0.0:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.watch_score_threshold must be float >= 0.0")
+        if critical_score_threshold is None or critical_score_threshold < 0.0:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.critical_score_threshold must be float >= 0.0")
+        if watch_score_threshold is not None and critical_score_threshold is not None and critical_score_threshold < watch_score_threshold:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.critical_score_threshold must be >= watch_score_threshold")
+        if not isinstance(max_dashboard_failures, int) or max_dashboard_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json alignment_dashboard_refinement.max_dashboard_failures must be int >= 0")
+
+    if not isinstance(pressure_alignment_convergence_gate, dict) or not pressure_alignment_convergence_gate:
+        _add_error(errors, "visual_snapshot_targets.json pressure_alignment_convergence_gate must be non-empty object")
+    else:
+        required_run_modes = pressure_alignment_convergence_gate.get("required_run_modes")
+        required_backends = pressure_alignment_convergence_gate.get("required_backends")
+        max_standardization_failures = pressure_alignment_convergence_gate.get("max_standardization_failures")
+        max_alignment_failures = pressure_alignment_convergence_gate.get("max_alignment_failures")
+        max_dashboard_failures = pressure_alignment_convergence_gate.get("max_dashboard_failures")
+        max_critical_severity_count = pressure_alignment_convergence_gate.get("max_critical_severity_count")
+        max_convergence_failures = pressure_alignment_convergence_gate.get("max_convergence_failures")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json pressure_alignment_convergence_gate.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json pressure_alignment_convergence_gate.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for pressure_alignment_convergence_gate.required_run_modes")
+
+        backend_matrix_required_row = backend_matrix_governance.get("required_backend_matrix", []) if isinstance(backend_matrix_governance, dict) else []
+        if not isinstance(required_backends, list) or not required_backends:
+            _add_error(errors, "visual_snapshot_targets.json pressure_alignment_convergence_gate.required_backends must be non-empty array")
+        else:
+            for idx, backend_name in enumerate(required_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json pressure_alignment_convergence_gate.required_backends[{idx}] must be non-empty string")
+                    continue
+                if isinstance(backend_matrix_required_row, list) and backend_name not in backend_matrix_required_row:
+                    _add_error(errors, f"visual_snapshot_targets.json pressure_alignment_convergence_gate.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+
+        for key, value in {
+            "max_standardization_failures": max_standardization_failures,
+            "max_alignment_failures": max_alignment_failures,
+            "max_dashboard_failures": max_dashboard_failures,
+            "max_critical_severity_count": max_critical_severity_count,
+            "max_convergence_failures": max_convergence_failures,
+        }.items():
+            if not isinstance(value, int) or value < 0:
+                _add_error(errors, f"visual_snapshot_targets.json pressure_alignment_convergence_gate.{key} must be int >= 0")
+
+    if not isinstance(regression_cycle_window_governance, dict) or not regression_cycle_window_governance:
+        _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance must be non-empty object")
+    else:
+        history_file = regression_cycle_window_governance.get("history_file")
+        cycle_window_size = regression_cycle_window_governance.get("cycle_window_size")
+        min_cycle_entries = regression_cycle_window_governance.get("min_cycle_entries")
+        required_run_modes = regression_cycle_window_governance.get("required_run_modes")
+        required_backends = regression_cycle_window_governance.get("required_backends")
+        max_warning_delta = regression_cycle_window_governance.get("max_warning_delta")
+        max_blocker_delta = regression_cycle_window_governance.get("max_blocker_delta")
+        max_alignment_score_delta = _to_float(regression_cycle_window_governance.get("max_alignment_score_delta"))
+        max_cycle_failures = regression_cycle_window_governance.get("max_cycle_failures")
+
+        if not isinstance(history_file, str) or not history_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.history_file must be non-empty user:// path")
+        archive_file_row = approval_history_archive.get("archive_file", "") if isinstance(approval_history_archive, dict) else ""
+        if isinstance(history_file, str) and isinstance(archive_file_row, str) and archive_file_row and history_file != archive_file_row:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.history_file must match approval_history_archive.archive_file")
+
+        if not isinstance(cycle_window_size, int) or cycle_window_size < 10:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.cycle_window_size must be int >= 10")
+        if not isinstance(min_cycle_entries, int) or min_cycle_entries < 1:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.min_cycle_entries must be int >= 1")
+        if isinstance(cycle_window_size, int) and isinstance(min_cycle_entries, int) and min_cycle_entries > cycle_window_size:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.min_cycle_entries must be <= cycle_window_size")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json regression_cycle_window_governance.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for regression_cycle_window_governance.required_run_modes")
+
+        backend_matrix_required_row = backend_matrix_governance.get("required_backend_matrix", []) if isinstance(backend_matrix_governance, dict) else []
+        if not isinstance(required_backends, list) or not required_backends:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.required_backends must be non-empty array")
+        else:
+            for idx, backend_name in enumerate(required_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json regression_cycle_window_governance.required_backends[{idx}] must be non-empty string")
+                    continue
+                if isinstance(backend_matrix_required_row, list) and backend_name not in backend_matrix_required_row:
+                    _add_error(errors, f"visual_snapshot_targets.json regression_cycle_window_governance.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+
+        if not isinstance(max_warning_delta, int) or max_warning_delta < 0:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.max_warning_delta must be int >= 0")
+        if not isinstance(max_blocker_delta, int) or max_blocker_delta < 0:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.max_blocker_delta must be int >= 0")
+        if max_alignment_score_delta is None or max_alignment_score_delta < 0.0 or max_alignment_score_delta > 5.0:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.max_alignment_score_delta must be within [0.0, 5.0]")
+        if not isinstance(max_cycle_failures, int) or max_cycle_failures < 0:
+            _add_error(errors, "visual_snapshot_targets.json regression_cycle_window_governance.max_cycle_failures must be int >= 0")
+
+    if not isinstance(multi_cycle_adaptive_gate, dict) or not multi_cycle_adaptive_gate:
+        _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate must be non-empty object")
+    else:
+        history_file = multi_cycle_adaptive_gate.get("history_file")
+        window_sizes = multi_cycle_adaptive_gate.get("window_sizes")
+        min_window_entries = multi_cycle_adaptive_gate.get("min_window_entries")
+        required_run_modes = multi_cycle_adaptive_gate.get("required_run_modes")
+        required_backends = multi_cycle_adaptive_gate.get("required_backends")
+        max_warning_slopes = multi_cycle_adaptive_gate.get("max_warning_slopes")
+        max_blocker_slopes = multi_cycle_adaptive_gate.get("max_blocker_slopes")
+        max_missing_run_modes = multi_cycle_adaptive_gate.get("max_missing_run_modes")
+        max_missing_backends = multi_cycle_adaptive_gate.get("max_missing_backends")
+        max_adaptive_failures = multi_cycle_adaptive_gate.get("max_adaptive_failures")
+
+        if not isinstance(history_file, str) or not history_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.history_file must be non-empty user:// path")
+        archive_file_row = approval_history_archive.get("archive_file", "") if isinstance(approval_history_archive, dict) else ""
+        if isinstance(history_file, str) and isinstance(archive_file_row, str) and archive_file_row and history_file != archive_file_row:
+            _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.history_file must match approval_history_archive.archive_file")
+
+        short_window = None
+        if not isinstance(window_sizes, dict) or not window_sizes:
+            _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes must be non-empty object")
+        else:
+            short_window = window_sizes.get("short")
+            mid_window = window_sizes.get("mid")
+            long_window = window_sizes.get("long")
+            if not isinstance(short_window, int) or short_window < 4:
+                _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.short must be int >= 4")
+            if not isinstance(mid_window, int) or mid_window < 4:
+                _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.mid must be int >= 4")
+            if not isinstance(long_window, int) or long_window < 4:
+                _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.long must be int >= 4")
+            if isinstance(short_window, int) and isinstance(mid_window, int) and mid_window < short_window:
+                _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.mid must be >= short")
+            if isinstance(mid_window, int) and isinstance(long_window, int) and long_window < mid_window:
+                _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.window_sizes.long must be >= mid")
+
+        if not isinstance(min_window_entries, int) or min_window_entries < 1:
+            _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.min_window_entries must be int >= 1")
+        elif isinstance(short_window, int) and min_window_entries > short_window:
+            _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.min_window_entries must be <= window_sizes.short")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json multi_cycle_adaptive_gate.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for multi_cycle_adaptive_gate.required_run_modes")
+
+        backend_matrix_required_row = backend_matrix_governance.get("required_backend_matrix", []) if isinstance(backend_matrix_governance, dict) else []
+        if not isinstance(required_backends, list) or not required_backends:
+            _add_error(errors, "visual_snapshot_targets.json multi_cycle_adaptive_gate.required_backends must be non-empty array")
+        else:
+            for idx, backend_name in enumerate(required_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json multi_cycle_adaptive_gate.required_backends[{idx}] must be non-empty string")
+                    continue
+                if isinstance(backend_matrix_required_row, list) and backend_name not in backend_matrix_required_row:
+                    _add_error(errors, f"visual_snapshot_targets.json multi_cycle_adaptive_gate.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+
+        for key, slope_row in {
+            "max_warning_slopes": max_warning_slopes,
+            "max_blocker_slopes": max_blocker_slopes,
+        }.items():
+            if not isinstance(slope_row, dict) or not slope_row:
+                _add_error(errors, f"visual_snapshot_targets.json multi_cycle_adaptive_gate.{key} must be non-empty object")
+                continue
+            for window_key in ("short", "mid", "long"):
+                slope_value = _to_float(slope_row.get(window_key))
+                if slope_value is None or slope_value < 0.0 or slope_value > 10.0:
+                    _add_error(errors, f"visual_snapshot_targets.json multi_cycle_adaptive_gate.{key}.{window_key} must be within [0.0, 10.0]")
+
+        for key, value in {
+            "max_missing_run_modes": max_missing_run_modes,
+            "max_missing_backends": max_missing_backends,
+            "max_adaptive_failures": max_adaptive_failures,
+        }.items():
+            if not isinstance(value, int) or value < 0:
+                _add_error(errors, f"visual_snapshot_targets.json multi_cycle_adaptive_gate.{key} must be int >= 0")
+
+    if not isinstance(release_feedback_governance, dict) or not release_feedback_governance:
+        _add_error(errors, "visual_snapshot_targets.json release_feedback_governance must be non-empty object")
+    else:
+        history_file = release_feedback_governance.get("history_file")
+        feedback_window_size = release_feedback_governance.get("feedback_window_size")
+        min_feedback_entries = release_feedback_governance.get("min_feedback_entries")
+        required_run_modes = release_feedback_governance.get("required_run_modes")
+        required_backends = release_feedback_governance.get("required_backends")
+        issue_metrics = release_feedback_governance.get("issue_metrics")
+        min_closure_rate = _to_float(release_feedback_governance.get("min_closure_rate"))
+        max_unresolved_issues = release_feedback_governance.get("max_unresolved_issues")
+        max_missing_run_modes = release_feedback_governance.get("max_missing_run_modes")
+        max_missing_backends = release_feedback_governance.get("max_missing_backends")
+        max_feedback_failures = release_feedback_governance.get("max_feedback_failures")
+
+        if not isinstance(history_file, str) or not history_file.startswith("user://"):
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.history_file must be non-empty user:// path")
+        archive_file_row = approval_history_archive.get("archive_file", "") if isinstance(approval_history_archive, dict) else ""
+        if isinstance(history_file, str) and isinstance(archive_file_row, str) and archive_file_row and history_file != archive_file_row:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.history_file must match approval_history_archive.archive_file")
+
+        if not isinstance(feedback_window_size, int) or feedback_window_size < 5:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.feedback_window_size must be int >= 5")
+        if not isinstance(min_feedback_entries, int) or min_feedback_entries < 1:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.min_feedback_entries must be int >= 1")
+        if isinstance(feedback_window_size, int) and isinstance(min_feedback_entries, int) and min_feedback_entries > feedback_window_size:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.min_feedback_entries must be <= feedback_window_size")
+
+        ci_mode_bindings_row = release_gate_templates.get("ci_mode_bindings", {}) if isinstance(release_gate_templates, dict) else {}
+        if not isinstance(required_run_modes, list) or not required_run_modes:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.required_run_modes must be non-empty array")
+        else:
+            for idx, mode_name in enumerate(required_run_modes):
+                if not isinstance(mode_name, str) or not mode_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_feedback_governance.required_run_modes[{idx}] must be non-empty string")
+                    continue
+                if isinstance(ci_mode_bindings_row, dict) and mode_name not in ci_mode_bindings_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_gate_templates.ci_mode_bindings must include '{mode_name}' for release_feedback_governance.required_run_modes")
+
+        backend_matrix_required_row = backend_matrix_governance.get("required_backend_matrix", []) if isinstance(backend_matrix_governance, dict) else []
+        if not isinstance(required_backends, list) or not required_backends:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.required_backends must be non-empty array")
+        else:
+            for idx, backend_name in enumerate(required_backends):
+                if not isinstance(backend_name, str) or not backend_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_feedback_governance.required_backends[{idx}] must be non-empty string")
+                    continue
+                if isinstance(backend_matrix_required_row, list) and backend_name not in backend_matrix_required_row:
+                    _add_error(errors, f"visual_snapshot_targets.json release_feedback_governance.required_backends[{idx}] must be listed in backend_matrix_governance.required_backend_matrix")
+
+        allowed_issue_metrics = {
+            "blockers",
+            "warnings",
+            "approval_failures",
+            "tracking_failures",
+            "dashboard_failures",
+            "contract_failures",
+            "performance_cogate_failures",
+            "performance_scenario_failures",
+            "pressure_standardization_failures",
+            "alignment_dashboard_failures",
+        }
+        if not isinstance(issue_metrics, list) or not issue_metrics:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.issue_metrics must be non-empty array")
+        else:
+            for idx, metric_name in enumerate(issue_metrics):
+                if not isinstance(metric_name, str) or not metric_name.strip():
+                    _add_error(errors, f"visual_snapshot_targets.json release_feedback_governance.issue_metrics[{idx}] must be non-empty string")
+                    continue
+                if metric_name not in allowed_issue_metrics:
+                    _add_error(errors, f"visual_snapshot_targets.json release_feedback_governance.issue_metrics[{idx}] is not supported")
+
+        if min_closure_rate is None or min_closure_rate < 0.0 or min_closure_rate > 1.0:
+            _add_error(errors, "visual_snapshot_targets.json release_feedback_governance.min_closure_rate must be within [0.0, 1.0]")
+
+        for key, value in {
+            "max_unresolved_issues": max_unresolved_issues,
+            "max_missing_run_modes": max_missing_run_modes,
+            "max_missing_backends": max_missing_backends,
+            "max_feedback_failures": max_feedback_failures,
+        }.items():
+            if not isinstance(value, int) or value < 0:
+                _add_error(errors, f"visual_snapshot_targets.json release_feedback_governance.{key} must be int >= 0")
 
     if not isinstance(report_layers, dict) or not report_layers:
         _add_error(errors, "visual_snapshot_targets.json report_layers must be non-empty object")

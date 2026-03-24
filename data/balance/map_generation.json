@@ -88,6 +88,465 @@
       "elite": 1.55
     }
   },
+  "chapter_room_profiles": {
+    "chapter_1": {
+      "combat": {
+        "title": "Drowned Approach",
+        "objective": "Break the spore line",
+        "route_tag": "ABY-CMB",
+        "status_hint": "Hold the flooded corridor before the abyss closes.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "elite": {
+        "title": "Sunken Vanguard",
+        "objective": "Collapse the abyss spearhead",
+        "route_tag": "ABY-ELT",
+        "status_hint": "Heavy spores gather around elite packs.",
+        "required_kills_mult": 1.05,
+        "required_kills_add": 0,
+        "reward_mult": 1.05
+      },
+      "boss": {
+        "title": "Rockfall Threshold",
+        "objective": "Shatter the colossus gate",
+        "route_tag": "ABY-BOSS",
+        "status_hint": "End the abyss chapter with momentum.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.1
+      },
+      "event": {
+        "title": "Abyss Omen",
+        "objective": "Choose what to preserve",
+        "route_tag": "ABY-EVT",
+        "status_hint": "Your first route bend starts here.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "shop": {
+        "title": "Depth Market",
+        "objective": "Trade before the spores thicken",
+        "route_tag": "ABY-SHOP",
+        "status_hint": "Use the calm window to shape your build.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "treasure": {
+        "title": "Sunken Cache",
+        "objective": "Crack the sealed reliquary",
+        "route_tag": "ABY-TRE",
+        "status_hint": "Early ore bursts set the run tempo.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.1
+      },
+      "safe_camp": {
+        "title": "Shallow Refuge",
+        "objective": "Reset before the furnace descent",
+        "route_tag": "ABY-CAMP",
+        "status_hint": "Next leg shifts into chapter_2 fire pressure.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      }
+    },
+    "chapter_2": {
+      "combat": {
+        "title": "Furnace Push",
+        "objective": "Clear the molten choke point",
+        "route_tag": "PYRE-CMB",
+        "status_hint": "Heat ramps once the lane is sealed.",
+        "required_kills_mult": 1.05,
+        "required_kills_add": 1,
+        "reward_mult": 1.02
+      },
+      "elite": {
+        "title": "Inferno Spear",
+        "objective": "Break the demon honor guard",
+        "route_tag": "PYRE-ELT",
+        "status_hint": "Elite clears soften the coming lava surge.",
+        "required_kills_mult": 1.12,
+        "required_kills_add": 1,
+        "reward_mult": 1.08
+      },
+      "boss": {
+        "title": "Molten Gate",
+        "objective": "Silence the Flame Lord",
+        "route_tag": "PYRE-BOSS",
+        "status_hint": "The forge path opens after this throne falls.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.15
+      },
+      "event": {
+        "title": "Ashen Bargain",
+        "objective": "Choose what the pyre consumes",
+        "route_tag": "PYRE-EVT",
+        "status_hint": "Chapter choices begin burning into the route.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "shop": {
+        "title": "Ember Exchange",
+        "objective": "Refit before the forge run",
+        "route_tag": "PYRE-SHOP",
+        "status_hint": "Midgame upgrades spike hardest here.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "treasure": {
+        "title": "Cinder Vault",
+        "objective": "Raid the ember reserve",
+        "route_tag": "PYRE-TRE",
+        "status_hint": "Ore here feeds early evolutions.",
+        "required_kills_mult": 1.08,
+        "required_kills_add": 0,
+        "reward_mult": 1.15
+      },
+      "safe_camp": {
+        "title": "Forge Halt",
+        "objective": "Temper gear before the whiteout",
+        "route_tag": "PYRE-CAMP",
+        "status_hint": "Next routes pivot from fire lanes into chapter_3 frost pressure.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      }
+    },
+    "chapter_3": {
+      "combat": {
+        "title": "Whiteout Gauntlet",
+        "objective": "Seal the frost breach",
+        "route_tag": "FROST-CMB",
+        "status_hint": "Visibility collapses after each wave.",
+        "required_kills_mult": 1.15,
+        "required_kills_add": 2,
+        "reward_mult": 1.05
+      },
+      "elite": {
+        "title": "Frozen Hunt",
+        "objective": "Break the icebound vanguard",
+        "route_tag": "FROST-ELT",
+        "status_hint": "Blizzard pressure rewards decisive clears.",
+        "required_kills_mult": 1.3,
+        "required_kills_add": 1,
+        "reward_mult": 1.15
+      },
+      "boss": {
+        "title": "Aurora Throne",
+        "objective": "Unseat the Frost King",
+        "route_tag": "FROST-BOSS",
+        "status_hint": "Reflection pulses punish greedy movement.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.2
+      },
+      "event": {
+        "title": "Whispering Cairn",
+        "objective": "Read the names beneath the snow",
+        "route_tag": "FROST-EVT",
+        "status_hint": "These choices bend route memory and endings.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "shop": {
+        "title": "Glacier Exchange",
+        "objective": "Refit before the whiteout crest",
+        "route_tag": "FROST-SHOP",
+        "status_hint": "Last calm market before the aurora throne.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "treasure": {
+        "title": "Crystal Reliquary",
+        "objective": "Break the prism vault",
+        "route_tag": "FROST-TRE",
+        "status_hint": "Extra ore here funds late evolutions.",
+        "required_kills_mult": 1.2,
+        "required_kills_add": 1,
+        "reward_mult": 1.25
+      },
+      "safe_camp": {
+        "title": "Aurora Camp",
+        "objective": "Warm the party before the throne road",
+        "route_tag": "FROST-CAMP",
+        "status_hint": "Next route pushes directly into Frost King territory.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      }
+    },
+    "chapter_4": {
+      "combat": {
+        "title": "Void March",
+        "objective": "Hold the line against collapse",
+        "route_tag": "VOID-CMB",
+        "status_hint": "Corruption climbs with every delay.",
+        "required_kills_mult": 1.25,
+        "required_kills_add": 2,
+        "reward_mult": 1.1
+      },
+      "elite": {
+        "title": "Rift Tribunal",
+        "objective": "Break the void tribunal",
+        "route_tag": "VOID-ELT",
+        "status_hint": "Spatial shear punishes overextension.",
+        "required_kills_mult": 1.4,
+        "required_kills_add": 2,
+        "reward_mult": 1.2
+      },
+      "boss": {
+        "title": "Heart of Null",
+        "objective": "Break the Void Lord's shell",
+        "route_tag": "VOID-BOSS",
+        "status_hint": "The final route closes after this room.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.35
+      },
+      "event": {
+        "title": "Threshold Echo",
+        "objective": "Decide what survives the collapse",
+        "route_tag": "VOID-EVT",
+        "status_hint": "Late choices lock the ending axis.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "shop": {
+        "title": "Ashen Broker",
+        "objective": "Spend boldly before the heart",
+        "route_tag": "VOID-SHOP",
+        "status_hint": "Few rooms remain after this market.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      },
+      "treasure": {
+        "title": "Entropy Vault",
+        "objective": "Raid the collapsing hoard",
+        "route_tag": "VOID-TRE",
+        "status_hint": "High-risk loot spikes endgame builds.",
+        "required_kills_mult": 1.35,
+        "required_kills_add": 1,
+        "reward_mult": 1.35
+      },
+      "safe_camp": {
+        "title": "Last Ember Camp",
+        "objective": "Purge corruption before the final approach",
+        "route_tag": "VOID-CAMP",
+        "status_hint": "No true sanctuary remains beyond this point.",
+        "required_kills_mult": 1.0,
+        "required_kills_add": 0,
+        "reward_mult": 1.0
+      }
+    }
+  },
+  "chapter_progression_profiles": {
+    "chapter_1": {
+      "clear_banner": "Abyss line secured.",
+      "transition_intro": "Colossus broken. Seal the abyss gate and choose your furnace oath.",
+      "transition_resolved": "Abyss chapter resolved. Fire routes are now open.",
+      "event_resolved": "Abyss omen settled. Carry the decision into the furnace.",
+      "camp_recovery_note": "Camp respite complete. Next push enters chapter_2 heat lanes.",
+      "history_recap_prefix": "Abyss memory trace:",
+      "history_recap_limit": 4,
+      "checkpoint_label": "ABYSS-CHECK",
+      "mainline_nodes": {
+        "combat": "Breach the drowned line",
+        "elite": "Pin the abyss vanguard",
+        "boss": "Break the colossus seal",
+        "event": "Choose the omen response",
+        "treasure": "Secure the sunken cache",
+        "shop": "Rearm at the depth market",
+        "safe_camp": "Stabilize at shallow refuge"
+      },
+      "history_pace_tags": {
+        "combat": "abyss_push",
+        "elite": "abyss_vanguard",
+        "boss": "abyss_gate",
+        "event": "abyss_choice",
+        "treasure": "abyss_cache",
+        "shop": "abyss_market",
+        "safe_camp": "abyss_refuge"
+      }
+    },
+    "chapter_2": {
+      "clear_banner": "Furnace lane secured.",
+      "transition_intro": "Flame Lord broken. Resolve the forge vow before the whiteout.",
+      "transition_resolved": "Furnace chapter resolved. Frost routes are now open.",
+      "event_resolved": "Ashen bargain sealed. The next lane inherits the cost.",
+      "camp_recovery_note": "Forge halt complete. Next push enters chapter_3 frost pressure.",
+      "history_recap_prefix": "Furnace memory trace:",
+      "history_recap_limit": 4,
+      "checkpoint_label": "PYRE-CHECK",
+      "mainline_nodes": {
+        "combat": "Press through the molten choke",
+        "elite": "Break the inferno honor guard",
+        "boss": "Extinguish the flame throne",
+        "event": "Price the ashen bargain",
+        "treasure": "Open the cinder reserve",
+        "shop": "Refit at ember exchange",
+        "safe_camp": "Temper gear at forge halt"
+      },
+      "history_pace_tags": {
+        "combat": "pyre_push",
+        "elite": "pyre_guard",
+        "boss": "pyre_gate",
+        "event": "pyre_choice",
+        "treasure": "pyre_cache",
+        "shop": "pyre_market",
+        "safe_camp": "pyre_halt"
+      }
+    },
+    "chapter_3": {
+      "clear_banner": "Whiteout lane secured.",
+      "transition_intro": "Frost King dethroned. Stabilize the aurora breach before the void.",
+      "transition_resolved": "Frost chapter resolved. Void routes are now open.",
+      "event_resolved": "Whispering cairn answered. The ending axis shifts forward.",
+      "camp_recovery_note": "Aurora camp complete. Next push enters chapter_4 collapse pressure.",
+      "history_recap_prefix": "Frost memory trace:",
+      "history_recap_limit": 5,
+      "checkpoint_label": "FROST-CHECK",
+      "mainline_nodes": {
+        "combat": "Breach the frost line",
+        "elite": "Shatter the frozen hunt",
+        "boss": "Unseat the aurora throne",
+        "event": "Answer the whispering cairn",
+        "treasure": "Crack the crystal reliquary",
+        "shop": "Refit at glacier exchange",
+        "safe_camp": "Anchor the aurora camp"
+      },
+      "history_pace_tags": {
+        "combat": "frost_push",
+        "elite": "frost_hunt",
+        "boss": "frost_throne",
+        "event": "frost_choice",
+        "treasure": "frost_vault",
+        "shop": "frost_market",
+        "safe_camp": "frost_camp"
+      }
+    },
+    "chapter_4": {
+      "clear_banner": "Void lane secured.",
+      "transition_intro": "Void front breached. Resolve the final axis before the heart closes.",
+      "transition_resolved": "Void chapter resolved. Final route locked.",
+      "event_resolved": "Threshold echo sealed. Final route pressure is set.",
+      "camp_recovery_note": "Last ember camp complete. The final approach has no fallback.",
+      "history_recap_prefix": "Void memory trace:",
+      "history_recap_limit": 5,
+      "checkpoint_label": "VOID-CHECK",
+      "mainline_nodes": {
+        "combat": "Breach the void line",
+        "elite": "Break the rift tribunal",
+        "boss": "Fracture the null heart",
+        "event": "Seal the threshold echo",
+        "treasure": "Raid the entropy vault",
+        "shop": "Spend at the ashen broker",
+        "safe_camp": "Steady the last ember camp"
+      },
+      "history_pace_tags": {
+        "combat": "void_push",
+        "elite": "void_tribunal",
+        "boss": "void_heart",
+        "event": "void_choice",
+        "treasure": "void_vault",
+        "shop": "void_market",
+        "safe_camp": "void_ember"
+      }
+    }
+  },
+  "hidden_layers": {
+    "FS1": {
+      "title": "Time Rift",
+      "theme": "Survival fracture beyond the chapter_3 threshold.",
+      "unlock_rule": "Clear chapter bosses 1-3 in one victorious run without losing HP.",
+      "entrance_hint": "When the chapter_3 boss falls flawlessly, the camp altar can refract into the rift.",
+      "map_profile": {
+        "mode": "survival",
+        "room_count": -1,
+        "room_count_label": "Infinite survival loop",
+        "entry_room_type": "hidden_entry",
+        "encounter_room_type": "rift_arena",
+        "boss_room_type": "rift_boss_echo",
+        "settlement_room_type": "rift_settlement"
+      },
+      "combat_profile": {
+        "enemy_multiplier_base": 20.0,
+        "enemy_multiplier_step": 2.0,
+        "enemy_step_minutes": 5,
+        "boss_cycle_minutes": 5,
+        "enemy_pool_tags": [
+          "void_variant",
+          "time_echo"
+        ],
+        "boss_pool_tags": [
+          "chapter_boss_void_echo"
+        ]
+      },
+      "reward_profile": {
+        "track": "time_fragments",
+        "summary": "Gather Time Fragments and bank one Rewind charge for the next mainline clear.",
+        "repeat_motivation": "Longer survival pushes leaderboard time and cosmetic fragment payouts."
+      },
+      "settlement_profile": {
+        "mode": "survival_cashout",
+        "summary": "Cash out through the rift seal to archive survival time, fragments, and the earned Rewind charge."
+      }
+    },
+    "FS2": {
+      "title": "Genesis Forge",
+      "theme": "Five chained forge trials that stabilize legendary fusion.",
+      "unlock_rule": "Collect the four chapter boss relic accessories to stabilize the forge entrance.",
+      "entrance_hint": "Once every boss relic is archived, the camp forge can open a sealed genesis chain.",
+      "map_profile": {
+        "mode": "trial_chain",
+        "room_count": 5,
+        "room_count_label": "5 fixed forge trials",
+        "entry_room_type": "forge_gate",
+        "encounter_room_type": "forge_trial",
+        "boss_room_type": "forge_core",
+        "settlement_room_type": "forge_settlement",
+        "room_roles": [
+          "ore_tempering",
+          "ember_fold",
+          "frost_bind",
+          "void_sunder",
+          "genesis_core"
+        ]
+      },
+      "combat_profile": {
+        "enemy_multiplier_base": 25.0,
+        "enemy_multiplier_step": 0.0,
+        "enemy_step_minutes": 0,
+        "boss_cycle_minutes": 0,
+        "enemy_pool_tags": [
+          "forge_construct",
+          "boss_relic_echo"
+        ],
+        "boss_pool_tags": [
+          "forge_trial_master"
+        ]
+      },
+      "reward_profile": {
+        "track": "legendary_forge",
+        "summary": "Clear forge trials to unlock boss relic fusion and draft legendary weapon recipes.",
+        "repeat_motivation": "Repeat clears widen fusion options and reinforce late-game build goals."
+      },
+      "settlement_profile": {
+        "mode": "forge_resolution",
+        "summary": "Resolve the trial chain at the forge altar to archive recipes, relic merges, and repeat routes."
+      }
+    }
+  },
   "treasure_challenge": {
     "enabled": true,
     "combat_mode": "elite",

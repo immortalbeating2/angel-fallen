@@ -37,11 +37,26 @@ func test_visual_snapshot_targets_schema_is_valid() -> void:
 	var approval_history_archive: Dictionary = cfg.get("approval_history_archive", {})
 	var approval_threshold_templates: Dictionary = cfg.get("approval_threshold_templates", {})
 	var release_candidate_tracking: Dictionary = cfg.get("release_candidate_tracking", {})
+	var stability_scoring: Dictionary = cfg.get("stability_scoring", {})
+	var stability_tiers: Dictionary = cfg.get("stability_tiers", {})
+	var convergence_dashboard: Dictionary = cfg.get("convergence_dashboard", {})
+	var ci_signal_contract: Dictionary = cfg.get("ci_signal_contract", {})
+	var convergence_trend_reinforcement: Dictionary = cfg.get("convergence_trend_reinforcement", {})
+	var exception_lifecycle_linkage: Dictionary = cfg.get("exception_lifecycle_linkage", {})
+	var visual_performance_cogate: Dictionary = cfg.get("visual_performance_cogate", {})
+	var cogate_threshold_templates: Dictionary = cfg.get("cogate_threshold_templates", {})
+	var cross_platform_alignment: Dictionary = cfg.get("cross_platform_alignment", {})
+	var pressure_scenario_standardization: Dictionary = cfg.get("pressure_scenario_standardization", {})
+	var alignment_dashboard_refinement: Dictionary = cfg.get("alignment_dashboard_refinement", {})
+	var pressure_alignment_convergence_gate: Dictionary = cfg.get("pressure_alignment_convergence_gate", {})
+	var regression_cycle_window_governance: Dictionary = cfg.get("regression_cycle_window_governance", {})
+	var multi_cycle_adaptive_gate: Dictionary = cfg.get("multi_cycle_adaptive_gate", {})
+	var release_feedback_governance: Dictionary = cfg.get("release_feedback_governance", {})
 	var report_layers: Dictionary = cfg.get("report_layers", {})
 	var cross_version_baseline: Dictionary = cfg.get("cross_version_baseline", {})
 
 	assert_ne(channel, "", "channel should be non-empty")
-	assert_eq(channel, "chapter_snapshot_v12", "D36 should use chapter_snapshot_v12 channel")
+	assert_eq(channel, "chapter_snapshot_v19", "D43 should use chapter_snapshot_v19 channel")
 	assert_typeof(snapshots, TYPE_DICTIONARY, "snapshots should be Dictionary")
 	assert_typeof(precision, TYPE_DICTIONARY, "precision should be Dictionary")
 	assert_typeof(backend_profiles, TYPE_DICTIONARY, "backend_profiles should be Dictionary")
@@ -60,9 +75,24 @@ func test_visual_snapshot_targets_schema_is_valid() -> void:
 	assert_typeof(approval_history_archive, TYPE_DICTIONARY, "approval_history_archive should be Dictionary")
 	assert_typeof(approval_threshold_templates, TYPE_DICTIONARY, "approval_threshold_templates should be Dictionary")
 	assert_typeof(release_candidate_tracking, TYPE_DICTIONARY, "release_candidate_tracking should be Dictionary")
+	assert_typeof(stability_scoring, TYPE_DICTIONARY, "stability_scoring should be Dictionary")
+	assert_typeof(stability_tiers, TYPE_DICTIONARY, "stability_tiers should be Dictionary")
+	assert_typeof(convergence_dashboard, TYPE_DICTIONARY, "convergence_dashboard should be Dictionary")
+	assert_typeof(ci_signal_contract, TYPE_DICTIONARY, "ci_signal_contract should be Dictionary")
+	assert_typeof(convergence_trend_reinforcement, TYPE_DICTIONARY, "convergence_trend_reinforcement should be Dictionary")
+	assert_typeof(exception_lifecycle_linkage, TYPE_DICTIONARY, "exception_lifecycle_linkage should be Dictionary")
+	assert_typeof(visual_performance_cogate, TYPE_DICTIONARY, "visual_performance_cogate should be Dictionary")
+	assert_typeof(cogate_threshold_templates, TYPE_DICTIONARY, "cogate_threshold_templates should be Dictionary")
+	assert_typeof(cross_platform_alignment, TYPE_DICTIONARY, "cross_platform_alignment should be Dictionary")
+	assert_typeof(pressure_scenario_standardization, TYPE_DICTIONARY, "pressure_scenario_standardization should be Dictionary")
+	assert_typeof(alignment_dashboard_refinement, TYPE_DICTIONARY, "alignment_dashboard_refinement should be Dictionary")
+	assert_typeof(pressure_alignment_convergence_gate, TYPE_DICTIONARY, "pressure_alignment_convergence_gate should be Dictionary")
+	assert_typeof(regression_cycle_window_governance, TYPE_DICTIONARY, "regression_cycle_window_governance should be Dictionary")
+	assert_typeof(multi_cycle_adaptive_gate, TYPE_DICTIONARY, "multi_cycle_adaptive_gate should be Dictionary")
+	assert_typeof(release_feedback_governance, TYPE_DICTIONARY, "release_feedback_governance should be Dictionary")
 	assert_typeof(report_layers, TYPE_DICTIONARY, "report_layers should be Dictionary")
 	assert_typeof(cross_version_baseline, TYPE_DICTIONARY, "cross_version_baseline should be Dictionary")
-	assert_gte(snapshots.size(), 5, "D36 should define at least 5 snapshot targets")
+	assert_gte(snapshots.size(), 5, "D43 should define at least 5 snapshot targets")
 
 	assert_gte(int(precision.get("sample_rounds", 0)), 3, "D36 sample_rounds should be >= 3")
 	assert_gte(float(precision.get("max_opaque_ratio_stddev", -1.0)), 0.0, "max_opaque_ratio_stddev should be >= 0")
@@ -163,6 +193,20 @@ func test_visual_snapshot_targets_schema_is_valid() -> void:
 	assert_true(approval_required_sections.has("Backend Matrix Governance"), "approval_workflow.required_report_sections should include Backend Matrix Governance")
 	assert_true(approval_required_sections.has("Approval Workflow"), "approval_workflow.required_report_sections should include Approval Workflow")
 	assert_true(approval_required_sections.has("Approval Audit Trail"), "approval_workflow.required_report_sections should include Approval Audit Trail")
+	assert_true(approval_required_sections.has("Stability Scoring"), "approval_workflow.required_report_sections should include Stability Scoring")
+	assert_true(approval_required_sections.has("Convergence Dashboard"), "approval_workflow.required_report_sections should include Convergence Dashboard")
+	assert_true(approval_required_sections.has("CI Signal Contract"), "approval_workflow.required_report_sections should include CI Signal Contract")
+	assert_true(approval_required_sections.has("Convergence Trend Reinforcement"), "approval_workflow.required_report_sections should include Convergence Trend Reinforcement")
+	assert_true(approval_required_sections.has("Exception Lifecycle Linkage"), "approval_workflow.required_report_sections should include Exception Lifecycle Linkage")
+	assert_true(approval_required_sections.has("Visual-Performance Co-Gate"), "approval_workflow.required_report_sections should include Visual-Performance Co-Gate")
+	assert_true(approval_required_sections.has("Co-Gate Threshold Template"), "approval_workflow.required_report_sections should include Co-Gate Threshold Template")
+	assert_true(approval_required_sections.has("Cross-Platform Alignment"), "approval_workflow.required_report_sections should include Cross-Platform Alignment")
+	assert_true(approval_required_sections.has("Pressure Scenario Standardization"), "approval_workflow.required_report_sections should include Pressure Scenario Standardization")
+	assert_true(approval_required_sections.has("Alignment Dashboard Refinement"), "approval_workflow.required_report_sections should include Alignment Dashboard Refinement")
+	assert_true(approval_required_sections.has("Pressure Alignment Convergence Gate"), "approval_workflow.required_report_sections should include Pressure Alignment Convergence Gate")
+	assert_true(approval_required_sections.has("Regression Cycle Window Governance"), "approval_workflow.required_report_sections should include Regression Cycle Window Governance")
+	assert_true(approval_required_sections.has("Multi-Cycle Adaptive Gate"), "approval_workflow.required_report_sections should include Multi-Cycle Adaptive Gate")
+	assert_true(approval_required_sections.has("Release Feedback Governance"), "approval_workflow.required_report_sections should include Release Feedback Governance")
 	assert_true(bool(approval_workflow.get("require_zero_blockers", false)), "approval_workflow.require_zero_blockers should be true")
 	assert_typeof(approval_zero_warning, TYPE_ARRAY, "approval_workflow.require_zero_warnings_for_strategies should be Array")
 	assert_true(approval_zero_warning.has("release_blocking"), "approval_workflow.require_zero_warnings_for_strategies should include release_blocking")
@@ -308,7 +352,384 @@ func test_visual_snapshot_targets_schema_is_valid() -> void:
 		assert_true(manifest_ci_bindings.has(run_mode_name), "release_gate_templates.ci_mode_bindings should include %s for D36 tracking" % run_mode_name)
 	for strategy_name_var: Variant in tracking_required_strategies:
 		var strategy_name: String = str(strategy_name_var)
-		assert_true(manifest_required_strategies.has(strategy_name), "release_gate_templates.required_strategies should include %s for D36 tracking" % strategy_name)
+		assert_true(manifest_required_strategies.has(strategy_name), "release_gate_templates.required_strategies should include %s for D37 tracking" % strategy_name)
+
+	var scoring_weights: Dictionary = stability_scoring.get("weights", {})
+	var scoring_caps: Dictionary = stability_scoring.get("failure_caps", {})
+	var scoring_confidence: Dictionary = stability_scoring.get("confidence", {})
+	assert_typeof(scoring_weights, TYPE_DICTIONARY, "stability_scoring.weights should be Dictionary")
+	assert_typeof(scoring_caps, TYPE_DICTIONARY, "stability_scoring.failure_caps should be Dictionary")
+	assert_typeof(scoring_confidence, TYPE_DICTIONARY, "stability_scoring.confidence should be Dictionary")
+	for key in ["matching_runs", "avg_warnings", "total_blockers", "tracking_failures"]:
+		assert_gte(float(scoring_weights.get(key, -1.0)), 0.0, "stability_scoring.weights.%s should be >= 0" % key)
+		assert_lte(float(scoring_weights.get(key, 2.0)), 1.0, "stability_scoring.weights.%s should be <= 1" % key)
+	assert_gt(float(scoring_caps.get("max_avg_warnings", 0.0)), 0.0, "stability_scoring.failure_caps.max_avg_warnings should be > 0")
+	assert_gte(int(scoring_caps.get("max_total_blockers", -1)), 0, "stability_scoring.failure_caps.max_total_blockers should be >= 0")
+	assert_gte(int(scoring_caps.get("max_tracking_failures", -1)), 0, "stability_scoring.failure_caps.max_tracking_failures should be >= 0")
+	assert_gte(int(scoring_confidence.get("reference_runs", 0)), 1, "stability_scoring.confidence.reference_runs should be >= 1")
+	assert_gte(float(scoring_confidence.get("min_confidence", -1.0)), 0.0, "stability_scoring.confidence.min_confidence should be >= 0")
+	assert_lte(float(scoring_confidence.get("min_confidence", 2.0)), 1.0, "stability_scoring.confidence.min_confidence should be <= 1")
+	assert_gte(int(stability_scoring.get("score_round_digits", -1)), 0, "stability_scoring.score_round_digits should be >= 0")
+	assert_lte(int(stability_scoring.get("score_round_digits", 10)), 5, "stability_scoring.score_round_digits should be <= 5")
+
+	var tier_default: String = str(stability_tiers.get("default_tier", ""))
+	var tier_rows: Array = stability_tiers.get("tiers", [])
+	assert_ne(tier_default, "", "stability_tiers.default_tier should be non-empty")
+	assert_typeof(tier_rows, TYPE_ARRAY, "stability_tiers.tiers should be Array")
+	assert_gte(tier_rows.size(), 1, "stability_tiers.tiers should be non-empty")
+	var tier_names: Array[String] = []
+	for idx in range(tier_rows.size()):
+		var tier_row: Dictionary = tier_rows[idx]
+		assert_typeof(tier_row, TYPE_DICTIONARY, "stability tier row should be Dictionary")
+		var tier_name: String = str(tier_row.get("name", ""))
+		assert_ne(tier_name, "", "stability tier name should be non-empty")
+		tier_names.append(tier_name)
+		assert_gte(float(tier_row.get("min_score", -1.0)), 0.0, "stability tier min_score should be >= 0")
+		assert_lte(float(tier_row.get("min_score", 101.0)), 100.0, "stability tier min_score should be <= 100")
+		assert_gte(float(tier_row.get("max_avg_warnings", -1.0)), 0.0, "stability tier max_avg_warnings should be >= 0")
+		assert_gte(int(tier_row.get("max_total_blockers", -1)), 0, "stability tier max_total_blockers should be >= 0")
+		assert_gte(int(tier_row.get("max_tracking_failures", -1)), 0, "stability tier max_tracking_failures should be >= 0")
+		assert_gte(float(tier_row.get("min_confidence", -1.0)), 0.0, "stability tier min_confidence should be >= 0")
+		assert_lte(float(tier_row.get("min_confidence", 2.0)), 1.0, "stability tier min_confidence should be <= 1")
+	assert_true(tier_names.has(tier_default), "stability_tiers.default_tier should reference tiers.name")
+
+	for key in [
+		"max_approval_failures",
+		"max_tracking_failures",
+		"max_trace_failures",
+		"max_manifest_failures",
+		"max_blockers",
+		"max_warnings",
+		"max_dashboard_failures",
+	]:
+		assert_gte(int(convergence_dashboard.get(key, -1)), 0, "convergence_dashboard.%s should be >= 0" % key)
+
+	var ci_required_fields: Array = ci_signal_contract.get("required_fields", [])
+	var ci_tier_requirements: Dictionary = ci_signal_contract.get("tier_requirements", {})
+	assert_typeof(ci_required_fields, TYPE_ARRAY, "ci_signal_contract.required_fields should be Array")
+	assert_typeof(ci_tier_requirements, TYPE_DICTIONARY, "ci_signal_contract.tier_requirements should be Dictionary")
+	assert_gte(ci_required_fields.size(), 1, "ci_signal_contract.required_fields should be non-empty")
+	for run_mode_name in ["rehearsal", "trend_gate", "release_candidate", "release_blocking"]:
+		assert_true(ci_tier_requirements.has(run_mode_name), "ci_signal_contract.tier_requirements should include %s" % run_mode_name)
+		var required_tier: String = str(ci_tier_requirements.get(run_mode_name, ""))
+		assert_ne(required_tier, "", "ci_signal tier should be non-empty for %s" % run_mode_name)
+		assert_true(tier_names.has(required_tier), "ci_signal tier should reference stability_tiers for %s" % run_mode_name)
+		assert_true(manifest_ci_bindings.has(run_mode_name), "release_gate_templates.ci_mode_bindings should include %s for D38 ci signal contract" % run_mode_name)
+	assert_gte(int(ci_signal_contract.get("max_contract_failures", -1)), 0, "ci_signal_contract.max_contract_failures should be >= 0")
+
+	var trend_history_file: String = str(convergence_trend_reinforcement.get("history_file", ""))
+	var trend_required_metrics: Array = convergence_trend_reinforcement.get("required_metrics", [])
+	assert_true(trend_history_file.begins_with("user://"), "convergence_trend_reinforcement.history_file should be user:// path")
+	assert_eq(trend_history_file, archive_file, "convergence_trend_reinforcement.history_file should match approval_history_archive.archive_file")
+	assert_gte(int(convergence_trend_reinforcement.get("long_window", 0)), 5, "convergence_trend_reinforcement.long_window should be >= 5")
+	assert_gte(int(convergence_trend_reinforcement.get("short_window", 0)), 3, "convergence_trend_reinforcement.short_window should be >= 3")
+	assert_lte(int(convergence_trend_reinforcement.get("short_window", 0)), int(convergence_trend_reinforcement.get("long_window", 0)), "convergence_trend_reinforcement.short_window should be <= long_window")
+	assert_gte(int(convergence_trend_reinforcement.get("min_samples", 0)), 1, "convergence_trend_reinforcement.min_samples should be >= 1")
+	assert_lte(int(convergence_trend_reinforcement.get("min_samples", 0)), int(convergence_trend_reinforcement.get("short_window", 0)), "convergence_trend_reinforcement.min_samples should be <= short_window")
+	assert_typeof(trend_required_metrics, TYPE_ARRAY, "convergence_trend_reinforcement.required_metrics should be Array")
+	assert_gte(trend_required_metrics.size(), 1, "convergence_trend_reinforcement.required_metrics should be non-empty")
+	var allowed_trend_metrics: Array[String] = [
+		"warnings",
+		"blockers",
+		"approval_failures",
+		"tracking_failures",
+		"dashboard_failures",
+		"contract_failures",
+		"stability_score",
+	]
+	for metric_name_var: Variant in trend_required_metrics:
+		var metric_name: String = str(metric_name_var)
+		assert_true(allowed_trend_metrics.has(metric_name), "convergence_trend_reinforcement.required_metrics should contain supported metric names")
+	if trend_required_metrics.has("tracking_failures"):
+		assert_true(tracking_required_run_modes.has("release_candidate"), "tracking_failures metric should align with release_candidate_tracking.required_run_modes")
+	if trend_required_metrics.has("dashboard_failures"):
+		assert_gte(int(convergence_dashboard.get("max_dashboard_failures", -1)), 0, "dashboard_failures metric should align with convergence_dashboard")
+	assert_gte(int(convergence_trend_reinforcement.get("max_worsening_metrics", -1)), 0, "convergence_trend_reinforcement.max_worsening_metrics should be >= 0")
+	assert_lte(int(convergence_trend_reinforcement.get("max_worsening_metrics", 999)), trend_required_metrics.size(), "convergence_trend_reinforcement.max_worsening_metrics should be <= required_metrics size")
+	assert_gte(float(convergence_trend_reinforcement.get("max_worsening_delta", -1.0)), 0.0, "convergence_trend_reinforcement.max_worsening_delta should be >= 0")
+	assert_gte(int(convergence_trend_reinforcement.get("min_improving_metrics", -1)), 0, "convergence_trend_reinforcement.min_improving_metrics should be >= 0")
+	assert_lte(int(convergence_trend_reinforcement.get("min_improving_metrics", 999)), trend_required_metrics.size(), "convergence_trend_reinforcement.min_improving_metrics should be <= required_metrics size")
+	assert_gte(float(convergence_trend_reinforcement.get("min_improvement_delta", -1.0)), 0.0, "convergence_trend_reinforcement.min_improvement_delta should be >= 0")
+	assert_gte(int(convergence_trend_reinforcement.get("max_trend_failures", -1)), 0, "convergence_trend_reinforcement.max_trend_failures should be >= 0")
+
+	var linkage_required_states: Array = exception_lifecycle_linkage.get("required_states", [])
+	assert_typeof(linkage_required_states, TYPE_ARRAY, "exception_lifecycle_linkage.required_states should be Array")
+	for state_name_var: Variant in linkage_required_states:
+		var state_name: String = str(state_name_var)
+		assert_true(["active", "stale", "reclaim_candidate", "expired"].has(state_name), "exception_lifecycle_linkage.required_states should contain supported states")
+	assert_gte(int(exception_lifecycle_linkage.get("stale_idle_runs", 0)), 1, "exception_lifecycle_linkage.stale_idle_runs should be >= 1")
+	assert_lt(int(exception_lifecycle_linkage.get("stale_idle_runs", 999)), int(exception_lifecycle.get("expire_idle_runs", 0)), "exception_lifecycle_linkage.stale_idle_runs should be < exception_lifecycle.expire_idle_runs")
+	assert_gte(int(exception_lifecycle_linkage.get("min_transition_count", -1)), 0, "exception_lifecycle_linkage.min_transition_count should be >= 0")
+	assert_lte(
+		int(exception_lifecycle_linkage.get("min_transition_count", 0)),
+		int(exception_lifecycle.get("max_expired_entries", 0)) + int(exception_lifecycle.get("max_reclaim_candidates", 0)),
+		"exception_lifecycle_linkage.min_transition_count should be <= exception_lifecycle capacity"
+	)
+	for key in ["max_orphan_entries", "max_unlinked_reclaims", "max_unlinked_expired", "max_linkage_failures"]:
+		assert_gte(int(exception_lifecycle_linkage.get(key, -1)), 0, "exception_lifecycle_linkage.%s should be >= 0" % key)
+	assert_true(manifest_ci_bindings.has("release_blocking"), "release_gate_templates.ci_mode_bindings should include release_blocking for D38 linkage governance")
+
+	var cogate_baseline_report: String = str(visual_performance_cogate.get("baseline_report", ""))
+	var cogate_required_modes: Array = visual_performance_cogate.get("required_run_modes", [])
+	var cogate_required_scenarios: Array = visual_performance_cogate.get("required_scenarios", [])
+	var release_checklist_reports: Array = manifest_release_checklist.get("required_reports", [])
+	assert_true(cogate_baseline_report.begins_with("user://"), "visual_performance_cogate.baseline_report should be user:// path")
+	assert_true(release_checklist_reports.has(cogate_baseline_report), "visual_performance_cogate.baseline_report should be included in release_checklist.required_reports")
+	assert_typeof(cogate_required_modes, TYPE_ARRAY, "visual_performance_cogate.required_run_modes should be Array")
+	assert_gte(cogate_required_modes.size(), 1, "visual_performance_cogate.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in cogate_required_modes:
+		var run_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(run_mode_name), "release_gate_templates.ci_mode_bindings should include %s for D40 co-gate" % run_mode_name)
+	assert_gte(int(visual_performance_cogate.get("max_alert_total", -1)), 0, "visual_performance_cogate.max_alert_total should be >= 0")
+	assert_gte(int(visual_performance_cogate.get("max_alert_critical", -1)), 0, "visual_performance_cogate.max_alert_critical should be >= 0")
+	assert_gte(int(visual_performance_cogate.get("max_alert_warning", -1)), 0, "visual_performance_cogate.max_alert_warning should be >= 0")
+	assert_gte(int(visual_performance_cogate.get("max_scenario_failures", -1)), 0, "visual_performance_cogate.max_scenario_failures should be >= 0")
+	assert_typeof(cogate_required_scenarios, TYPE_ARRAY, "visual_performance_cogate.required_scenarios should be Array")
+	for scenario_id_var: Variant in cogate_required_scenarios:
+		assert_ne(str(scenario_id_var), "", "visual_performance_cogate.required_scenarios should contain non-empty ids")
+	assert_gte(float(visual_performance_cogate.get("max_frame_ms_ratio", -1.0)), 1.0, "visual_performance_cogate.max_frame_ms_ratio should be >= 1.0")
+	assert_lte(float(visual_performance_cogate.get("max_frame_ms_ratio", 4.0)), 3.0, "visual_performance_cogate.max_frame_ms_ratio should be <= 3.0")
+	assert_gte(float(visual_performance_cogate.get("max_memory_mb_ratio", -1.0)), 1.0, "visual_performance_cogate.max_memory_mb_ratio should be >= 1.0")
+	assert_lte(float(visual_performance_cogate.get("max_memory_mb_ratio", 4.0)), 3.0, "visual_performance_cogate.max_memory_mb_ratio should be <= 3.0")
+	assert_gte(int(visual_performance_cogate.get("max_cogate_failures", -1)), 0, "visual_performance_cogate.max_cogate_failures should be >= 0")
+
+	var cogate_default_template: String = str(cogate_threshold_templates.get("default_template", ""))
+	var cogate_run_mode_templates: Dictionary = cogate_threshold_templates.get("run_mode_templates", {})
+	var cogate_templates: Dictionary = cogate_threshold_templates.get("templates", {})
+	assert_ne(cogate_default_template, "", "cogate_threshold_templates.default_template should be non-empty")
+	assert_typeof(cogate_run_mode_templates, TYPE_DICTIONARY, "cogate_threshold_templates.run_mode_templates should be Dictionary")
+	assert_typeof(cogate_templates, TYPE_DICTIONARY, "cogate_threshold_templates.templates should be Dictionary")
+	assert_true(cogate_templates.has(cogate_default_template), "cogate_threshold_templates.default_template should exist in templates")
+	for run_mode_name_var: Variant in cogate_run_mode_templates.keys():
+		var run_mode_name: String = str(run_mode_name_var)
+		var template_name: String = str(cogate_run_mode_templates.get(run_mode_name, ""))
+		assert_true(manifest_ci_bindings.has(run_mode_name), "cogate_threshold_templates.run_mode_templates should align with ci_mode_bindings")
+		assert_true(cogate_templates.has(template_name), "cogate_threshold_templates.run_mode_templates should reference templates key")
+	for run_mode_name_var: Variant in cogate_required_modes:
+		var required_mode: String = str(run_mode_name_var)
+		assert_true(cogate_run_mode_templates.has(required_mode), "cogate_threshold_templates.run_mode_templates should cover visual_performance_cogate.required_run_modes")
+	for template_name_var: Variant in cogate_templates.keys():
+		var template_name: String = str(template_name_var)
+		var template_row: Dictionary = cogate_templates.get(template_name, {})
+		assert_typeof(template_row, TYPE_DICTIONARY, "cogate_threshold_templates.templates.%s should be Dictionary" % template_name)
+		for key in ["max_alert_total", "max_alert_critical", "max_alert_warning", "max_scenario_failures", "max_cogate_failures"]:
+			assert_gte(int(template_row.get(key, -1)), 0, "cogate_threshold_templates.templates.%s.%s should be >= 0" % [template_name, key])
+		assert_gte(float(template_row.get("max_frame_ms_ratio", -1.0)), 1.0, "cogate_threshold_templates.templates.%s.max_frame_ms_ratio should be >= 1.0" % template_name)
+		assert_lte(float(template_row.get("max_frame_ms_ratio", 4.0)), 3.0, "cogate_threshold_templates.templates.%s.max_frame_ms_ratio should be <= 3.0" % template_name)
+		assert_gte(float(template_row.get("max_memory_mb_ratio", -1.0)), 1.0, "cogate_threshold_templates.templates.%s.max_memory_mb_ratio should be >= 1.0" % template_name)
+		assert_lte(float(template_row.get("max_memory_mb_ratio", 4.0)), 3.0, "cogate_threshold_templates.templates.%s.max_memory_mb_ratio should be <= 3.0" % template_name)
+
+	var alignment_history_file: String = str(cross_platform_alignment.get("history_file", ""))
+	var alignment_required_modes: Array = cross_platform_alignment.get("required_run_modes", [])
+	var alignment_required_backends: Array = cross_platform_alignment.get("required_backends", [])
+	var alignment_metric_limits: Dictionary = cross_platform_alignment.get("metric_limits", {})
+	assert_eq(alignment_history_file, archive_file, "cross_platform_alignment.history_file should match approval_history_archive.archive_file")
+	assert_gte(int(cross_platform_alignment.get("aggregation_window", -1)), 10, "cross_platform_alignment.aggregation_window should be >= 10")
+	assert_typeof(alignment_required_modes, TYPE_ARRAY, "cross_platform_alignment.required_run_modes should be Array")
+	assert_gte(alignment_required_modes.size(), 1, "cross_platform_alignment.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in alignment_required_modes:
+		var run_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(run_mode_name), "cross_platform_alignment.required_run_modes should align with ci_mode_bindings")
+	assert_typeof(alignment_required_backends, TYPE_ARRAY, "cross_platform_alignment.required_backends should be Array")
+	assert_gte(alignment_required_backends.size(), 1, "cross_platform_alignment.required_backends should be non-empty")
+	for backend_name_var: Variant in alignment_required_backends:
+		assert_ne(str(backend_name_var), "", "cross_platform_alignment.required_backends should contain non-empty backend names")
+	assert_typeof(alignment_metric_limits, TYPE_DICTIONARY, "cross_platform_alignment.metric_limits should be Dictionary")
+	assert_gte(alignment_metric_limits.size(), 1, "cross_platform_alignment.metric_limits should be non-empty")
+	for metric_name_var: Variant in alignment_metric_limits.keys():
+		var metric_name: String = str(metric_name_var)
+		assert_true([
+			"performance_alert_total",
+			"performance_alert_critical",
+			"performance_alert_warning",
+			"performance_scenario_failures",
+			"performance_cogate_failures",
+		].has(metric_name), "cross_platform_alignment.metric_limits should use supported metrics")
+		assert_gte(int(alignment_metric_limits.get(metric_name, -1)), 0, "cross_platform_alignment.metric_limits.%s should be >= 0" % metric_name)
+	for key in ["max_missing_backends", "max_missing_run_modes", "max_alignment_failures"]:
+		assert_gte(int(cross_platform_alignment.get(key, -1)), 0, "cross_platform_alignment.%s should be >= 0" % key)
+
+	var standardization_targets_file: String = str(pressure_scenario_standardization.get("baseline_targets_file", ""))
+	var standardization_report_file: String = str(pressure_scenario_standardization.get("baseline_report", ""))
+	var standardization_required_modes: Array = pressure_scenario_standardization.get("required_run_modes", [])
+	var standardization_required_scenarios: Array = pressure_scenario_standardization.get("required_scenarios", [])
+	assert_true(standardization_targets_file.begins_with("res://"), "pressure_scenario_standardization.baseline_targets_file should be res:// path")
+	assert_true(standardization_report_file.begins_with("user://"), "pressure_scenario_standardization.baseline_report should be user:// path")
+	assert_true(release_checklist_reports.has(standardization_report_file), "pressure_scenario_standardization.baseline_report should be included in release_checklist.required_reports")
+	assert_typeof(standardization_required_modes, TYPE_ARRAY, "pressure_scenario_standardization.required_run_modes should be Array")
+	assert_gte(standardization_required_modes.size(), 1, "pressure_scenario_standardization.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in standardization_required_modes:
+		var standardization_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(standardization_mode_name), "pressure_scenario_standardization.required_run_modes should align with ci_mode_bindings")
+	assert_typeof(standardization_required_scenarios, TYPE_ARRAY, "pressure_scenario_standardization.required_scenarios should be Array")
+	assert_gte(standardization_required_scenarios.size(), 1, "pressure_scenario_standardization.required_scenarios should be non-empty")
+	for scenario_id_var: Variant in standardization_required_scenarios:
+		assert_ne(str(scenario_id_var), "", "pressure_scenario_standardization.required_scenarios should contain non-empty ids")
+	for required_scenario in [
+		"game_world_elite_pressure_medium",
+		"game_world_elite_pressure_high",
+		"game_world_elite_pressure_extreme",
+		"game_world_boss_pressure_endurance",
+	]:
+		assert_true(standardization_required_scenarios.has(required_scenario), "pressure_scenario_standardization.required_scenarios should include %s" % required_scenario)
+	assert_gte(float(pressure_scenario_standardization.get("max_avg_frame_ms_ratio", -1.0)), 1.0, "pressure_scenario_standardization.max_avg_frame_ms_ratio should be >= 1.0")
+	assert_lte(float(pressure_scenario_standardization.get("max_avg_frame_ms_ratio", 4.0)), 3.0, "pressure_scenario_standardization.max_avg_frame_ms_ratio should be <= 3.0")
+	assert_gte(float(pressure_scenario_standardization.get("max_p95_frame_ms_ratio", -1.0)), 1.0, "pressure_scenario_standardization.max_p95_frame_ms_ratio should be >= 1.0")
+	assert_lte(float(pressure_scenario_standardization.get("max_p95_frame_ms_ratio", 4.0)), 3.0, "pressure_scenario_standardization.max_p95_frame_ms_ratio should be <= 3.0")
+	assert_gte(float(pressure_scenario_standardization.get("max_peak_memory_mb_ratio", -1.0)), 1.0, "pressure_scenario_standardization.max_peak_memory_mb_ratio should be >= 1.0")
+	assert_lte(float(pressure_scenario_standardization.get("max_peak_memory_mb_ratio", 4.0)), 3.0, "pressure_scenario_standardization.max_peak_memory_mb_ratio should be <= 3.0")
+	assert_gte(int(pressure_scenario_standardization.get("max_standardization_failures", -1)), 0, "pressure_scenario_standardization.max_standardization_failures should be >= 0")
+
+	var refinement_required_modes: Array = alignment_dashboard_refinement.get("required_run_modes", [])
+	var refinement_metric_weights: Dictionary = alignment_dashboard_refinement.get("metric_weights", {})
+	assert_typeof(refinement_required_modes, TYPE_ARRAY, "alignment_dashboard_refinement.required_run_modes should be Array")
+	assert_gte(refinement_required_modes.size(), 1, "alignment_dashboard_refinement.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in refinement_required_modes:
+		var refinement_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(refinement_mode_name), "alignment_dashboard_refinement.required_run_modes should align with ci_mode_bindings")
+		assert_true(alignment_required_modes.has(refinement_mode_name), "alignment_dashboard_refinement.required_run_modes should align with cross_platform_alignment.required_run_modes")
+	assert_typeof(refinement_metric_weights, TYPE_DICTIONARY, "alignment_dashboard_refinement.metric_weights should be Dictionary")
+	assert_gte(refinement_metric_weights.size(), 1, "alignment_dashboard_refinement.metric_weights should be non-empty")
+	for metric_name_var: Variant in refinement_metric_weights.keys():
+		var refinement_metric_name: String = str(metric_name_var)
+		assert_true(alignment_metric_limits.has(refinement_metric_name), "alignment_dashboard_refinement.metric_weights should reference cross_platform_alignment.metric_limits")
+		assert_gte(float(refinement_metric_weights.get(refinement_metric_name, -1.0)), 0.0, "alignment_dashboard_refinement.metric_weights.%s should be >= 0" % refinement_metric_name)
+		assert_lte(float(refinement_metric_weights.get(refinement_metric_name, 6.0)), 5.0, "alignment_dashboard_refinement.metric_weights.%s should be <= 5" % refinement_metric_name)
+	assert_gte(float(alignment_dashboard_refinement.get("missing_backend_weight", -1.0)), 0.0, "alignment_dashboard_refinement.missing_backend_weight should be >= 0")
+	assert_lte(float(alignment_dashboard_refinement.get("missing_backend_weight", 6.0)), 5.0, "alignment_dashboard_refinement.missing_backend_weight should be <= 5")
+	assert_gte(float(alignment_dashboard_refinement.get("missing_run_mode_weight", -1.0)), 0.0, "alignment_dashboard_refinement.missing_run_mode_weight should be >= 0")
+	assert_lte(float(alignment_dashboard_refinement.get("missing_run_mode_weight", 6.0)), 5.0, "alignment_dashboard_refinement.missing_run_mode_weight should be <= 5")
+	assert_gte(float(alignment_dashboard_refinement.get("watch_score_threshold", -1.0)), 0.0, "alignment_dashboard_refinement.watch_score_threshold should be >= 0")
+	assert_gte(float(alignment_dashboard_refinement.get("critical_score_threshold", -1.0)), 0.0, "alignment_dashboard_refinement.critical_score_threshold should be >= 0")
+	assert_gte(float(alignment_dashboard_refinement.get("critical_score_threshold", -1.0)), float(alignment_dashboard_refinement.get("watch_score_threshold", 0.0)), "alignment_dashboard_refinement.critical_score_threshold should be >= watch_score_threshold")
+	assert_gte(int(alignment_dashboard_refinement.get("max_dashboard_failures", -1)), 0, "alignment_dashboard_refinement.max_dashboard_failures should be >= 0")
+
+	var convergence_gate_required_modes: Array = pressure_alignment_convergence_gate.get("required_run_modes", [])
+	var convergence_gate_required_backends: Array = pressure_alignment_convergence_gate.get("required_backends", [])
+	assert_typeof(convergence_gate_required_modes, TYPE_ARRAY, "pressure_alignment_convergence_gate.required_run_modes should be Array")
+	assert_gte(convergence_gate_required_modes.size(), 1, "pressure_alignment_convergence_gate.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in convergence_gate_required_modes:
+		var convergence_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(convergence_mode_name), "pressure_alignment_convergence_gate.required_run_modes should align with ci_mode_bindings")
+		assert_true(standardization_required_modes.has(convergence_mode_name), "pressure_alignment_convergence_gate.required_run_modes should align with pressure_scenario_standardization.required_run_modes")
+		assert_true(refinement_required_modes.has(convergence_mode_name), "pressure_alignment_convergence_gate.required_run_modes should align with alignment_dashboard_refinement.required_run_modes")
+	assert_typeof(convergence_gate_required_backends, TYPE_ARRAY, "pressure_alignment_convergence_gate.required_backends should be Array")
+	assert_gte(convergence_gate_required_backends.size(), 1, "pressure_alignment_convergence_gate.required_backends should be non-empty")
+	for backend_name_var: Variant in convergence_gate_required_backends:
+		var convergence_backend_name: String = str(backend_name_var)
+		assert_true(matrix_required_backends.has(convergence_backend_name), "pressure_alignment_convergence_gate.required_backends should align with backend_matrix_governance.required_backend_matrix")
+		assert_true(alignment_required_backends.has(convergence_backend_name), "pressure_alignment_convergence_gate.required_backends should align with cross_platform_alignment.required_backends")
+	for key in [
+		"max_standardization_failures",
+		"max_alignment_failures",
+		"max_dashboard_failures",
+		"max_critical_severity_count",
+		"max_convergence_failures",
+	]:
+		assert_gte(int(pressure_alignment_convergence_gate.get(key, -1)), 0, "pressure_alignment_convergence_gate.%s should be >= 0" % key)
+
+	var cycle_history_file: String = str(regression_cycle_window_governance.get("history_file", ""))
+	var cycle_window_size: int = int(regression_cycle_window_governance.get("cycle_window_size", 0))
+	var cycle_min_entries: int = int(regression_cycle_window_governance.get("min_cycle_entries", 0))
+	var cycle_required_modes: Array = regression_cycle_window_governance.get("required_run_modes", [])
+	var cycle_required_backends: Array = regression_cycle_window_governance.get("required_backends", [])
+	assert_eq(cycle_history_file, archive_file, "regression_cycle_window_governance.history_file should match approval_history_archive.archive_file")
+	assert_gte(cycle_window_size, 10, "regression_cycle_window_governance.cycle_window_size should be >= 10")
+	assert_gte(cycle_min_entries, 1, "regression_cycle_window_governance.min_cycle_entries should be >= 1")
+	assert_lte(cycle_min_entries, cycle_window_size, "regression_cycle_window_governance.min_cycle_entries should be <= cycle_window_size")
+	assert_typeof(cycle_required_modes, TYPE_ARRAY, "regression_cycle_window_governance.required_run_modes should be Array")
+	assert_gte(cycle_required_modes.size(), 1, "regression_cycle_window_governance.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in cycle_required_modes:
+		var cycle_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(cycle_mode_name), "regression_cycle_window_governance.required_run_modes should align with ci_mode_bindings")
+		assert_true(convergence_gate_required_modes.has(cycle_mode_name), "regression_cycle_window_governance.required_run_modes should align with pressure_alignment_convergence_gate.required_run_modes")
+	assert_typeof(cycle_required_backends, TYPE_ARRAY, "regression_cycle_window_governance.required_backends should be Array")
+	assert_gte(cycle_required_backends.size(), 1, "regression_cycle_window_governance.required_backends should be non-empty")
+	for backend_name_var: Variant in cycle_required_backends:
+		var cycle_backend_name: String = str(backend_name_var)
+		assert_true(matrix_required_backends.has(cycle_backend_name), "regression_cycle_window_governance.required_backends should align with backend_matrix_governance.required_backend_matrix")
+		assert_true(convergence_gate_required_backends.has(cycle_backend_name), "regression_cycle_window_governance.required_backends should align with pressure_alignment_convergence_gate.required_backends")
+	assert_gte(int(regression_cycle_window_governance.get("max_warning_delta", -1)), 0, "regression_cycle_window_governance.max_warning_delta should be >= 0")
+	assert_gte(int(regression_cycle_window_governance.get("max_blocker_delta", -1)), 0, "regression_cycle_window_governance.max_blocker_delta should be >= 0")
+	assert_gte(float(regression_cycle_window_governance.get("max_alignment_score_delta", -1.0)), 0.0, "regression_cycle_window_governance.max_alignment_score_delta should be >= 0")
+	assert_lte(float(regression_cycle_window_governance.get("max_alignment_score_delta", 6.0)), 5.0, "regression_cycle_window_governance.max_alignment_score_delta should be <= 5")
+	assert_gte(int(regression_cycle_window_governance.get("max_cycle_failures", -1)), 0, "regression_cycle_window_governance.max_cycle_failures should be >= 0")
+
+	var adaptive_history_file: String = str(multi_cycle_adaptive_gate.get("history_file", ""))
+	var adaptive_window_sizes: Dictionary = multi_cycle_adaptive_gate.get("window_sizes", {})
+	var adaptive_min_window_entries: int = int(multi_cycle_adaptive_gate.get("min_window_entries", 0))
+	var adaptive_required_modes: Array = multi_cycle_adaptive_gate.get("required_run_modes", [])
+	var adaptive_required_backends: Array = multi_cycle_adaptive_gate.get("required_backends", [])
+	var adaptive_warning_slopes: Dictionary = multi_cycle_adaptive_gate.get("max_warning_slopes", {})
+	var adaptive_blocker_slopes: Dictionary = multi_cycle_adaptive_gate.get("max_blocker_slopes", {})
+	assert_eq(adaptive_history_file, archive_file, "multi_cycle_adaptive_gate.history_file should match approval_history_archive.archive_file")
+	assert_typeof(adaptive_window_sizes, TYPE_DICTIONARY, "multi_cycle_adaptive_gate.window_sizes should be Dictionary")
+	var adaptive_short_window: int = int(adaptive_window_sizes.get("short", 0))
+	var adaptive_mid_window: int = int(adaptive_window_sizes.get("mid", 0))
+	var adaptive_long_window: int = int(adaptive_window_sizes.get("long", 0))
+	assert_gte(adaptive_short_window, 4, "multi_cycle_adaptive_gate.window_sizes.short should be >= 4")
+	assert_gte(adaptive_mid_window, adaptive_short_window, "multi_cycle_adaptive_gate.window_sizes.mid should be >= short")
+	assert_gte(adaptive_long_window, adaptive_mid_window, "multi_cycle_adaptive_gate.window_sizes.long should be >= mid")
+	assert_gte(adaptive_min_window_entries, 1, "multi_cycle_adaptive_gate.min_window_entries should be >= 1")
+	assert_lte(adaptive_min_window_entries, adaptive_short_window, "multi_cycle_adaptive_gate.min_window_entries should be <= window_sizes.short")
+	assert_typeof(adaptive_required_modes, TYPE_ARRAY, "multi_cycle_adaptive_gate.required_run_modes should be Array")
+	assert_gte(adaptive_required_modes.size(), 1, "multi_cycle_adaptive_gate.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in adaptive_required_modes:
+		var adaptive_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(adaptive_mode_name), "multi_cycle_adaptive_gate.required_run_modes should align with ci_mode_bindings")
+		assert_true(convergence_gate_required_modes.has(adaptive_mode_name), "multi_cycle_adaptive_gate.required_run_modes should align with pressure_alignment_convergence_gate.required_run_modes")
+	assert_typeof(adaptive_required_backends, TYPE_ARRAY, "multi_cycle_adaptive_gate.required_backends should be Array")
+	assert_gte(adaptive_required_backends.size(), 1, "multi_cycle_adaptive_gate.required_backends should be non-empty")
+	for backend_name_var: Variant in adaptive_required_backends:
+		var adaptive_backend_name: String = str(backend_name_var)
+		assert_true(matrix_required_backends.has(adaptive_backend_name), "multi_cycle_adaptive_gate.required_backends should align with backend_matrix_governance.required_backend_matrix")
+		assert_true(convergence_gate_required_backends.has(adaptive_backend_name), "multi_cycle_adaptive_gate.required_backends should align with pressure_alignment_convergence_gate.required_backends")
+	assert_typeof(adaptive_warning_slopes, TYPE_DICTIONARY, "multi_cycle_adaptive_gate.max_warning_slopes should be Dictionary")
+	assert_typeof(adaptive_blocker_slopes, TYPE_DICTIONARY, "multi_cycle_adaptive_gate.max_blocker_slopes should be Dictionary")
+	for window_name in ["short", "mid", "long"]:
+		assert_true(adaptive_warning_slopes.has(window_name), "multi_cycle_adaptive_gate.max_warning_slopes should include %s" % window_name)
+		assert_true(adaptive_blocker_slopes.has(window_name), "multi_cycle_adaptive_gate.max_blocker_slopes should include %s" % window_name)
+		assert_gte(float(adaptive_warning_slopes.get(window_name, -1.0)), 0.0, "multi_cycle_adaptive_gate.max_warning_slopes.%s should be >= 0" % window_name)
+		assert_lte(float(adaptive_warning_slopes.get(window_name, 11.0)), 10.0, "multi_cycle_adaptive_gate.max_warning_slopes.%s should be <= 10" % window_name)
+		assert_gte(float(adaptive_blocker_slopes.get(window_name, -1.0)), 0.0, "multi_cycle_adaptive_gate.max_blocker_slopes.%s should be >= 0" % window_name)
+		assert_lte(float(adaptive_blocker_slopes.get(window_name, 11.0)), 10.0, "multi_cycle_adaptive_gate.max_blocker_slopes.%s should be <= 10" % window_name)
+	assert_gte(int(multi_cycle_adaptive_gate.get("max_missing_run_modes", -1)), 0, "multi_cycle_adaptive_gate.max_missing_run_modes should be >= 0")
+	assert_gte(int(multi_cycle_adaptive_gate.get("max_missing_backends", -1)), 0, "multi_cycle_adaptive_gate.max_missing_backends should be >= 0")
+	assert_gte(int(multi_cycle_adaptive_gate.get("max_adaptive_failures", -1)), 0, "multi_cycle_adaptive_gate.max_adaptive_failures should be >= 0")
+
+	var feedback_history_file: String = str(release_feedback_governance.get("history_file", ""))
+	var feedback_window_size: int = int(release_feedback_governance.get("feedback_window_size", 0))
+	var feedback_min_entries: int = int(release_feedback_governance.get("min_feedback_entries", 0))
+	var feedback_required_modes: Array = release_feedback_governance.get("required_run_modes", [])
+	var feedback_required_backends: Array = release_feedback_governance.get("required_backends", [])
+	var feedback_issue_metrics: Array = release_feedback_governance.get("issue_metrics", [])
+	assert_eq(feedback_history_file, archive_file, "release_feedback_governance.history_file should match approval_history_archive.archive_file")
+	assert_gte(feedback_window_size, 5, "release_feedback_governance.feedback_window_size should be >= 5")
+	assert_gte(feedback_min_entries, 1, "release_feedback_governance.min_feedback_entries should be >= 1")
+	assert_lte(feedback_min_entries, feedback_window_size, "release_feedback_governance.min_feedback_entries should be <= feedback_window_size")
+	assert_typeof(feedback_required_modes, TYPE_ARRAY, "release_feedback_governance.required_run_modes should be Array")
+	assert_gte(feedback_required_modes.size(), 1, "release_feedback_governance.required_run_modes should be non-empty")
+	for run_mode_name_var: Variant in feedback_required_modes:
+		var feedback_mode_name: String = str(run_mode_name_var)
+		assert_true(manifest_ci_bindings.has(feedback_mode_name), "release_feedback_governance.required_run_modes should align with ci_mode_bindings")
+		assert_true(adaptive_required_modes.has(feedback_mode_name), "release_feedback_governance.required_run_modes should align with multi_cycle_adaptive_gate.required_run_modes")
+	assert_typeof(feedback_required_backends, TYPE_ARRAY, "release_feedback_governance.required_backends should be Array")
+	assert_gte(feedback_required_backends.size(), 1, "release_feedback_governance.required_backends should be non-empty")
+	for backend_name_var: Variant in feedback_required_backends:
+		var feedback_backend_name: String = str(backend_name_var)
+		assert_true(matrix_required_backends.has(feedback_backend_name), "release_feedback_governance.required_backends should align with backend_matrix_governance.required_backend_matrix")
+		assert_true(adaptive_required_backends.has(feedback_backend_name), "release_feedback_governance.required_backends should align with multi_cycle_adaptive_gate.required_backends")
+	assert_typeof(feedback_issue_metrics, TYPE_ARRAY, "release_feedback_governance.issue_metrics should be Array")
+	assert_gte(feedback_issue_metrics.size(), 1, "release_feedback_governance.issue_metrics should be non-empty")
+	for metric_name in ["blockers", "warnings", "approval_failures"]:
+		assert_true(feedback_issue_metrics.has(metric_name), "release_feedback_governance.issue_metrics should include %s" % metric_name)
+	assert_gte(float(release_feedback_governance.get("min_closure_rate", -1.0)), 0.0, "release_feedback_governance.min_closure_rate should be >= 0")
+	assert_lte(float(release_feedback_governance.get("min_closure_rate", 2.0)), 1.0, "release_feedback_governance.min_closure_rate should be <= 1")
+	assert_gte(int(release_feedback_governance.get("max_unresolved_issues", -1)), 0, "release_feedback_governance.max_unresolved_issues should be >= 0")
+	assert_gte(int(release_feedback_governance.get("max_missing_run_modes", -1)), 0, "release_feedback_governance.max_missing_run_modes should be >= 0")
+	assert_gte(int(release_feedback_governance.get("max_missing_backends", -1)), 0, "release_feedback_governance.max_missing_backends should be >= 0")
+	assert_gte(int(release_feedback_governance.get("max_feedback_failures", -1)), 0, "release_feedback_governance.max_feedback_failures should be >= 0")
+
 	var required_reports: Array = manifest_release_checklist.get("required_reports", [])
 	var publish_strategies: Array = manifest_release_checklist.get("required_strategies_for_publish", [])
 	var zero_warning_strategies: Array = manifest_release_checklist.get("require_zero_warnings_for", [])
@@ -405,15 +826,15 @@ func test_visual_snapshot_targets_reference_existing_scenes() -> void:
 		assert_true(ResourceLoader.exists(scene_path), "%s scene should exist" % snapshot_id)
 
 	var thresholds: Dictionary = cfg.get("thresholds", {})
-	assert_gte(int(thresholds.get("min_snapshots", 0)), 5, "D36 min_snapshots should be >= 5")
+	assert_gte(int(thresholds.get("min_snapshots", 0)), 5, "D43 min_snapshots should be >= 5")
 	assert_eq(int(thresholds.get("max_failures", -1)), 0, "max_failures should stay strict at 0")
 	assert_eq(int(thresholds.get("max_trend_regressions", -1)), 0, "max_trend_regressions should stay strict at 0")
 	assert_gte(float(thresholds.get("max_opaque_ratio_drop", -1.0)), 0.0, "max_opaque_ratio_drop should be >= 0")
 	assert_lte(float(thresholds.get("max_opaque_ratio_drop", -1.0)), 1.0, "max_opaque_ratio_drop should be <= 1")
-	assert_lte(float(thresholds.get("max_opaque_ratio_drop", 1.0)), 0.12, "D36 max_opaque_ratio_drop should be <= 0.12")
+	assert_lte(float(thresholds.get("max_opaque_ratio_drop", 1.0)), 0.12, "D43 max_opaque_ratio_drop should be <= 0.12")
 	assert_gte(float(thresholds.get("max_unique_color_drop_ratio", -1.0)), 0.0, "max_unique_color_drop_ratio should be >= 0")
 	assert_lte(float(thresholds.get("max_unique_color_drop_ratio", -1.0)), 1.0, "max_unique_color_drop_ratio should be <= 1")
-	assert_lte(float(thresholds.get("max_unique_color_drop_ratio", 1.0)), 0.45, "D36 max_unique_color_drop_ratio should be <= 0.45")
+	assert_lte(float(thresholds.get("max_unique_color_drop_ratio", 1.0)), 0.45, "D43 max_unique_color_drop_ratio should be <= 0.45")
 	assert_gte(float(thresholds.get("max_luma_delta", -1.0)), 0.0, "max_luma_delta should be >= 0")
 	assert_lte(float(thresholds.get("max_luma_delta", -1.0)), 1.0, "max_luma_delta should be <= 1")
-	assert_lte(float(thresholds.get("max_luma_delta", 1.0)), 0.15, "D36 max_luma_delta should be <= 0.15")
+	assert_lte(float(thresholds.get("max_luma_delta", 1.0)), 0.15, "D43 max_luma_delta should be <= 0.15")

@@ -4,6 +4,68 @@
       "theme": "ruined_chapel",
       "tile_palette": ["#4E5A64", "#72808A", "#A6B1B7"],
       "hazards": ["water_flow", "spore_cloud"],
+      "room_profiles": {
+        "combat": {
+          "hazards": ["water_flow", "spore_cloud"],
+          "hazard_pressure": 1.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.70,
+            "ambient_alpha_mult": 1.08
+          }
+        },
+        "elite": {
+          "hazards": ["water_flow", "spore_cloud"],
+          "hazard_pressure": 1.12,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.73,
+            "hazard_alpha_mult": 1.02,
+            "ambient_wave_amplitude": 0.05
+          }
+        },
+        "boss": {
+          "hazards": ["water_flow", "spore_cloud"],
+          "hazard_pressure": 1.2,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.76,
+            "hazard_alpha_mult": 1.08,
+            "ambient_alpha_mult": 1.12
+          }
+        },
+        "event": {
+          "hazards": ["spore_cloud"],
+          "hazard_pressure": 0.82,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.64,
+            "ambient_scroll_speed_x": 2.0
+          }
+        },
+        "treasure": {
+          "hazards": ["water_flow"],
+          "hazard_pressure": 0.88,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.66,
+            "ambient_alpha_mult": 1.0
+          }
+        },
+        "shop": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.58,
+            "ambient_alpha_mult": 0.84
+          }
+        },
+        "safe_camp": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.56,
+            "ambient_alpha_mult": 0.82,
+            "ambient_scroll_speed_x": 1.2,
+            "ambient_scroll_speed_y": -0.8
+          }
+        }
+      },
       "hazard_anim_interval": 0.18,
       "ambient_fx_interval": 0.26,
       "visual_profile": {
@@ -23,6 +85,68 @@
       "theme": "molten_forge",
       "tile_palette": ["#5A2E20", "#8C3E26", "#D96A2B"],
       "hazards": ["lava_pool", "conveyor"],
+      "room_profiles": {
+        "combat": {
+          "hazards": ["lava_pool", "conveyor"],
+          "hazard_pressure": 1.04,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.76,
+            "hazard_alpha_mult": 1.18
+          }
+        },
+        "elite": {
+          "hazards": ["lava_pool", "conveyor"],
+          "hazard_pressure": 1.18,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.8,
+            "hazard_alpha_mult": 1.24,
+            "ambient_wave_amplitude": 0.07
+          }
+        },
+        "boss": {
+          "hazards": ["lava_pool", "conveyor"],
+          "hazard_pressure": 1.26,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.84,
+            "hazard_alpha_mult": 1.3,
+            "ambient_alpha_mult": 1.18
+          }
+        },
+        "event": {
+          "hazards": ["conveyor"],
+          "hazard_pressure": 0.9,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.7,
+            "ambient_scroll_speed_x": 2.6
+          }
+        },
+        "treasure": {
+          "hazards": ["lava_pool"],
+          "hazard_pressure": 0.96,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.72,
+            "ambient_alpha_mult": 1.08
+          }
+        },
+        "shop": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.63,
+            "ambient_alpha_mult": 0.86
+          }
+        },
+        "safe_camp": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.6,
+            "ambient_alpha_mult": 0.84,
+            "ambient_scroll_speed_x": 1.8,
+            "ambient_scroll_speed_y": -0.6
+          }
+        }
+      },
       "hazard_anim_interval": 0.14,
       "ambient_fx_interval": 0.2,
       "visual_profile": {
@@ -42,6 +166,71 @@
       "theme": "frozen_sanctum",
       "tile_palette": ["#A6C8D8", "#DDEAF1", "#7CA5BD"],
       "hazards": ["ice_slide", "frostbite"],
+      "room_profiles": {
+        "combat": {
+          "hazards": ["ice_slide", "frostbite"],
+          "hazard_pressure": 1.02,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.64,
+            "ambient_alpha_mult": 0.96
+          }
+        },
+        "elite": {
+          "hazards": ["ice_slide", "frostbite", "blizzard"],
+          "hazard_pressure": 1.22,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.7,
+            "hazard_alpha_mult": 0.98,
+            "ambient_wave_amplitude": 0.06,
+            "ambient_scroll_speed_x": 1.1
+          }
+        },
+        "boss": {
+          "hazards": ["frostbite", "blizzard", "crystal_reflection"],
+          "hazard_pressure": 1.34,
+          "visual_profile_overrides": {
+            "detail_tint": "#E6F7FF",
+            "detail_alpha": 0.78,
+            "hazard_alpha_mult": 1.1,
+            "ambient_alpha_mult": 1.0,
+            "ambient_wave_amplitude": 0.08
+          }
+        },
+        "event": {
+          "hazards": ["ice_slide", "crystal_reflection"],
+          "hazard_pressure": 0.92,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.6,
+            "ambient_scroll_speed_y": -1.9
+          }
+        },
+        "treasure": {
+          "hazards": ["ice_slide", "crystal_reflection"],
+          "hazard_pressure": 1.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.68,
+            "hazard_alpha_mult": 0.94
+          }
+        },
+        "shop": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.54,
+            "ambient_alpha_mult": 0.8
+          }
+        },
+        "safe_camp": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.5,
+            "ambient_alpha_mult": 0.76,
+            "ambient_scroll_speed_x": 0.8,
+            "ambient_scroll_speed_y": -1.0
+          }
+        }
+      },
       "hazard_anim_interval": 0.2,
       "ambient_fx_interval": 0.3,
       "visual_profile": {
@@ -61,6 +250,73 @@
       "theme": "void_abyss",
       "tile_palette": ["#1E1B2E", "#3A2C5A", "#6A4EA1"],
       "hazards": ["void_rift", "void_corruption"],
+      "room_profiles": {
+        "combat": {
+          "hazards": ["void_rift", "void_corruption"],
+          "hazard_pressure": 1.08,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.8,
+            "ambient_alpha_mult": 1.24
+          }
+        },
+        "elite": {
+          "hazards": ["void_rift", "void_corruption", "spatial_distortion"],
+          "hazard_pressure": 1.24,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.84,
+            "hazard_alpha_mult": 1.3,
+            "ambient_wave_amplitude": 0.1,
+            "ambient_scroll_speed_x": 4.1
+          }
+        },
+        "boss": {
+          "hazards": ["void_rift", "void_corruption", "spatial_distortion"],
+          "hazard_pressure": 1.42,
+          "visual_profile_overrides": {
+            "detail_tint": "#E7CCFF",
+            "detail_alpha": 0.88,
+            "hazard_alpha_mult": 1.36,
+            "ambient_alpha_mult": 1.28,
+            "ambient_wave_amplitude": 0.12,
+            "ambient_scroll_speed_x": 4.6,
+            "ambient_scroll_speed_y": -2.6
+          }
+        },
+        "event": {
+          "hazards": ["void_corruption", "spatial_distortion"],
+          "hazard_pressure": 0.96,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.74,
+            "ambient_scroll_speed_y": -2.3
+          }
+        },
+        "treasure": {
+          "hazards": ["void_rift", "spatial_distortion"],
+          "hazard_pressure": 1.06,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.76,
+            "hazard_alpha_mult": 1.2
+          }
+        },
+        "shop": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.62,
+            "ambient_alpha_mult": 0.88
+          }
+        },
+        "safe_camp": {
+          "hazards": [],
+          "hazard_pressure": 0.0,
+          "visual_profile_overrides": {
+            "detail_alpha": 0.58,
+            "ambient_alpha_mult": 0.84,
+            "ambient_scroll_speed_x": 2.2,
+            "ambient_scroll_speed_y": -1.4
+          }
+        }
+      },
       "hazard_anim_interval": 0.12,
       "ambient_fx_interval": 0.18,
       "visual_profile": {

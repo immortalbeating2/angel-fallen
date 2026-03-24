@@ -12,6 +12,13 @@ var _weapon: Node
 var _option_lookup: Dictionary = {}
 var _passive_levels: Dictionary = {}
 var _evolution_recipes: Array[Dictionary] = []
+var _build_anchor_scores: Dictionary = {
+    "offense": 0.0,
+    "tempo": 0.0,
+    "precision": 0.0,
+    "survival": 0.0,
+    "economy": 0.0
+}
 
 const PASSIVE_OPTION_TO_ID: Dictionary = {
     "power": "pas_might",
@@ -21,6 +28,64 @@ const PASSIVE_OPTION_TO_ID: Dictionary = {
     "focus": "pas_focus",
     "precision": "pas_precision",
     "force": "pas_force"
+}
+
+const PASSIVE_ID_TO_ANCHOR: Dictionary = {
+    "pas_might": "offense",
+    "pas_vitality": "survival",
+    "pas_agility": "tempo",
+    "pas_endurance": "survival",
+    "pas_focus": "tempo",
+    "pas_precision": "precision",
+    "pas_force": "precision",
+    "pas_armor": "survival",
+    "pas_resolve": "survival",
+    "pas_momentum": "tempo",
+    "pas_overcharge": "offense",
+    "pas_bastion": "survival",
+    "pas_siphon": "offense",
+    "pas_zeal": "precision",
+    "pas_warding": "survival",
+    "pas_harvest": "economy"
+}
+
+const SHOP_ITEM_ANCHOR_BOOSTS: Dictionary = {
+    "hp_potion": {"survival": 0.35},
+    "stamina_tonic": {"tempo": 0.30},
+    "pas_might": {"offense": 0.80},
+    "pas_armor": {"survival": 0.70},
+    "pas_focus": {"tempo": 0.75},
+    "pas_precision": {"precision": 0.75},
+    "pas_force": {"precision": 0.70},
+    "pas_fortune": {"economy": 0.85},
+    "pas_resolve": {"survival": 0.70},
+    "pas_momentum": {"tempo": 0.80},
+    "pas_overcharge": {"offense": 0.80},
+    "pas_bastion": {"survival": 0.75},
+    "pas_siphon": {"offense": 0.72},
+    "pas_zeal": {"precision": 0.72},
+    "pas_warding": {"survival": 0.65},
+    "pas_harvest": {"economy": 0.80},
+    "wpn_magic_missile": {"offense": 0.62},
+    "wpn_holy_cross": {"offense": 0.74, "precision": 0.30},
+    "wpn_arcane_comet": {"offense": 0.60, "tempo": 0.28},
+    "wpn_holy_judgment": {"offense": 0.82},
+    "wpn_shadow_tempest": {"tempo": 0.90},
+    "wpn_solar_supernova": {"offense": 1.00},
+    "wpn_sacred_lance": {"precision": 0.80},
+    "wpn_void_chain": {"offense": 0.66, "tempo": 0.24},
+    "wpn_frost_orb": {"tempo": 0.74},
+    "wpn_storm_bow": {"tempo": 0.70, "precision": 0.24},
+    "wpn_radiant_hammer": {"offense": 0.86},
+    "wpn_blood_rite": {"offense": 0.72},
+    "wpn_vowblade": {"precision": 0.82},
+    "wpn_nether_shard": {"offense": 0.68, "tempo": 0.24},
+    "wpn_astral_disc": {"tempo": 0.68, "precision": 0.22}
+}
+
+const FORGE_ANCHOR_BOOSTS: Dictionary = {
+    "damage": {"offense": 1.10},
+    "speed": {"tempo": 1.10}
 }
 
 
@@ -67,7 +132,7 @@ func _generate_options() -> Array[Dictionary]:
     var picked: Array[Dictionary] = []
     var evolution_options: Array[Dictionary] = _collect_available_evolution_options()
     if not evolution_options.is_empty():
-        picked.append(evolution_options[randi_range(0, evolution_options.size() - 1)])
+        picked.append(_pick_weighted_evolution_option(evolution_options))
 
     var bag: Array[Dictionary] = pool.duplicate()
     while picked.size() < 3 and bag.size() > 0:
@@ -128,6 +193,9 @@ func _mark_passive_progress(option_id: String) -> void:
     if passive_id == "":
         return
     _passive_levels[passive_id] = int(_passive_levels.get(passive_id, 0)) + 1
+    var anchor_id: String = _resolve_anchor_from_passive(passive_id)
+    if anchor_id != "":
+        register_build_anchor(anchor_id, 0.85, "level_up:%s" % option_id)
 
 
 func _load_evolution_recipes() -> void:
@@ -160,12 +228,14 @@ func _collect_available_evolution_options() -> Array[Dictionary]:
         var desc: String = str(recipe.get("desc", "Evolve weapon with passive synergy"))
         var passive_id: String = str(recipe.get("passive_id", ""))
         var required_passive_level: int = maxi(1, int(recipe.get("required_passive_level", 1)))
+        var anchor_weight: float = get_evolution_anchor_weight(recipe)
         options.append({
             "id": "evo::%s" % result_weapon_id,
             "type": "evolution",
             "title": "Evolution: %s" % title,
             "desc": "%s (need %s Lv.%d)" % [desc, passive_id, required_passive_level],
-            "recipe": recipe
+            "recipe": recipe,
+            "anchor_weight": anchor_weight
         })
 
     return options
@@ -220,3 +290,67 @@ func _prettify_result_id(raw_id: String) -> String:
         text = text.trim_prefix("wpn_")
     text = text.replace("_", " ")
     return text.capitalize()
+
+
+func register_build_anchor(anchor_id: String, amount: float = 1.0, _source: String = "") -> void:
+    var key: String = anchor_id.strip_edges().to_lower()
+    if key == "":
+        return
+    if not _build_anchor_scores.has(key):
+        _build_anchor_scores[key] = 0.0
+    var current_value: float = float(_build_anchor_scores.get(key, 0.0))
+    _build_anchor_scores[key] = clampf(current_value + amount, 0.0, 99.0)
+
+
+func register_build_anchor_from_shop(item_id: String) -> void:
+    _apply_anchor_boost_map(SHOP_ITEM_ANCHOR_BOOSTS.get(item_id, {}), "shop:%s" % item_id)
+
+
+func register_build_anchor_from_forge(forge_type: String) -> void:
+    _apply_anchor_boost_map(FORGE_ANCHOR_BOOSTS.get(forge_type, {}), "forge:%s" % forge_type)
+
+
+func get_build_anchor_snapshot() -> Dictionary:
+    return _build_anchor_scores.duplicate(true)
+
+
+func get_evolution_anchor_weight(recipe: Dictionary) -> float:
+    var passive_id: String = str(recipe.get("passive_id", "")).strip_edges()
+    var required_level: int = maxi(1, int(recipe.get("required_passive_level", 1)))
+    var passive_level: int = int(_passive_levels.get(passive_id, 0))
+    var anchor_id: String = _resolve_anchor_from_passive(passive_id)
+    var anchor_score: float = float(_build_anchor_scores.get(anchor_id, 0.0))
+    var level_surplus: float = maxf(0.0, float(passive_level - required_level))
+    var weight: float = 1.0 + anchor_score * 0.26 + level_surplus * 0.22
+    return clampf(weight, 1.0, 4.5)
+
+
+func _pick_weighted_evolution_option(options: Array[Dictionary]) -> Dictionary:
+    if options.is_empty():
+        return {}
+    var total_weight: float = 0.0
+    for row in options:
+        total_weight += maxf(0.01, float(row.get("anchor_weight", 1.0)))
+    var roll: float = randf() * total_weight
+    var cursor: float = 0.0
+    for row in options:
+        cursor += maxf(0.01, float(row.get("anchor_weight", 1.0)))
+        if roll <= cursor:
+            return row
+    return options[options.size() - 1]
+
+
+func _resolve_anchor_from_passive(passive_id: String) -> String:
+    return str(PASSIVE_ID_TO_ANCHOR.get(passive_id, "")).strip_edges().to_lower()
+
+
+func _apply_anchor_boost_map(boost_map_var: Variant, source: String) -> void:
+    if not (boost_map_var is Dictionary):
+        return
+    var boost_map: Dictionary = boost_map_var
+    for anchor_key_var in boost_map.keys():
+        var anchor_key: String = str(anchor_key_var).strip_edges().to_lower()
+        var amount: float = maxf(0.0, float(boost_map.get(anchor_key, 0.0)))
+        if amount <= 0.0:
+            continue
+        register_build_anchor(anchor_key, amount, source)

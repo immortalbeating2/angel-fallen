@@ -18,6 +18,9 @@ signal defaults_restored
 @onready var _shake_slider: HSlider = $ShakeRow/Slider
 @onready var _ui_scale_value: Label = $UIScaleRow/Value
 @onready var _ui_scale_slider: HSlider = $UIScaleRow/Slider
+@onready var _difficulty_value: Label = $DifficultyRow/Value
+@onready var _difficulty_slider: HSlider = $DifficultyRow/Slider
+@onready var _difficulty_hint: Label = $DifficultyHint
 
 @onready var _master_meter: ProgressBar = $BusMeterTitle/MasterMeter
 @onready var _bgm_meter: ProgressBar = $BusMeterTitle/BGMMeter
@@ -42,6 +45,9 @@ const INPUT_ACTION_ROWS: Array[Dictionary] = [
     {"id": "camp_forge_damage", "label": "Forge Damage"},
     {"id": "camp_forge_speed", "label": "Forge Speed"},
     {"id": "camp_memory_altar", "label": "Memory Altar"},
+    {"id": "camp_hidden_fs1", "label": "Enter FS1"},
+    {"id": "camp_hidden_fs2", "label": "Enter FS2"},
+    {"id": "camp_challenge_layer", "label": "Enter Challenge"},
     {"id": "camp_route_holy", "label": "Route Holy"},
     {"id": "camp_route_void", "label": "Route Void"},
     {"id": "narrative_choice_1", "label": "Choice 1"},
@@ -145,12 +151,17 @@ func reset_to_default() -> void:
 
 func _apply_settings_to_ui(settings: Dictionary) -> void:
     _syncing = true
+    var max_unlocked_tier: int = 2
+    if SaveManager != null and SaveManager.has_method("get_max_unlocked_difficulty_tier"):
+        max_unlocked_tier = int(SaveManager.get_max_unlocked_difficulty_tier())
+    _difficulty_slider.max_value = max_unlocked_tier
     _master_slider.value = float(settings.get("master_volume", 1.0))
     _bgm_slider.value = float(settings.get("bgm_volume", 1.0))
     _sfx_slider.value = float(settings.get("sfx_volume", 1.0))
     _ambience_slider.value = float(settings.get("ambience_volume", 1.0))
     _shake_slider.value = float(settings.get("screen_shake", 1.0))
     _ui_scale_slider.value = float(settings.get("ui_scale", 1.0))
+    _difficulty_slider.value = clampi(int(settings.get("difficulty_tier", 0)), 0, max_unlocked_tier)
     _syncing = false
     _refresh_value_labels()
 
@@ -162,6 +173,9 @@ func _refresh_value_labels() -> void:
     _set_value_label(_ambience_value, "%d%%" % int(round(_ambience_slider.value * 100.0)), _is_dirty("ambience_volume", _ambience_slider.value))
     _set_value_label(_shake_value, "%d%%" % int(round(_shake_slider.value * 100.0)), _is_dirty("screen_shake", _shake_slider.value))
     _set_value_label(_ui_scale_value, "%.2fx" % _ui_scale_slider.value, _is_dirty("ui_scale", _ui_scale_slider.value))
+    _set_value_label(_difficulty_value, _get_difficulty_label(int(round(_difficulty_slider.value))), _is_dirty("difficulty_tier", _difficulty_slider.value))
+    if _difficulty_hint != null:
+        _difficulty_hint.text = _get_difficulty_hint_text()
 
 
 func _set_value_label(label: Label, text_value: String, dirty: bool) -> void:
@@ -400,8 +414,27 @@ func _get_default_settings() -> Dictionary:
         "sfx_volume": 1.0,
         "ambience_volume": 1.0,
         "screen_shake": 1.0,
-        "ui_scale": 1.0
+        "ui_scale": 1.0,
+        "difficulty_tier": 0
     }
+
+
+func _get_difficulty_label(tier: int) -> String:
+    if SaveManager != null and SaveManager.has_method("get_difficulty_label"):
+        return str(SaveManager.get_difficulty_label(tier))
+    match clampi(tier, 0, 2):
+        1:
+            return "Hard"
+        2:
+            return "Nightmare"
+        _:
+            return "Normal"
+
+
+func _get_difficulty_hint_text() -> String:
+    if SaveManager != null and SaveManager.has_method("get_next_difficulty_unlock_hint"):
+        return str(SaveManager.get_next_difficulty_unlock_hint())
+    return "All difficulty tiers unlocked"
 
 
 func _on_master_slider_value_changed(value: float) -> void:
@@ -426,6 +459,10 @@ func _on_shake_slider_value_changed(value: float) -> void:
 
 func _on_ui_scale_slider_value_changed(value: float) -> void:
     _commit_settings_patch({"ui_scale": value})
+
+
+func _on_difficulty_slider_value_changed(value: float) -> void:
+    _commit_settings_patch({"difficulty_tier": int(round(value))})
 
 
 func _on_test_sfx_button_pressed() -> void:

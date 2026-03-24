@@ -22,11 +22,13 @@ func test_shop_config_contains_dynamic_economy_fields() -> void:
 	assert_true(cfg.has("restock_cost_cap"), "shop config should include restock_cost_cap")
 	assert_true(cfg.has("catchup_discount"), "shop config should include catchup_discount")
 	assert_true(cfg.has("ore_exchange"), "shop config should include ore_exchange")
+	assert_true(cfg.has("forge_recipes"), "shop config should include forge_recipes")
 	assert_true(cfg.has("chapter_overrides"), "shop config should include chapter_overrides")
 	assert_true(cfg.has("category_weights"), "shop config should include category_weights")
 
 	assert_typeof(cfg.get("catchup_discount", {}), TYPE_DICTIONARY, "catchup_discount should be Dictionary")
 	assert_typeof(cfg.get("ore_exchange", {}), TYPE_DICTIONARY, "ore_exchange should be Dictionary")
+	assert_typeof(cfg.get("forge_recipes", {}), TYPE_DICTIONARY, "forge_recipes should be Dictionary")
 	assert_typeof(cfg.get("chapter_overrides", {}), TYPE_DICTIONARY, "chapter_overrides should be Dictionary")
 	assert_typeof(cfg.get("category_weights", {}), TYPE_DICTIONARY, "category_weights should be Dictionary")
 
@@ -182,3 +184,26 @@ func test_restock_growth_progression_does_not_exceed_cap_in_sample_steps() -> vo
 		var clamped_cost: int = mini(cap, maxi(base_cost, simulated_cost))
 		assert_lte(clamped_cost, cap, "sample restock cost should not exceed cap")
 		assert_gte(clamped_cost, base_cost, "sample restock cost should not drop below base")
+
+
+func test_shop_forge_recipes_have_required_fields_and_ranges() -> void:
+	var cfg := _load_shop_config()
+	var forge_recipes: Dictionary = cfg.get("forge_recipes", {})
+
+	assert_typeof(forge_recipes, TYPE_DICTIONARY, "forge_recipes should be Dictionary")
+	for recipe_id in ["damage", "speed"]:
+		assert_true(forge_recipes.has(recipe_id), "forge_recipes should include %s" % recipe_id)
+		var row: Dictionary = forge_recipes.get(recipe_id, {})
+		assert_typeof(row, TYPE_DICTIONARY, "%s forge recipe should be Dictionary" % recipe_id)
+
+		assert_gte(int(row.get("ore_cost", 0)), 1, "%s ore_cost should be >= 1" % recipe_id)
+		assert_lte(int(row.get("ore_cost", 999)), 20, "%s ore_cost should be <= 20" % recipe_id)
+		assert_ne(str(row.get("anchor", "")), "", "%s anchor should not be empty" % recipe_id)
+		assert_gte(float(row.get("anchor_amount", -1.0)), 0.0, "%s anchor_amount lower bound" % recipe_id)
+		assert_lte(float(row.get("anchor_amount", 9.0)), 3.0, "%s anchor_amount upper bound" % recipe_id)
+		assert_ne(str(row.get("success_text", "")), "", "%s success_text should not be empty" % recipe_id)
+
+	var damage_recipe: Dictionary = forge_recipes.get("damage", {})
+	var speed_recipe: Dictionary = forge_recipes.get("speed", {})
+	assert_gt(float(damage_recipe.get("damage_mult", 1.0)), 1.0, "damage recipe should increase damage")
+	assert_lt(float(speed_recipe.get("interval_mult", 1.0)), 1.0, "speed recipe should reduce attack interval")

@@ -6,6 +6,8 @@ extends CharacterBody2D
 @export var attack_interval: float = 0.7
 @export var boss_dash_cooldown: float = 4.8
 @export var boss_pulse_cooldown: float = 5.5
+@export var boss_frost_shard_cooldown: float = 3.9
+@export var boss_void_grasp_cooldown: float = 4.3
 
 @onready var _health_component: Node = $HealthComponent
 @onready var _visual: Polygon2D = $Polygon2D
@@ -20,6 +22,8 @@ var _phase_speed_mult: float = 1.0
 var _phase_damage_mult: float = 1.0
 var _dash_cooldown_timer: float = 0.0
 var _pulse_cooldown_timer: float = 0.0
+var _frost_shard_cooldown_timer: float = 0.0
+var _void_grasp_cooldown_timer: float = 0.0
 var _dash_velocity: Vector2 = Vector2.ZERO
 var _dash_time: float = 0.0
 var _base_attack_interval: float = 0.7
@@ -220,8 +224,10 @@ func _update_phase_by_hp() -> void:
     if new_phase == _phase_index:
         return
 
+    var previous_phase: int = _phase_index
     _phase_index = new_phase
     _apply_phase_stats()
+    _apply_phase_transition_pressure(previous_phase, _phase_index)
 
 
 func _apply_phase_stats() -> void:
@@ -230,9 +236,58 @@ func _apply_phase_stats() -> void:
     attack_interval = maxf(0.24, _base_attack_interval * (1.0 - 0.12 * _phase_index))
 
 
+func _apply_phase_transition_pressure(previous_phase: int, new_phase: int) -> void:
+    if not _is_boss:
+        return
+    if new_phase <= previous_phase:
+        return
+
+    if _player == null or not is_instance_valid(_player):
+        _player = get_tree().get_first_node_in_group("player") as CharacterBody2D
+    if _player == null:
+        return
+
+    var radius: float = 156.0 + 30.0 * new_phase
+    var distance: float = global_position.distance_to(_player.global_position)
+    if distance > radius:
+        return
+
+    var burst_damage: float = touch_damage * (0.42 + 0.18 * new_phase)
+    var impulse: Vector2 = (_player.global_position - global_position).normalized()
+    if impulse == Vector2.ZERO:
+        impulse = Vector2.RIGHT
+    var burst_color: Color = Color(1.0, 0.78, 0.34, 1.0)
+
+    if _is_frost_king():
+        burst_damage *= 1.08
+        burst_color = Color(0.76, 0.95, 1.0, 1.0)
+    elif _is_void_lord():
+        burst_damage *= 1.18
+        impulse = -impulse
+        burst_color = Color(0.82, 0.58, 1.0, 1.0)
+
+    if _player.has_method("apply_damage"):
+        _player.apply_damage(burst_damage)
+    if _player.has_method("apply_knockback"):
+        _player.apply_knockback(impulse * (126.0 + 22.0 * new_phase))
+
+    if _visual != null:
+        var phase_tween: Tween = create_tween()
+        phase_tween.tween_property(_visual, "color", burst_color, 0.08)
+        phase_tween.tween_property(_visual, "color", _base_color, 0.15)
+
+    if AudioManager != null and AudioManager.has_method("play_boss_phase_cue"):
+        AudioManager.play_boss_phase_cue(enemy_id, new_phase, 2 + new_phase, 0.115)
+
+
 func _process_boss_skills(delta: float, direction: Vector2) -> void:
     _dash_cooldown_timer -= delta
     _pulse_cooldown_timer -= delta
+
+    if _is_frost_king():
+        _frost_shard_cooldown_timer -= delta
+    if _is_void_lord():
+        _void_grasp_cooldown_timer -= delta
 
     if _dash_cooldown_timer <= 0.0:
         _dash_cooldown_timer = maxf(1.5, boss_dash_cooldown - 0.55 * _phase_index)
@@ -242,6 +297,14 @@ func _process_boss_skills(delta: float, direction: Vector2) -> void:
     if _pulse_cooldown_timer <= 0.0:
         _pulse_cooldown_timer = maxf(2.0, boss_pulse_cooldown - 0.45 * _phase_index)
         _cast_phase_pulse()
+
+    if _is_frost_king() and _frost_shard_cooldown_timer <= 0.0:
+        _frost_shard_cooldown_timer = _get_frost_shard_cooldown_for_phase()
+        _cast_frost_king_shardburst()
+
+    if _is_void_lord() and _void_grasp_cooldown_timer <= 0.0:
+        _void_grasp_cooldown_timer = _get_void_grasp_cooldown_for_phase()
+        _cast_void_lord_gravity_well()
 
 
 func _cast_phase_pulse() -> void:
@@ -264,8 +327,83 @@ func _cast_phase_pulse() -> void:
 
     if _visual != null:
         var pulse_tween: Tween = create_tween()
-        pulse_tween.tween_property(_visual, "color", Color(1.0, 0.78, 0.34, 1.0), 0.08)
+        var pulse_color: Color = Color(1.0, 0.78, 0.34, 1.0)
+        if _is_frost_king():
+            pulse_color = Color(0.72, 0.92, 1.0, 1.0)
+        elif _is_void_lord():
+            pulse_color = Color(0.78, 0.56, 0.98, 1.0)
+        pulse_tween.tween_property(_visual, "color", pulse_color, 0.08)
         pulse_tween.tween_property(_visual, "color", _base_color, 0.12)
+
+
+func _cast_frost_king_shardburst() -> void:
+    if _player == null:
+        return
+
+    var radius: float = 170.0 + 34.0 * _phase_index
+    var distance: float = global_position.distance_to(_player.global_position)
+    if distance > radius:
+        return
+
+    var shard_damage: float = touch_damage * (0.56 + 0.2 * _phase_index)
+    if _player.has_method("apply_damage"):
+        _player.apply_damage(shard_damage)
+        if _phase_index >= 1:
+            _player.apply_damage(shard_damage * 0.33)
+
+    if _player.has_method("apply_knockback"):
+        var push: Vector2 = (_player.global_position - global_position).normalized()
+        if push == Vector2.ZERO:
+            push = Vector2.RIGHT
+        _player.apply_knockback(push * (145.0 + 26.0 * _phase_index))
+
+    if _visual != null:
+        var tween: Tween = create_tween()
+        tween.tween_property(_visual, "color", Color(0.72, 0.92, 1.0, 1.0), 0.08)
+        tween.tween_property(_visual, "color", _base_color, 0.12)
+
+
+func _cast_void_lord_gravity_well() -> void:
+    if _player == null:
+        return
+
+    var radius: float = 190.0 + 32.0 * _phase_index
+    var distance: float = global_position.distance_to(_player.global_position)
+    if distance > radius:
+        return
+
+    var well_damage: float = touch_damage * (0.5 + 0.24 * _phase_index)
+    if _player.has_method("apply_damage"):
+        _player.apply_damage(well_damage)
+        if _phase_index >= 2:
+            _player.apply_damage(well_damage * 0.4)
+
+    if _player.has_method("apply_knockback"):
+        var pull: Vector2 = (global_position - _player.global_position).normalized()
+        if pull == Vector2.ZERO:
+            pull = Vector2.LEFT
+        _player.apply_knockback(pull * (84.0 + 24.0 * _phase_index))
+
+    if _visual != null:
+        var tween: Tween = create_tween()
+        tween.tween_property(_visual, "color", Color(0.78, 0.56, 0.98, 1.0), 0.08)
+        tween.tween_property(_visual, "color", _base_color, 0.12)
+
+
+func _is_frost_king() -> bool:
+    return enemy_id.find("frost_king") >= 0
+
+
+func _is_void_lord() -> bool:
+    return enemy_id.find("void_lord") >= 0
+
+
+func _get_frost_shard_cooldown_for_phase() -> float:
+    return maxf(1.5, boss_frost_shard_cooldown - 0.42 * _phase_index)
+
+
+func _get_void_grasp_cooldown_for_phase() -> float:
+    return maxf(1.7, boss_void_grasp_cooldown - 0.36 * _phase_index)
 
 
 func _load_boss_phase_thresholds() -> void:
@@ -288,6 +426,35 @@ func _load_boss_phase_thresholds() -> void:
         parsed.append(clampf(float(value), 0.0, 1.0))
     if parsed.size() >= 2:
         _phase_thresholds = parsed
+
+
+func get_phase_index() -> int:
+    return _phase_index
+
+
+func play_boss_support_stage_cue(phase_index: int, includes_miniboss: bool = false) -> void:
+    if not _is_boss:
+        return
+    if _visual == null:
+        return
+
+    var cue_color: Color = Color(1.0, 0.82, 0.36, 1.0)
+    if _is_frost_king():
+        cue_color = Color(0.74, 0.94, 1.0, 1.0)
+    elif _is_void_lord():
+        cue_color = Color(0.82, 0.62, 1.0, 1.0)
+    if includes_miniboss:
+        cue_color = cue_color.lightened(0.12)
+
+    var pulse_scale: float = 1.04 + 0.03 * clampf(float(phase_index), 0.0, 4.0)
+    if includes_miniboss:
+        pulse_scale += 0.05
+
+    var tween: Tween = create_tween()
+    tween.tween_property(_visual, "color", cue_color, 0.08)
+    tween.parallel().tween_property(self, "scale", _base_scale * pulse_scale, 0.08)
+    tween.tween_property(_visual, "color", _base_color, 0.14)
+    tween.parallel().tween_property(self, "scale", _base_scale, 0.14)
 
 
 func _get_ranged_direction(direction_to_player: Vector2, distance_to_player: float) -> Vector2:
@@ -374,6 +541,8 @@ func _reset_for_spawn() -> void:
     _dash_time = 0.0
     _dash_cooldown_timer = 0.0
     _pulse_cooldown_timer = 0.0
+    _frost_shard_cooldown_timer = 0.0
+    _void_grasp_cooldown_timer = 0.0
     _ranged_cooldown = 0.0
 
     _tier = "normal"

@@ -53,6 +53,68 @@ func _run_regression() -> Dictionary:
 		backend_matrix_governance
 	)
 	var release_candidate_tracking: Dictionary = _sanitize_release_candidate_tracking(targets.get("release_candidate_tracking", {}))
+	var stability_scoring: Dictionary = _sanitize_stability_scoring(targets.get("stability_scoring", {}))
+	var stability_tiers: Dictionary = _sanitize_stability_tiers(targets.get("stability_tiers", {}))
+	var convergence_dashboard: Dictionary = _sanitize_convergence_dashboard(targets.get("convergence_dashboard", {}))
+	var ci_signal_contract: Dictionary = _sanitize_ci_signal_contract(
+		targets.get("ci_signal_contract", {}),
+		release_gate_templates
+	)
+	var convergence_trend_reinforcement: Dictionary = _sanitize_convergence_trend_reinforcement(
+		targets.get("convergence_trend_reinforcement", {}),
+		release_candidate_tracking,
+		base_approval_history_archive
+	)
+	var exception_lifecycle_linkage: Dictionary = _sanitize_exception_lifecycle_linkage(
+		targets.get("exception_lifecycle_linkage", {}),
+		base_exception_lifecycle_cfg
+	)
+	var visual_performance_cogate: Dictionary = _sanitize_visual_performance_cogate(
+		targets.get("visual_performance_cogate", {}),
+		release_gate_templates
+	)
+	var cogate_threshold_templates: Dictionary = _sanitize_cogate_threshold_templates(
+		targets.get("cogate_threshold_templates", {}),
+		release_gate_templates
+	)
+	var cross_platform_alignment: Dictionary = _sanitize_cross_platform_alignment(
+		targets.get("cross_platform_alignment", {}),
+		base_approval_history_archive,
+		release_gate_templates
+	)
+	var pressure_scenario_standardization: Dictionary = _sanitize_pressure_scenario_standardization(
+		targets.get("pressure_scenario_standardization", {}),
+		visual_performance_cogate,
+		release_gate_templates
+	)
+	var alignment_dashboard_refinement: Dictionary = _sanitize_alignment_dashboard_refinement(
+		targets.get("alignment_dashboard_refinement", {}),
+		cross_platform_alignment,
+		release_gate_templates
+	)
+	var pressure_alignment_convergence_gate: Dictionary = _sanitize_pressure_alignment_convergence_gate(
+		targets.get("pressure_alignment_convergence_gate", {}),
+		cross_platform_alignment,
+		release_gate_templates
+	)
+	var regression_cycle_window_governance: Dictionary = _sanitize_regression_cycle_window_governance(
+		targets.get("regression_cycle_window_governance", {}),
+		base_approval_history_archive,
+		release_gate_templates,
+		cross_platform_alignment
+	)
+	var multi_cycle_adaptive_gate: Dictionary = _sanitize_multi_cycle_adaptive_gate(
+		targets.get("multi_cycle_adaptive_gate", {}),
+		base_approval_history_archive,
+		release_gate_templates,
+		cross_platform_alignment
+	)
+	var release_feedback_governance: Dictionary = _sanitize_release_feedback_governance(
+		targets.get("release_feedback_governance", {}),
+		base_approval_history_archive,
+		release_gate_templates,
+		cross_platform_alignment
+	)
 	var strategy_state: Dictionary = _resolve_strategy_orchestration(
 		targets.get("strategy_orchestration", {}),
 		{
@@ -71,6 +133,14 @@ func _run_regression() -> Dictionary:
 	var run_mode: String = OS.get_environment("VISUAL_SNAPSHOT_RUN_MODE").strip_edges()
 	if run_mode.is_empty():
 		run_mode = "rehearsal"
+	var cogate_template_state: Dictionary = _resolve_cogate_threshold_template(
+		cogate_threshold_templates,
+		visual_performance_cogate,
+		run_mode
+	)
+	var resolved_visual_performance_cogate: Dictionary = cogate_template_state.get("config", visual_performance_cogate)
+	var cogate_template_name: String = str(cogate_template_state.get("template", ""))
+	var cogate_template_errors: Array[String] = _sanitize_string_array(cogate_template_state.get("errors", []))
 	var approval_template_state: Dictionary = _resolve_approval_threshold_template(
 		approval_threshold_templates,
 		run_mode,
@@ -263,6 +333,105 @@ func _run_regression() -> Dictionary:
 			"tracking_failures": 0,
 			"items": [],
 		},
+		"stability_scoring": {
+			"score": 0.0,
+			"tier": str(stability_tiers.get("default_tier", "D")),
+			"confidence": 0.0,
+			"min_confidence": float((stability_scoring.get("confidence", {}) as Dictionary).get("min_confidence", 0.4)),
+			"scoring_failures": 0,
+			"items": [],
+		},
+		"convergence_dashboard": {
+			"dashboard_failures": 0,
+			"max_dashboard_failures": int(convergence_dashboard.get("max_dashboard_failures", 0)),
+			"items": [],
+		},
+		"ci_signal": {
+			"required_fields": ci_signal_contract.get("required_fields", []),
+			"tier_requirements": ci_signal_contract.get("tier_requirements", {}),
+			"max_contract_failures": int(ci_signal_contract.get("max_contract_failures", 0)),
+			"contract_failures": 0,
+			"items": [],
+		},
+		"convergence_trend": {
+			"trend_failures": 0,
+			"max_trend_failures": int(convergence_trend_reinforcement.get("max_trend_failures", 0)),
+			"items": [],
+		},
+		"exception_lifecycle_linkage": {
+			"linkage_failures": 0,
+			"max_linkage_failures": int(exception_lifecycle_linkage.get("max_linkage_failures", 0)),
+			"items": [],
+		},
+		"visual_performance_cogate": {
+			"required_run_modes": resolved_visual_performance_cogate.get("required_run_modes", []),
+			"max_cogate_failures": int(resolved_visual_performance_cogate.get("max_cogate_failures", 0)),
+			"cogate_failures": 0,
+			"items": [],
+		},
+		"cogate_template": {
+			"run_mode": run_mode,
+			"template": cogate_template_name,
+			"errors": cogate_template_errors,
+		},
+		"cross_platform_alignment": {
+			"history_file": str(cross_platform_alignment.get("history_file", "user://visual_snapshot_approval_archive.json")),
+			"aggregation_window": int(cross_platform_alignment.get("aggregation_window", 80)),
+			"required_run_modes": cross_platform_alignment.get("required_run_modes", []),
+			"required_backends": cross_platform_alignment.get("required_backends", []),
+			"max_missing_backends": int(cross_platform_alignment.get("max_missing_backends", 0)),
+			"max_missing_run_modes": int(cross_platform_alignment.get("max_missing_run_modes", 0)),
+			"max_alignment_failures": int(cross_platform_alignment.get("max_alignment_failures", 0)),
+			"alignment_failures": 0,
+			"items": [],
+		},
+		"pressure_scenario_standardization": {
+			"required_run_modes": pressure_scenario_standardization.get("required_run_modes", []),
+			"required_scenarios": pressure_scenario_standardization.get("required_scenarios", []),
+			"max_standardization_failures": int(pressure_scenario_standardization.get("max_standardization_failures", 0)),
+			"standardization_failures": 0,
+			"items": [],
+		},
+		"alignment_dashboard_refinement": {
+			"required_run_modes": alignment_dashboard_refinement.get("required_run_modes", []),
+			"max_dashboard_failures": int(alignment_dashboard_refinement.get("max_dashboard_failures", 0)),
+			"dashboard_failures": 0,
+			"items": [],
+		},
+		"pressure_alignment_convergence_gate": {
+			"required_run_modes": pressure_alignment_convergence_gate.get("required_run_modes", []),
+			"required_backends": pressure_alignment_convergence_gate.get("required_backends", []),
+			"max_convergence_failures": int(pressure_alignment_convergence_gate.get("max_convergence_failures", 0)),
+			"convergence_failures": 0,
+			"items": [],
+		},
+		"regression_cycle_window_governance": {
+			"required_run_modes": regression_cycle_window_governance.get("required_run_modes", []),
+			"required_backends": regression_cycle_window_governance.get("required_backends", []),
+			"cycle_window_size": int(regression_cycle_window_governance.get("cycle_window_size", 20)),
+			"min_cycle_entries": int(regression_cycle_window_governance.get("min_cycle_entries", 8)),
+			"max_cycle_failures": int(regression_cycle_window_governance.get("max_cycle_failures", 0)),
+			"cycle_failures": 0,
+			"items": [],
+		},
+		"multi_cycle_adaptive_gate": {
+			"required_run_modes": multi_cycle_adaptive_gate.get("required_run_modes", []),
+			"required_backends": multi_cycle_adaptive_gate.get("required_backends", []),
+			"window_sizes": multi_cycle_adaptive_gate.get("window_sizes", {}),
+			"min_window_entries": int(multi_cycle_adaptive_gate.get("min_window_entries", 6)),
+			"max_adaptive_failures": int(multi_cycle_adaptive_gate.get("max_adaptive_failures", 0)),
+			"adaptive_failures": 0,
+			"items": [],
+		},
+		"release_feedback_governance": {
+			"required_run_modes": release_feedback_governance.get("required_run_modes", []),
+			"required_backends": release_feedback_governance.get("required_backends", []),
+			"feedback_window_size": int(release_feedback_governance.get("feedback_window_size", 24)),
+			"min_feedback_entries": int(release_feedback_governance.get("min_feedback_entries", 8)),
+			"max_feedback_failures": int(release_feedback_governance.get("max_feedback_failures", 0)),
+			"feedback_failures": 0,
+			"items": [],
+		},
 		"items": [],
 	}
 
@@ -275,6 +444,8 @@ func _run_regression() -> Dictionary:
 		_push_result(report, "global", "strategy_orchestration_invalid", false, strategy_error)
 	for approval_error in approval_template_errors:
 		_push_result(report, "global", "approval_threshold_template_invalid", false, approval_error)
+	for cogate_error in cogate_template_errors:
+		_push_result(report, "global", "cogate_threshold_template_invalid", false, cogate_error)
 
 	for required_id in required_snapshot_ids:
 		if not snapshots.has(required_id):
@@ -452,6 +623,20 @@ func _run_regression() -> Dictionary:
 	_evaluate_approval_audit_trail(report, approval_audit_trail, strategy_name, run_mode, backend_tag)
 	_evaluate_approval_history_archive(report, approval_history_archive, strategy_name, run_mode, backend_tag)
 	_evaluate_release_candidate_tracking(report, release_candidate_tracking, run_mode)
+	_evaluate_stability_scoring(report, stability_scoring, stability_tiers, run_mode)
+	_evaluate_convergence_dashboard(report, convergence_dashboard, run_mode)
+	_evaluate_ci_signal_contract(report, ci_signal_contract, stability_tiers, run_mode)
+	_evaluate_convergence_trend_reinforcement(report, convergence_trend_reinforcement, run_mode)
+	_evaluate_exception_lifecycle_linkage(report, exception_lifecycle_linkage, run_mode)
+	_evaluate_cogate_threshold_template(report, cogate_template_errors, run_mode)
+	_evaluate_visual_performance_cogate(report, resolved_visual_performance_cogate, run_mode)
+	_evaluate_cross_platform_alignment(report, cross_platform_alignment, run_mode, backend_tag)
+	_evaluate_pressure_scenario_standardization(report, pressure_scenario_standardization, run_mode)
+	_evaluate_alignment_dashboard_refinement(report, alignment_dashboard_refinement, run_mode)
+	_evaluate_pressure_alignment_convergence_gate(report, pressure_alignment_convergence_gate, run_mode, backend_tag)
+	_evaluate_regression_cycle_window_governance(report, regression_cycle_window_governance, run_mode, backend_tag)
+	_evaluate_multi_cycle_adaptive_gate(report, multi_cycle_adaptive_gate, run_mode, backend_tag)
+	_evaluate_release_feedback_governance(report, release_feedback_governance, run_mode, backend_tag)
 
 	var failures: int = int(report.get("blockers", 0))
 	if failures > max_failures:
@@ -1407,6 +1592,820 @@ func _sanitize_release_candidate_tracking(raw: Variant) -> Dictionary:
 	return output
 
 
+func _sanitize_stability_scoring(raw: Variant) -> Dictionary:
+	var output: Dictionary = {
+		"weights": {
+			"matching_runs": 0.3,
+			"avg_warnings": 0.25,
+			"total_blockers": 0.35,
+			"tracking_failures": 0.1,
+		},
+		"failure_caps": {
+			"max_avg_warnings": 2.0,
+			"max_total_blockers": 2,
+			"max_tracking_failures": 2,
+		},
+		"confidence": {
+			"reference_runs": 8,
+			"min_confidence": 0.4,
+		},
+		"score_round_digits": 3,
+	}
+	if not (raw is Dictionary):
+		return output
+	var row: Dictionary = raw
+
+	var weights_raw: Variant = row.get("weights", {})
+	if weights_raw is Dictionary:
+		var weights: Dictionary = output.get("weights", {})
+		for key in ["matching_runs", "avg_warnings", "total_blockers", "tracking_failures"]:
+			if (weights_raw as Dictionary).has(key):
+				weights[key] = clampf(float((weights_raw as Dictionary).get(key, weights.get(key, 0.0))), 0.0, 1.0)
+		output["weights"] = weights
+
+	var caps_raw: Variant = row.get("failure_caps", {})
+	if caps_raw is Dictionary:
+		var caps: Dictionary = output.get("failure_caps", {})
+		caps["max_avg_warnings"] = maxf(0.1, float((caps_raw as Dictionary).get("max_avg_warnings", caps.get("max_avg_warnings", 2.0))))
+		caps["max_total_blockers"] = maxi(1, int((caps_raw as Dictionary).get("max_total_blockers", caps.get("max_total_blockers", 2))))
+		caps["max_tracking_failures"] = maxi(1, int((caps_raw as Dictionary).get("max_tracking_failures", caps.get("max_tracking_failures", 2))))
+		output["failure_caps"] = caps
+
+	var confidence_raw: Variant = row.get("confidence", {})
+	if confidence_raw is Dictionary:
+		var confidence: Dictionary = output.get("confidence", {})
+		confidence["reference_runs"] = maxi(1, int((confidence_raw as Dictionary).get("reference_runs", confidence.get("reference_runs", 8))))
+		confidence["min_confidence"] = clampf(float((confidence_raw as Dictionary).get("min_confidence", confidence.get("min_confidence", 0.4))), 0.0, 1.0)
+		output["confidence"] = confidence
+
+	output["score_round_digits"] = clampi(int(row.get("score_round_digits", output.get("score_round_digits", 3))), 0, 5)
+	return output
+
+
+func _sanitize_stability_tiers(raw: Variant) -> Dictionary:
+	var output: Dictionary = {
+		"default_tier": "D",
+		"tiers": [
+			{
+				"name": "S",
+				"min_score": 95.0,
+				"max_avg_warnings": 0.2,
+				"max_total_blockers": 0,
+				"max_tracking_failures": 0,
+				"min_confidence": 0.8,
+			},
+			{
+				"name": "A",
+				"min_score": 85.0,
+				"max_avg_warnings": 0.5,
+				"max_total_blockers": 0,
+				"max_tracking_failures": 0,
+				"min_confidence": 0.7,
+			},
+			{
+				"name": "B",
+				"min_score": 70.0,
+				"max_avg_warnings": 1.0,
+				"max_total_blockers": 0,
+				"max_tracking_failures": 1,
+				"min_confidence": 0.55,
+			},
+			{
+				"name": "C",
+				"min_score": 50.0,
+				"max_avg_warnings": 1.5,
+				"max_total_blockers": 1,
+				"max_tracking_failures": 1,
+				"min_confidence": 0.4,
+			},
+			{
+				"name": "D",
+				"min_score": 0.0,
+				"max_avg_warnings": 2.0,
+				"max_total_blockers": 2,
+				"max_tracking_failures": 2,
+				"min_confidence": 0.0,
+			},
+		],
+	}
+	if not (raw is Dictionary):
+		return output
+	var row: Dictionary = raw
+
+	var default_tier: String = str(row.get("default_tier", output.get("default_tier", "D"))).strip_edges()
+	if not default_tier.is_empty():
+		output["default_tier"] = default_tier
+
+	var tiers_raw: Variant = row.get("tiers", [])
+	if tiers_raw is Array:
+		var tiers: Array = []
+		for tier_row_variant in tiers_raw:
+			if not (tier_row_variant is Dictionary):
+				continue
+			var tier_row: Dictionary = tier_row_variant
+			var name: String = str(tier_row.get("name", "")).strip_edges()
+			if name.is_empty():
+				continue
+			tiers.append({
+				"name": name,
+				"min_score": clampf(float(tier_row.get("min_score", 0.0)), 0.0, 100.0),
+				"max_avg_warnings": maxf(0.0, float(tier_row.get("max_avg_warnings", 999.0))),
+				"max_total_blockers": maxi(0, int(tier_row.get("max_total_blockers", 999))),
+				"max_tracking_failures": maxi(0, int(tier_row.get("max_tracking_failures", 999))),
+				"min_confidence": clampf(float(tier_row.get("min_confidence", 0.0)), 0.0, 1.0),
+			})
+		if not tiers.is_empty():
+			tiers.sort_custom(_sort_tier_rows_desc)
+			output["tiers"] = tiers
+
+	return output
+
+
+func _sort_tier_rows_desc(a: Dictionary, b: Dictionary) -> bool:
+	return float(a.get("min_score", 0.0)) > float(b.get("min_score", 0.0))
+
+
+func _sanitize_convergence_dashboard(raw: Variant) -> Dictionary:
+	var output: Dictionary = {
+		"max_approval_failures": 0,
+		"max_tracking_failures": 0,
+		"max_trace_failures": 0,
+		"max_manifest_failures": 0,
+		"max_blockers": 0,
+		"max_warnings": 2,
+		"max_dashboard_failures": 0,
+	}
+	if not (raw is Dictionary):
+		return output
+	var row: Dictionary = raw
+	for key in output.keys():
+		output[key] = maxi(0, int(row.get(key, output.get(key, 0))))
+	return output
+
+
+func _sanitize_ci_signal_contract(raw: Variant, release_gate_templates: Dictionary) -> Dictionary:
+	var output: Dictionary = {
+		"required_fields": [
+			"run_mode",
+			"strategy",
+			"stability_score",
+			"stability_tier",
+			"confidence",
+			"dashboard_failures",
+		],
+		"tier_requirements": {
+			"rehearsal": "C",
+			"trend_gate": "B",
+			"release_candidate": "B",
+			"release_blocking": "A",
+		},
+		"max_contract_failures": 0,
+	}
+	if not (raw is Dictionary):
+		return output
+	var row: Dictionary = raw
+
+	var required_fields: Array[String] = _sanitize_string_array(row.get("required_fields", output.get("required_fields", [])))
+	if not required_fields.is_empty():
+		output["required_fields"] = required_fields
+
+	var tier_requirements_raw: Variant = row.get("tier_requirements", {})
+	if tier_requirements_raw is Dictionary:
+		var tier_requirements: Dictionary = {}
+		for run_mode_var in (tier_requirements_raw as Dictionary).keys():
+			var mode_name: String = str(run_mode_var).strip_edges()
+			var tier_name: String = str((tier_requirements_raw as Dictionary).get(run_mode_var, "")).strip_edges()
+			if mode_name.is_empty() or tier_name.is_empty():
+				continue
+			tier_requirements[mode_name] = tier_name
+		if not tier_requirements.is_empty():
+			output["tier_requirements"] = tier_requirements
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	var tier_requirements_output: Dictionary = output.get("tier_requirements", {})
+	for run_mode in _sanitize_string_array(ci_mode_bindings.keys()):
+		if not tier_requirements_output.has(run_mode):
+			tier_requirements_output[run_mode] = "C"
+	output["tier_requirements"] = tier_requirements_output
+
+	output["max_contract_failures"] = maxi(0, int(row.get("max_contract_failures", output.get("max_contract_failures", 0))))
+	return output
+
+
+func _sanitize_convergence_trend_reinforcement(
+	raw: Variant,
+	tracking_cfg: Dictionary,
+	archive_cfg: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"history_file": str(archive_cfg.get("archive_file", tracking_cfg.get("history_file", "user://visual_snapshot_approval_archive.json"))),
+		"long_window": maxi(10, int(tracking_cfg.get("window", archive_cfg.get("aggregation_window", 40)))),
+		"short_window": 12,
+		"min_samples": 6,
+		"required_metrics": [
+			"warnings",
+			"blockers",
+			"approval_failures",
+			"tracking_failures",
+			"dashboard_failures",
+		],
+		"max_worsening_metrics": 1,
+		"max_worsening_delta": 0.25,
+		"min_improving_metrics": 0,
+		"min_improvement_delta": 0.1,
+		"max_trend_failures": 0,
+	}
+	if not (raw is Dictionary):
+		return output
+	var row: Dictionary = raw
+
+	output["history_file"] = str(row.get("history_file", output.get("history_file", "user://visual_snapshot_approval_archive.json")))
+	output["long_window"] = maxi(10, int(row.get("long_window", output.get("long_window", 40))))
+	output["short_window"] = maxi(3, int(row.get("short_window", output.get("short_window", 12))))
+	if int(output.get("short_window", 12)) > int(output.get("long_window", 40)):
+		output["short_window"] = int(output.get("long_window", 40))
+	output["min_samples"] = maxi(1, int(row.get("min_samples", output.get("min_samples", 6))))
+	output["required_metrics"] = _sanitize_string_array(row.get("required_metrics", output.get("required_metrics", [])))
+	output["max_worsening_metrics"] = maxi(0, int(row.get("max_worsening_metrics", output.get("max_worsening_metrics", 1))))
+	output["max_worsening_delta"] = maxf(0.0, float(row.get("max_worsening_delta", output.get("max_worsening_delta", 0.25))))
+	output["min_improving_metrics"] = maxi(0, int(row.get("min_improving_metrics", output.get("min_improving_metrics", 0))))
+	output["min_improvement_delta"] = maxf(0.0, float(row.get("min_improvement_delta", output.get("min_improvement_delta", 0.1))))
+	output["max_trend_failures"] = maxi(0, int(row.get("max_trend_failures", output.get("max_trend_failures", 0))))
+	return output
+
+
+func _sanitize_exception_lifecycle_linkage(raw: Variant, lifecycle_cfg: Dictionary) -> Dictionary:
+	var output: Dictionary = {
+		"required_states": [],
+		"stale_idle_runs": maxi(1, int(lifecycle_cfg.get("expire_idle_runs", 2)) - 1),
+		"min_transition_count": 0,
+		"max_orphan_entries": 0,
+		"max_unlinked_reclaims": 0,
+		"max_unlinked_expired": 0,
+		"max_linkage_failures": 0,
+	}
+	if not (raw is Dictionary):
+		return output
+	var row: Dictionary = raw
+	output["required_states"] = _sanitize_string_array(row.get("required_states", output.get("required_states", [])))
+	output["stale_idle_runs"] = maxi(1, int(row.get("stale_idle_runs", output.get("stale_idle_runs", 1))))
+	output["min_transition_count"] = maxi(0, int(row.get("min_transition_count", output.get("min_transition_count", 0))))
+	output["max_orphan_entries"] = maxi(0, int(row.get("max_orphan_entries", output.get("max_orphan_entries", 0))))
+	output["max_unlinked_reclaims"] = maxi(0, int(row.get("max_unlinked_reclaims", output.get("max_unlinked_reclaims", 0))))
+	output["max_unlinked_expired"] = maxi(0, int(row.get("max_unlinked_expired", output.get("max_unlinked_expired", 0))))
+	output["max_linkage_failures"] = maxi(0, int(row.get("max_linkage_failures", output.get("max_linkage_failures", 0))))
+	return output
+
+
+func _sanitize_visual_performance_cogate(raw: Variant, release_gate_templates: Dictionary) -> Dictionary:
+	var required_reports: Array[String] = _sanitize_string_array(release_gate_templates.get("required_reports", []))
+	var baseline_report: String = "user://quality_baseline_latest.json"
+	for report_path in required_reports:
+		if str(report_path).ends_with("quality_baseline_latest.json"):
+			baseline_report = str(report_path)
+			break
+
+	var output: Dictionary = {
+		"baseline_report": baseline_report,
+		"required_run_modes": ["release_candidate", "release_blocking"],
+		"max_alert_total": 0,
+		"max_alert_critical": 0,
+		"max_alert_warning": 0,
+		"max_scenario_failures": 0,
+		"required_scenarios": [],
+		"max_frame_ms_ratio": 1.15,
+		"max_memory_mb_ratio": 1.1,
+		"max_cogate_failures": 0,
+	}
+	if not (raw is Dictionary):
+		return output
+
+	var row: Dictionary = raw
+	output["baseline_report"] = str(row.get("baseline_report", output.get("baseline_report", baseline_report)))
+	output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+	output["max_alert_total"] = maxi(0, int(row.get("max_alert_total", output.get("max_alert_total", 0))))
+	output["max_alert_critical"] = maxi(0, int(row.get("max_alert_critical", output.get("max_alert_critical", 0))))
+	output["max_alert_warning"] = maxi(0, int(row.get("max_alert_warning", output.get("max_alert_warning", 0))))
+	output["max_scenario_failures"] = maxi(0, int(row.get("max_scenario_failures", output.get("max_scenario_failures", 0))))
+	output["required_scenarios"] = _sanitize_string_array(row.get("required_scenarios", output.get("required_scenarios", [])))
+	output["max_frame_ms_ratio"] = maxf(1.0, float(row.get("max_frame_ms_ratio", output.get("max_frame_ms_ratio", 1.15))))
+	output["max_memory_mb_ratio"] = maxf(1.0, float(row.get("max_memory_mb_ratio", output.get("max_memory_mb_ratio", 1.1))))
+	output["max_cogate_failures"] = maxi(0, int(row.get("max_cogate_failures", output.get("max_cogate_failures", 0))))
+	return output
+
+
+func _sanitize_cogate_threshold_templates(raw: Variant, release_gate_templates: Dictionary) -> Dictionary:
+	var output: Dictionary = {
+		"default_template": "standard",
+		"run_mode_templates": {
+			"rehearsal": "relaxed",
+			"trend_gate": "standard",
+			"release_candidate": "candidate",
+			"release_blocking": "blocking",
+		},
+		"templates": {
+			"relaxed": {
+				"max_alert_total": 2,
+				"max_alert_critical": 0,
+				"max_alert_warning": 2,
+				"max_scenario_failures": 1,
+				"max_frame_ms_ratio": 1.25,
+				"max_memory_mb_ratio": 1.2,
+				"max_cogate_failures": 1,
+			},
+			"standard": {
+				"max_alert_total": 1,
+				"max_alert_critical": 0,
+				"max_alert_warning": 1,
+				"max_scenario_failures": 0,
+				"max_frame_ms_ratio": 1.2,
+				"max_memory_mb_ratio": 1.15,
+				"max_cogate_failures": 0,
+			},
+			"candidate": {
+				"max_alert_total": 0,
+				"max_alert_critical": 0,
+				"max_alert_warning": 0,
+				"max_scenario_failures": 0,
+				"max_frame_ms_ratio": 1.15,
+				"max_memory_mb_ratio": 1.1,
+				"max_cogate_failures": 0,
+			},
+			"blocking": {
+				"max_alert_total": 0,
+				"max_alert_critical": 0,
+				"max_alert_warning": 0,
+				"max_scenario_failures": 0,
+				"max_frame_ms_ratio": 1.1,
+				"max_memory_mb_ratio": 1.05,
+				"max_cogate_failures": 0,
+			},
+		},
+	}
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		var default_template: String = str(row.get("default_template", output.get("default_template", "standard"))).strip_edges()
+		if not default_template.is_empty():
+			output["default_template"] = default_template
+
+		var run_mode_templates_raw: Variant = row.get("run_mode_templates", {})
+		if run_mode_templates_raw is Dictionary:
+			var run_mode_templates: Dictionary = {}
+			for run_mode_var in (run_mode_templates_raw as Dictionary).keys():
+				var run_mode_name: String = str(run_mode_var).strip_edges()
+				var template_name: String = str((run_mode_templates_raw as Dictionary).get(run_mode_var, "")).strip_edges()
+				if run_mode_name.is_empty() or template_name.is_empty():
+					continue
+				run_mode_templates[run_mode_name] = template_name
+			if not run_mode_templates.is_empty():
+				output["run_mode_templates"] = run_mode_templates
+
+		var templates_raw: Variant = row.get("templates", {})
+		if templates_raw is Dictionary:
+			var templates: Dictionary = {}
+			for template_var in (templates_raw as Dictionary).keys():
+				var template_name: String = str(template_var).strip_edges()
+				var template_row_var: Variant = (templates_raw as Dictionary).get(template_var, {})
+				if template_name.is_empty() or not (template_row_var is Dictionary):
+					continue
+				var template_row: Dictionary = template_row_var
+				templates[template_name] = {
+					"max_alert_total": maxi(0, int(template_row.get("max_alert_total", 0))),
+					"max_alert_critical": maxi(0, int(template_row.get("max_alert_critical", 0))),
+					"max_alert_warning": maxi(0, int(template_row.get("max_alert_warning", 0))),
+					"max_scenario_failures": maxi(0, int(template_row.get("max_scenario_failures", 0))),
+					"max_frame_ms_ratio": clampf(float(template_row.get("max_frame_ms_ratio", 1.15)), 1.0, 3.0),
+					"max_memory_mb_ratio": clampf(float(template_row.get("max_memory_mb_ratio", 1.1)), 1.0, 3.0),
+					"max_cogate_failures": maxi(0, int(template_row.get("max_cogate_failures", 0))),
+				}
+			if not templates.is_empty():
+				output["templates"] = templates
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	var run_mode_templates_fallback: Dictionary = output.get("run_mode_templates", {})
+	var fallback_template: String = str(output.get("default_template", "standard"))
+	for run_mode in _sanitize_string_array(ci_mode_bindings.keys()):
+		if not run_mode_templates_fallback.has(run_mode):
+			run_mode_templates_fallback[run_mode] = fallback_template
+	output["run_mode_templates"] = run_mode_templates_fallback
+	return output
+
+
+func _resolve_cogate_threshold_template(
+	templates_cfg: Dictionary,
+	base_cogate_cfg: Dictionary,
+	run_mode: String
+) -> Dictionary:
+	var errors: Array[String] = []
+	var run_mode_templates: Dictionary = templates_cfg.get("run_mode_templates", {})
+	var templates: Dictionary = templates_cfg.get("templates", {})
+	var default_template: String = str(templates_cfg.get("default_template", "standard")).strip_edges()
+	if default_template.is_empty():
+		default_template = "standard"
+
+	var template_name: String = str(run_mode_templates.get(run_mode, default_template)).strip_edges()
+	if template_name.is_empty():
+		template_name = default_template
+		errors.append("cogate template name for run_mode '%s' is empty; fallback to %s" % [run_mode, default_template])
+
+	if not templates.has(template_name):
+		errors.append("cogate template '%s' for run_mode '%s' not found; fallback to %s" % [template_name, run_mode, default_template])
+		template_name = default_template
+
+	if not templates.has(template_name):
+		errors.append("default cogate template '%s' not found" % default_template)
+		return {
+			"template": template_name,
+			"config": base_cogate_cfg,
+			"errors": errors,
+		}
+
+	var template_row_var: Variant = templates.get(template_name, {})
+	if not (template_row_var is Dictionary):
+		errors.append("cogate template '%s' row must be object" % template_name)
+		return {
+			"template": template_name,
+			"config": base_cogate_cfg,
+			"errors": errors,
+		}
+
+	var template_row: Dictionary = template_row_var
+	var resolved: Dictionary = base_cogate_cfg.duplicate(true)
+	for key in [
+		"max_alert_total",
+		"max_alert_critical",
+		"max_alert_warning",
+		"max_scenario_failures",
+		"max_frame_ms_ratio",
+		"max_memory_mb_ratio",
+		"max_cogate_failures",
+	]:
+		if template_row.has(key):
+			resolved[key] = template_row.get(key)
+	resolved["template"] = template_name
+
+	return {
+		"template": template_name,
+		"config": resolved,
+		"errors": errors,
+	}
+
+
+func _sanitize_cross_platform_alignment(
+	raw: Variant,
+	approval_history_archive: Dictionary,
+	release_gate_templates: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"history_file": str(approval_history_archive.get("archive_file", "user://visual_snapshot_approval_archive.json")),
+		"aggregation_window": maxi(20, int(approval_history_archive.get("aggregation_window", 80))),
+		"required_run_modes": ["release_candidate", "release_blocking"],
+		"required_backends": _sanitize_string_array(approval_history_archive.get("required_backends", [])),
+		"metric_limits": {
+			"performance_alert_total": 0,
+			"performance_alert_critical": 0,
+			"performance_alert_warning": 1,
+			"performance_scenario_failures": 0,
+			"performance_cogate_failures": 0,
+		},
+		"max_missing_backends": 0,
+		"max_missing_run_modes": 0,
+		"max_alignment_failures": 0,
+	}
+
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		output["history_file"] = str(row.get("history_file", output.get("history_file", "user://visual_snapshot_approval_archive.json")))
+		output["aggregation_window"] = maxi(20, int(row.get("aggregation_window", output.get("aggregation_window", 80))))
+		output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+		output["required_backends"] = _sanitize_string_array(row.get("required_backends", output.get("required_backends", [])))
+		var metric_limits_raw: Variant = row.get("metric_limits", {})
+		if metric_limits_raw is Dictionary:
+			var metric_limits: Dictionary = output.get("metric_limits", {})
+			for metric_name in metric_limits.keys():
+				metric_limits[metric_name] = maxi(0, int((metric_limits_raw as Dictionary).get(metric_name, metric_limits.get(metric_name, 0))))
+			output["metric_limits"] = metric_limits
+		output["max_missing_backends"] = maxi(0, int(row.get("max_missing_backends", output.get("max_missing_backends", 0))))
+		output["max_missing_run_modes"] = maxi(0, int(row.get("max_missing_run_modes", output.get("max_missing_run_modes", 0))))
+		output["max_alignment_failures"] = maxi(0, int(row.get("max_alignment_failures", output.get("max_alignment_failures", 0))))
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	if (output.get("required_run_modes", []) as Array).is_empty() and not ci_mode_bindings.is_empty():
+		output["required_run_modes"] = _sanitize_string_array(ci_mode_bindings.keys())
+
+	return output
+
+
+func _sanitize_pressure_scenario_standardization(
+	raw: Variant,
+	base_cogate_cfg: Dictionary,
+	release_gate_templates: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"baseline_targets_file": "res://data/balance/quality_baseline_targets.json",
+		"baseline_report": str(base_cogate_cfg.get("baseline_report", "user://quality_baseline_latest.json")),
+		"required_run_modes": _sanitize_string_array(base_cogate_cfg.get("required_run_modes", ["release_candidate", "release_blocking"])),
+		"required_scenarios": [
+			"game_world_elite_pressure_medium",
+			"game_world_elite_pressure_high",
+			"game_world_elite_pressure_extreme",
+			"game_world_boss_pressure_endurance",
+		],
+		"max_avg_frame_ms_ratio": 1.1,
+		"max_p95_frame_ms_ratio": 1.12,
+		"max_peak_memory_mb_ratio": 1.1,
+		"max_standardization_failures": 0,
+	}
+
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		output["baseline_targets_file"] = str(row.get("baseline_targets_file", output.get("baseline_targets_file", "res://data/balance/quality_baseline_targets.json")))
+		output["baseline_report"] = str(row.get("baseline_report", output.get("baseline_report", "user://quality_baseline_latest.json")))
+		output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+		output["required_scenarios"] = _sanitize_string_array(row.get("required_scenarios", output.get("required_scenarios", [])))
+		output["max_avg_frame_ms_ratio"] = clampf(float(row.get("max_avg_frame_ms_ratio", output.get("max_avg_frame_ms_ratio", 1.1))), 1.0, 3.0)
+		output["max_p95_frame_ms_ratio"] = clampf(float(row.get("max_p95_frame_ms_ratio", output.get("max_p95_frame_ms_ratio", 1.12))), 1.0, 3.0)
+		output["max_peak_memory_mb_ratio"] = clampf(float(row.get("max_peak_memory_mb_ratio", output.get("max_peak_memory_mb_ratio", 1.1))), 1.0, 3.0)
+		output["max_standardization_failures"] = maxi(0, int(row.get("max_standardization_failures", output.get("max_standardization_failures", 0))))
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	if (output.get("required_run_modes", []) as Array).is_empty() and not ci_mode_bindings.is_empty():
+		output["required_run_modes"] = _sanitize_string_array(ci_mode_bindings.keys())
+
+	return output
+
+
+func _sanitize_alignment_dashboard_refinement(
+	raw: Variant,
+	base_alignment_cfg: Dictionary,
+	release_gate_templates: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"required_run_modes": _sanitize_string_array(base_alignment_cfg.get("required_run_modes", ["release_candidate", "release_blocking"])),
+		"metric_weights": {
+			"performance_alert_total": 1.0,
+			"performance_alert_critical": 1.2,
+			"performance_alert_warning": 0.8,
+			"performance_scenario_failures": 1.2,
+			"performance_cogate_failures": 1.4,
+		},
+		"missing_backend_weight": 1.0,
+		"missing_run_mode_weight": 1.0,
+		"watch_score_threshold": 0.35,
+		"critical_score_threshold": 0.7,
+		"max_dashboard_failures": 0,
+	}
+
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+
+		var metric_weights_raw: Variant = row.get("metric_weights", {})
+		if metric_weights_raw is Dictionary:
+			var metric_weights: Dictionary = output.get("metric_weights", {})
+			for metric_key in metric_weights.keys():
+				metric_weights[metric_key] = clampf(float((metric_weights_raw as Dictionary).get(metric_key, metric_weights.get(metric_key, 1.0))), 0.0, 5.0)
+			output["metric_weights"] = metric_weights
+
+		output["missing_backend_weight"] = clampf(float(row.get("missing_backend_weight", output.get("missing_backend_weight", 1.0))), 0.0, 5.0)
+		output["missing_run_mode_weight"] = clampf(float(row.get("missing_run_mode_weight", output.get("missing_run_mode_weight", 1.0))), 0.0, 5.0)
+		output["watch_score_threshold"] = maxf(0.0, float(row.get("watch_score_threshold", output.get("watch_score_threshold", 0.35))))
+		output["critical_score_threshold"] = maxf(
+			float(output.get("watch_score_threshold", 0.35)),
+			float(row.get("critical_score_threshold", output.get("critical_score_threshold", 0.7)))
+		)
+		output["max_dashboard_failures"] = maxi(0, int(row.get("max_dashboard_failures", output.get("max_dashboard_failures", 0))))
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	if (output.get("required_run_modes", []) as Array).is_empty() and not ci_mode_bindings.is_empty():
+		output["required_run_modes"] = _sanitize_string_array(ci_mode_bindings.keys())
+
+	return output
+
+
+func _sanitize_pressure_alignment_convergence_gate(
+	raw: Variant,
+	base_alignment_cfg: Dictionary,
+	release_gate_templates: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"required_run_modes": _sanitize_string_array(base_alignment_cfg.get("required_run_modes", ["release_candidate", "release_blocking"])),
+		"required_backends": _sanitize_string_array(base_alignment_cfg.get("required_backends", ["linux_headless", "windows_headless"])),
+		"max_standardization_failures": 0,
+		"max_alignment_failures": 0,
+		"max_dashboard_failures": 0,
+		"max_critical_severity_count": 0,
+		"max_convergence_failures": 0,
+	}
+
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+		output["required_backends"] = _sanitize_string_array(row.get("required_backends", output.get("required_backends", [])))
+		output["max_standardization_failures"] = maxi(0, int(row.get("max_standardization_failures", output.get("max_standardization_failures", 0))))
+		output["max_alignment_failures"] = maxi(0, int(row.get("max_alignment_failures", output.get("max_alignment_failures", 0))))
+		output["max_dashboard_failures"] = maxi(0, int(row.get("max_dashboard_failures", output.get("max_dashboard_failures", 0))))
+		output["max_critical_severity_count"] = maxi(0, int(row.get("max_critical_severity_count", output.get("max_critical_severity_count", 0))))
+		output["max_convergence_failures"] = maxi(0, int(row.get("max_convergence_failures", output.get("max_convergence_failures", 0))))
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	if (output.get("required_run_modes", []) as Array).is_empty() and not ci_mode_bindings.is_empty():
+		output["required_run_modes"] = _sanitize_string_array(ci_mode_bindings.keys())
+
+	return output
+
+
+func _sanitize_regression_cycle_window_governance(
+	raw: Variant,
+	approval_history_archive: Dictionary,
+	release_gate_templates: Dictionary,
+	base_alignment_cfg: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"history_file": str(approval_history_archive.get("archive_file", "user://visual_snapshot_approval_archive.json")),
+		"cycle_window_size": 20,
+		"min_cycle_entries": 8,
+		"required_run_modes": _sanitize_string_array(base_alignment_cfg.get("required_run_modes", ["release_candidate", "release_blocking"])),
+		"required_backends": _sanitize_string_array(approval_history_archive.get("required_backends", base_alignment_cfg.get("required_backends", ["linux_headless", "windows_headless"]))),
+		"max_warning_delta": maxi(0, int(approval_history_archive.get("max_backend_warning_delta", 1))),
+		"max_blocker_delta": maxi(0, int(approval_history_archive.get("max_backend_blocker_delta", 0))),
+		"max_alignment_score_delta": 0.2,
+		"max_cycle_failures": 0,
+	}
+
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		output["history_file"] = str(row.get("history_file", output.get("history_file", "user://visual_snapshot_approval_archive.json")))
+		output["cycle_window_size"] = maxi(10, int(row.get("cycle_window_size", output.get("cycle_window_size", 20))))
+		output["min_cycle_entries"] = maxi(1, int(row.get("min_cycle_entries", output.get("min_cycle_entries", 8))))
+		output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+		output["required_backends"] = _sanitize_string_array(row.get("required_backends", output.get("required_backends", [])))
+		output["max_warning_delta"] = maxi(0, int(row.get("max_warning_delta", output.get("max_warning_delta", 1))))
+		output["max_blocker_delta"] = maxi(0, int(row.get("max_blocker_delta", output.get("max_blocker_delta", 0))))
+		output["max_alignment_score_delta"] = clampf(float(row.get("max_alignment_score_delta", output.get("max_alignment_score_delta", 0.2))), 0.0, 5.0)
+		output["max_cycle_failures"] = maxi(0, int(row.get("max_cycle_failures", output.get("max_cycle_failures", 0))))
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	if (output.get("required_run_modes", []) as Array).is_empty() and not ci_mode_bindings.is_empty():
+		output["required_run_modes"] = _sanitize_string_array(ci_mode_bindings.keys())
+
+	return output
+
+
+func _sanitize_multi_cycle_adaptive_gate(
+	raw: Variant,
+	approval_history_archive: Dictionary,
+	release_gate_templates: Dictionary,
+	base_alignment_cfg: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"history_file": str(approval_history_archive.get("archive_file", "user://visual_snapshot_approval_archive.json")),
+		"window_sizes": {
+			"short": 8,
+			"mid": 16,
+			"long": 32,
+		},
+		"min_window_entries": 6,
+		"required_run_modes": _sanitize_string_array(base_alignment_cfg.get("required_run_modes", ["release_candidate", "release_blocking"])),
+		"required_backends": _sanitize_string_array(approval_history_archive.get("required_backends", base_alignment_cfg.get("required_backends", ["linux_headless", "windows_headless"]))),
+		"max_warning_slopes": {
+			"short": 0.25,
+			"mid": 0.15,
+			"long": 0.1,
+		},
+		"max_blocker_slopes": {
+			"short": 0.0,
+			"mid": 0.0,
+			"long": 0.0,
+		},
+		"max_missing_run_modes": 0,
+		"max_missing_backends": 0,
+		"max_adaptive_failures": 0,
+	}
+
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		output["history_file"] = str(row.get("history_file", output.get("history_file", "user://visual_snapshot_approval_archive.json")))
+		output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+		output["required_backends"] = _sanitize_string_array(row.get("required_backends", output.get("required_backends", [])))
+
+		var default_window_sizes: Dictionary = output.get("window_sizes", {})
+		var window_sizes_raw: Variant = row.get("window_sizes", {})
+		var short_size: int = maxi(4, int(default_window_sizes.get("short", 8)))
+		var mid_size: int = maxi(short_size, int(default_window_sizes.get("mid", 16)))
+		var long_size: int = maxi(mid_size, int(default_window_sizes.get("long", 32)))
+		if window_sizes_raw is Dictionary:
+			short_size = maxi(4, int((window_sizes_raw as Dictionary).get("short", short_size)))
+			mid_size = maxi(short_size, int((window_sizes_raw as Dictionary).get("mid", mid_size)))
+			long_size = maxi(mid_size, int((window_sizes_raw as Dictionary).get("long", long_size)))
+		output["window_sizes"] = {
+			"short": short_size,
+			"mid": mid_size,
+			"long": long_size,
+		}
+
+		var min_window_entries: int = maxi(1, int(row.get("min_window_entries", output.get("min_window_entries", 6))))
+		output["min_window_entries"] = clampi(min_window_entries, 1, short_size)
+
+		var warning_slopes_default: Dictionary = output.get("max_warning_slopes", {})
+		var warning_slopes_raw: Variant = row.get("max_warning_slopes", {})
+		var warning_short: float = clampf(float(warning_slopes_default.get("short", 0.25)), 0.0, 10.0)
+		var warning_mid: float = clampf(float(warning_slopes_default.get("mid", 0.15)), 0.0, 10.0)
+		var warning_long: float = clampf(float(warning_slopes_default.get("long", 0.1)), 0.0, 10.0)
+		if warning_slopes_raw is Dictionary:
+			warning_short = clampf(float((warning_slopes_raw as Dictionary).get("short", warning_short)), 0.0, 10.0)
+			warning_mid = clampf(float((warning_slopes_raw as Dictionary).get("mid", warning_mid)), 0.0, 10.0)
+			warning_long = clampf(float((warning_slopes_raw as Dictionary).get("long", warning_long)), 0.0, 10.0)
+		output["max_warning_slopes"] = {
+			"short": warning_short,
+			"mid": warning_mid,
+			"long": warning_long,
+		}
+
+		var blocker_slopes_default: Dictionary = output.get("max_blocker_slopes", {})
+		var blocker_slopes_raw: Variant = row.get("max_blocker_slopes", {})
+		var blocker_short: float = clampf(float(blocker_slopes_default.get("short", 0.0)), 0.0, 10.0)
+		var blocker_mid: float = clampf(float(blocker_slopes_default.get("mid", 0.0)), 0.0, 10.0)
+		var blocker_long: float = clampf(float(blocker_slopes_default.get("long", 0.0)), 0.0, 10.0)
+		if blocker_slopes_raw is Dictionary:
+			blocker_short = clampf(float((blocker_slopes_raw as Dictionary).get("short", blocker_short)), 0.0, 10.0)
+			blocker_mid = clampf(float((blocker_slopes_raw as Dictionary).get("mid", blocker_mid)), 0.0, 10.0)
+			blocker_long = clampf(float((blocker_slopes_raw as Dictionary).get("long", blocker_long)), 0.0, 10.0)
+		output["max_blocker_slopes"] = {
+			"short": blocker_short,
+			"mid": blocker_mid,
+			"long": blocker_long,
+		}
+
+		output["max_missing_run_modes"] = maxi(0, int(row.get("max_missing_run_modes", output.get("max_missing_run_modes", 0))))
+		output["max_missing_backends"] = maxi(0, int(row.get("max_missing_backends", output.get("max_missing_backends", 0))))
+		output["max_adaptive_failures"] = maxi(0, int(row.get("max_adaptive_failures", output.get("max_adaptive_failures", 0))))
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	if (output.get("required_run_modes", []) as Array).is_empty() and not ci_mode_bindings.is_empty():
+		output["required_run_modes"] = _sanitize_string_array(ci_mode_bindings.keys())
+
+	return output
+
+
+func _sanitize_release_feedback_governance(
+	raw: Variant,
+	approval_history_archive: Dictionary,
+	release_gate_templates: Dictionary,
+	base_alignment_cfg: Dictionary
+) -> Dictionary:
+	var output: Dictionary = {
+		"history_file": str(approval_history_archive.get("archive_file", "user://visual_snapshot_approval_archive.json")),
+		"feedback_window_size": 24,
+		"min_feedback_entries": 8,
+		"required_run_modes": _sanitize_string_array(base_alignment_cfg.get("required_run_modes", ["release_candidate", "release_blocking"])),
+		"required_backends": _sanitize_string_array(approval_history_archive.get("required_backends", base_alignment_cfg.get("required_backends", ["linux_headless", "windows_headless"]))),
+		"issue_metrics": [
+			"blockers",
+			"warnings",
+			"approval_failures",
+			"tracking_failures",
+			"dashboard_failures",
+			"contract_failures",
+			"performance_cogate_failures",
+			"performance_scenario_failures",
+			"pressure_standardization_failures",
+			"alignment_dashboard_failures",
+		],
+		"min_closure_rate": 0.7,
+		"max_unresolved_issues": 2,
+		"max_missing_run_modes": 0,
+		"max_missing_backends": 0,
+		"max_feedback_failures": 0,
+	}
+
+	if raw is Dictionary:
+		var row: Dictionary = raw
+		output["history_file"] = str(row.get("history_file", output.get("history_file", "user://visual_snapshot_approval_archive.json")))
+		output["feedback_window_size"] = maxi(5, int(row.get("feedback_window_size", output.get("feedback_window_size", 24))))
+		output["min_feedback_entries"] = maxi(1, int(row.get("min_feedback_entries", output.get("min_feedback_entries", 8))))
+		output["required_run_modes"] = _sanitize_string_array(row.get("required_run_modes", output.get("required_run_modes", [])))
+		output["required_backends"] = _sanitize_string_array(row.get("required_backends", output.get("required_backends", [])))
+		var issue_metrics: Array[String] = _sanitize_string_array(row.get("issue_metrics", output.get("issue_metrics", [])))
+		if not issue_metrics.is_empty():
+			output["issue_metrics"] = issue_metrics
+		output["min_closure_rate"] = clampf(float(row.get("min_closure_rate", output.get("min_closure_rate", 0.7))), 0.0, 1.0)
+		output["max_unresolved_issues"] = maxi(0, int(row.get("max_unresolved_issues", output.get("max_unresolved_issues", 2))))
+		output["max_missing_run_modes"] = maxi(0, int(row.get("max_missing_run_modes", output.get("max_missing_run_modes", 0))))
+		output["max_missing_backends"] = maxi(0, int(row.get("max_missing_backends", output.get("max_missing_backends", 0))))
+		output["max_feedback_failures"] = maxi(0, int(row.get("max_feedback_failures", output.get("max_feedback_failures", 0))))
+
+	var feedback_window_size: int = int(output.get("feedback_window_size", 24))
+	var min_feedback_entries: int = int(output.get("min_feedback_entries", 8))
+	output["min_feedback_entries"] = clampi(min_feedback_entries, 1, feedback_window_size)
+
+	var ci_mode_bindings: Dictionary = release_gate_templates.get("ci_mode_bindings", {})
+	if (output.get("required_run_modes", []) as Array).is_empty() and not ci_mode_bindings.is_empty():
+		output["required_run_modes"] = _sanitize_string_array(ci_mode_bindings.keys())
+
+	return output
+
+
 func _sanitize_release_gate_templates(raw: Variant, strategy_raw: Variant) -> Dictionary:
 	var output: Dictionary = {
 		"required_strategies": [],
@@ -1698,6 +2697,34 @@ func _evaluate_approval_workflow(report: Dictionary, approval_workflow: Dictiona
 				section_ok = report.has("approval_template")
 			"Release Candidate Tracking":
 				section_ok = report.has("release_candidate_tracking")
+			"Stability Scoring":
+				section_ok = report.has("stability_scoring")
+			"Convergence Dashboard":
+				section_ok = report.has("convergence_dashboard")
+			"CI Signal Contract":
+				section_ok = report.has("ci_signal")
+			"Convergence Trend Reinforcement":
+				section_ok = report.has("convergence_trend")
+			"Exception Lifecycle Linkage":
+				section_ok = report.has("exception_lifecycle_linkage")
+			"Visual-Performance Co-Gate":
+				section_ok = report.has("visual_performance_cogate")
+			"Co-Gate Threshold Template":
+				section_ok = report.has("cogate_template")
+			"Cross-Platform Alignment":
+				section_ok = report.has("cross_platform_alignment")
+			"Pressure Scenario Standardization":
+				section_ok = report.has("pressure_scenario_standardization")
+			"Alignment Dashboard Refinement":
+				section_ok = report.has("alignment_dashboard_refinement")
+			"Pressure Alignment Convergence Gate":
+				section_ok = report.has("pressure_alignment_convergence_gate")
+			"Regression Cycle Window Governance":
+				section_ok = report.has("regression_cycle_window_governance")
+			"Multi-Cycle Adaptive Gate":
+				section_ok = report.has("multi_cycle_adaptive_gate")
+			"Release Feedback Governance":
+				section_ok = report.has("release_feedback_governance")
 			_:
 				section_ok = false
 
@@ -1948,6 +2975,14 @@ func _evaluate_approval_history_archive(
 			archive_history = parsed
 
 	var approval_row: Dictionary = report.get("approval", {})
+	var tracking_row: Dictionary = report.get("release_candidate_tracking", {})
+	var dashboard_row: Dictionary = report.get("convergence_dashboard", {})
+	var ci_row: Dictionary = report.get("ci_signal", {})
+	var scoring_row: Dictionary = report.get("stability_scoring", {})
+	var cogate_row: Dictionary = report.get("visual_performance_cogate", {})
+	var cogate_alerts: Dictionary = cogate_row.get("alerts", {})
+	var standardization_row: Dictionary = report.get("pressure_scenario_standardization", {})
+	var refinement_row: Dictionary = report.get("alignment_dashboard_refinement", {})
 	var current_record: Dictionary = {
 		"timestamp": int(report.get("generated_at_unix", Time.get_unix_time_from_system())),
 		"channel": str(report.get("channel", "unknown")),
@@ -1958,6 +2993,20 @@ func _evaluate_approval_history_archive(
 		"blockers": int(report.get("blockers", 0)),
 		"warnings": int(report.get("warnings", 0)),
 		"approval_failures": int(approval_row.get("approval_failures", 0)),
+		"tracking_failures": int(tracking_row.get("tracking_failures", 0)),
+		"dashboard_failures": int(dashboard_row.get("dashboard_failures", 0)),
+		"contract_failures": int(ci_row.get("contract_failures", 0)),
+		"stability_score": float(scoring_row.get("score", 0.0)),
+		"stability_tier": str(scoring_row.get("tier", "")),
+		"performance_cogate_failures": int(cogate_row.get("cogate_failures", 0)),
+		"performance_scenario_failures": int(cogate_row.get("scenario_failures", 0)),
+		"performance_alert_total": int(cogate_alerts.get("total", 0)),
+		"performance_alert_critical": int(cogate_alerts.get("critical", 0)),
+		"performance_alert_warning": int(cogate_alerts.get("warning", 0)),
+		"pressure_standardization_failures": int(standardization_row.get("standardization_failures", 0)),
+		"alignment_dashboard_score": float(refinement_row.get("score", 0.0)),
+		"alignment_dashboard_failures": int(refinement_row.get("dashboard_failures", 0)),
+		"alignment_dashboard_severity": str(refinement_row.get("severity", "normal")),
 	}
 	archive_history.append(current_record)
 	if archive_history.size() > max_entries:
@@ -2214,6 +3263,2300 @@ func _evaluate_release_candidate_tracking(report: Dictionary, tracking_cfg: Dict
 			_push_result(report, "global", "release_candidate_tracking_failures_exceeded", false, message)
 		else:
 			_push_warning(report, "global", "release_candidate_tracking_failures_pending", message)
+
+
+func _evaluate_stability_scoring(
+	report: Dictionary,
+	scoring_cfg: Dictionary,
+	tier_cfg: Dictionary,
+	run_mode: String
+) -> void:
+	if scoring_cfg.is_empty():
+		return
+
+	var tracking_row: Dictionary = report.get("release_candidate_tracking", {})
+	var matching_runs: int = maxi(0, int(tracking_row.get("matching_runs", 0)))
+	var avg_warnings: float = maxf(0.0, float(tracking_row.get("avg_warnings", 0.0)))
+	var total_blockers: int = maxi(0, int(tracking_row.get("total_blockers", 0)))
+	var tracking_failures: int = maxi(0, int(tracking_row.get("tracking_failures", 0)))
+	var min_runs: int = maxi(1, int(tracking_row.get("min_runs", 1)))
+
+	var weights: Dictionary = scoring_cfg.get("weights", {})
+	var failure_caps: Dictionary = scoring_cfg.get("failure_caps", {})
+	var confidence_cfg: Dictionary = scoring_cfg.get("confidence", {})
+	var score_round_digits: int = clampi(int(scoring_cfg.get("score_round_digits", 3)), 0, 5)
+
+	var matching_component: float = clampf(float(matching_runs) / float(min_runs), 0.0, 1.0)
+	var warning_cap: float = maxf(0.1, float(failure_caps.get("max_avg_warnings", 2.0)))
+	var blocker_cap: int = maxi(1, int(failure_caps.get("max_total_blockers", 2)))
+	var tracking_cap: int = maxi(1, int(failure_caps.get("max_tracking_failures", 2)))
+	var warnings_component: float = 1.0 - clampf(avg_warnings / warning_cap, 0.0, 1.0)
+	var blockers_component: float = 1.0 - clampf(float(total_blockers) / float(blocker_cap), 0.0, 1.0)
+	var tracking_component: float = 1.0 - clampf(float(tracking_failures) / float(tracking_cap), 0.0, 1.0)
+
+	var weighted_score: float = 0.0
+	weighted_score += matching_component * clampf(float(weights.get("matching_runs", 0.3)), 0.0, 1.0)
+	weighted_score += warnings_component * clampf(float(weights.get("avg_warnings", 0.25)), 0.0, 1.0)
+	weighted_score += blockers_component * clampf(float(weights.get("total_blockers", 0.35)), 0.0, 1.0)
+	weighted_score += tracking_component * clampf(float(weights.get("tracking_failures", 0.1)), 0.0, 1.0)
+	var weight_total: float = clampf(
+		clampf(float(weights.get("matching_runs", 0.3)), 0.0, 1.0)
+		+ clampf(float(weights.get("avg_warnings", 0.25)), 0.0, 1.0)
+		+ clampf(float(weights.get("total_blockers", 0.35)), 0.0, 1.0)
+		+ clampf(float(weights.get("tracking_failures", 0.1)), 0.0, 1.0),
+		0.0001,
+		4.0
+	)
+	var score: float = clampf((weighted_score / weight_total) * 100.0, 0.0, 100.0)
+	var score_multiplier: float = pow(10.0, float(score_round_digits))
+	if score_multiplier > 0.0:
+		score = roundf(score * score_multiplier) / score_multiplier
+
+	var reference_runs: int = maxi(1, int(confidence_cfg.get("reference_runs", 8)))
+	var min_confidence: float = clampf(float(confidence_cfg.get("min_confidence", 0.4)), 0.0, 1.0)
+	var confidence: float = clampf(float(matching_runs) / float(reference_runs), 0.0, 1.0)
+
+	var tier_resolution: Dictionary = _resolve_stability_tier(
+		score,
+		avg_warnings,
+		total_blockers,
+		tracking_failures,
+		confidence,
+		tier_cfg
+	)
+	var tier_name: String = str(tier_resolution.get("tier", str(tier_cfg.get("default_tier", "D"))))
+	var tier_matched: bool = bool(tier_resolution.get("matched", false))
+	var tier_rule: Dictionary = tier_resolution.get("rule", {})
+
+	var scoring_failures: int = 0
+	var scoring_items: Array = []
+
+	scoring_items.append({
+		"type": "confidence",
+		"value": confidence,
+		"limit": min_confidence,
+		"ok": confidence >= min_confidence,
+	})
+	if confidence < min_confidence:
+		scoring_failures += 1
+
+	scoring_items.append({
+		"type": "tier_match",
+		"value": tier_name,
+		"ok": tier_matched,
+	})
+	if not tier_matched:
+		scoring_failures += 1
+
+	var scoring_row: Dictionary = report.get("stability_scoring", {})
+	scoring_row["score"] = score
+	scoring_row["tier"] = tier_name
+	scoring_row["confidence"] = confidence
+	scoring_row["reference_runs"] = reference_runs
+	scoring_row["min_confidence"] = min_confidence
+	scoring_row["matching_component"] = matching_component
+	scoring_row["warnings_component"] = warnings_component
+	scoring_row["blockers_component"] = blockers_component
+	scoring_row["tracking_component"] = tracking_component
+	scoring_row["score_round_digits"] = score_round_digits
+	scoring_row["tier_rule"] = tier_rule
+	scoring_row["scoring_failures"] = scoring_failures
+	scoring_row["items"] = scoring_items
+	report["stability_scoring"] = scoring_row
+
+	if scoring_failures > 0:
+		var message: String = "stability scoring has %d unresolved checks" % scoring_failures
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "stability_scoring_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "stability_scoring_failures_pending", message)
+
+
+func _evaluate_convergence_dashboard(report: Dictionary, dashboard_cfg: Dictionary, run_mode: String) -> void:
+	if dashboard_cfg.is_empty():
+		return
+
+	var approval_row: Dictionary = report.get("approval", {})
+	var audit_row: Dictionary = report.get("approval_audit", {})
+	var archive_row: Dictionary = report.get("approval_archive", {})
+	var tracking_row: Dictionary = report.get("release_candidate_tracking", {})
+
+	var approval_failures: int = maxi(0, int(approval_row.get("approval_failures", 0)))
+	var tracking_failures: int = maxi(0, int(tracking_row.get("tracking_failures", 0)))
+	var trace_failures: int = maxi(0, int(audit_row.get("trace_failures", 0))) + maxi(0, int(archive_row.get("trace_failures", 0)))
+	var manifest_failures: int = maxi(0, int((report.get("release_manifest", {}) as Dictionary).get("checklist_failures", 0)))
+	var blockers: int = maxi(0, int(report.get("blockers", 0)))
+	var warnings: int = maxi(0, int(report.get("warnings", 0)))
+
+	var max_approval_failures: int = maxi(0, int(dashboard_cfg.get("max_approval_failures", 0)))
+	var max_tracking_failures: int = maxi(0, int(dashboard_cfg.get("max_tracking_failures", 0)))
+	var max_trace_failures: int = maxi(0, int(dashboard_cfg.get("max_trace_failures", 0)))
+	var max_manifest_failures: int = maxi(0, int(dashboard_cfg.get("max_manifest_failures", 0)))
+	var max_blockers: int = maxi(0, int(dashboard_cfg.get("max_blockers", 0)))
+	var max_warnings: int = maxi(0, int(dashboard_cfg.get("max_warnings", 0)))
+	var max_dashboard_failures: int = maxi(0, int(dashboard_cfg.get("max_dashboard_failures", 0)))
+
+	var dashboard_items: Array = []
+	var dashboard_failures: int = 0
+
+	for row in [
+		{"type": "approval_failures", "value": approval_failures, "limit": max_approval_failures},
+		{"type": "tracking_failures", "value": tracking_failures, "limit": max_tracking_failures},
+		{"type": "trace_failures", "value": trace_failures, "limit": max_trace_failures},
+		{"type": "manifest_failures", "value": manifest_failures, "limit": max_manifest_failures},
+		{"type": "blockers", "value": blockers, "limit": max_blockers},
+		{"type": "warnings", "value": warnings, "limit": max_warnings},
+	]:
+		var item: Dictionary = row
+		item["ok"] = int(item.get("value", 0)) <= int(item.get("limit", 0))
+		dashboard_items.append(item)
+		if not bool(item.get("ok", false)):
+			dashboard_failures += 1
+
+	var dashboard_row: Dictionary = report.get("convergence_dashboard", {})
+	dashboard_row["approval_failures"] = approval_failures
+	dashboard_row["tracking_failures"] = tracking_failures
+	dashboard_row["trace_failures"] = trace_failures
+	dashboard_row["manifest_failures"] = manifest_failures
+	dashboard_row["blockers"] = blockers
+	dashboard_row["warnings"] = warnings
+	dashboard_row["max_approval_failures"] = max_approval_failures
+	dashboard_row["max_tracking_failures"] = max_tracking_failures
+	dashboard_row["max_trace_failures"] = max_trace_failures
+	dashboard_row["max_manifest_failures"] = max_manifest_failures
+	dashboard_row["max_blockers"] = max_blockers
+	dashboard_row["max_warnings"] = max_warnings
+	dashboard_row["max_dashboard_failures"] = max_dashboard_failures
+	dashboard_row["dashboard_failures"] = dashboard_failures
+	dashboard_row["items"] = dashboard_items
+	report["convergence_dashboard"] = dashboard_row
+
+	if dashboard_failures > max_dashboard_failures:
+		var message: String = "convergence dashboard failures %d exceeds %d" % [dashboard_failures, max_dashboard_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "convergence_dashboard_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "convergence_dashboard_failures_pending", message)
+
+
+func _evaluate_ci_signal_contract(
+	report: Dictionary,
+	contract_cfg: Dictionary,
+	tier_cfg: Dictionary,
+	run_mode: String
+) -> void:
+	if contract_cfg.is_empty():
+		return
+
+	var scoring_row: Dictionary = report.get("stability_scoring", {})
+	var dashboard_row: Dictionary = report.get("convergence_dashboard", {})
+	var required_fields: Array[String] = _sanitize_string_array(contract_cfg.get("required_fields", []))
+	var tier_requirements: Dictionary = contract_cfg.get("tier_requirements", {})
+	var max_contract_failures: int = maxi(0, int(contract_cfg.get("max_contract_failures", 0)))
+	var strategy_name: String = str((report.get("strategy", {}) as Dictionary).get("name", "")).strip_edges()
+
+	var ci_signal: Dictionary = {
+		"run_mode": run_mode,
+		"strategy": strategy_name,
+		"stability_score": float(scoring_row.get("score", 0.0)),
+		"stability_tier": str(scoring_row.get("tier", str(tier_cfg.get("default_tier", "D")))),
+		"confidence": float(scoring_row.get("confidence", 0.0)),
+		"dashboard_failures": int(dashboard_row.get("dashboard_failures", 0)),
+		"blockers": int(report.get("blockers", 0)),
+		"warnings": int(report.get("warnings", 0)),
+	}
+
+	var contract_failures: int = 0
+	var contract_items: Array = []
+
+	for field_name in required_fields:
+		var value: Variant = ci_signal.get(field_name)
+		var ok: bool = value != null
+		if value is String:
+			ok = not str(value).strip_edges().is_empty()
+		contract_items.append({
+			"type": "required_field",
+			"field": field_name,
+			"ok": ok,
+		})
+		if not ok:
+			contract_failures += 1
+
+	var required_tier: String = str(tier_requirements.get(run_mode, "")).strip_edges()
+	if not required_tier.is_empty():
+		var actual_tier: String = str(ci_signal.get("stability_tier", "")).strip_edges()
+		var tier_ok: bool = _tier_rank(actual_tier, tier_cfg) >= _tier_rank(required_tier, tier_cfg)
+		contract_items.append({
+			"type": "tier_requirement",
+			"value": actual_tier,
+			"limit": required_tier,
+			"ok": tier_ok,
+		})
+		if not tier_ok:
+			contract_failures += 1
+
+	var ci_row: Dictionary = report.get("ci_signal", {})
+	ci_row["required_fields"] = required_fields
+	ci_row["tier_requirements"] = tier_requirements
+	ci_row["max_contract_failures"] = max_contract_failures
+	ci_row["contract_failures"] = contract_failures
+	ci_row["signal"] = ci_signal
+	ci_row["items"] = contract_items
+	report["ci_signal"] = ci_row
+
+	if contract_failures > max_contract_failures:
+		var message: String = "ci signal contract failures %d exceeds %d" % [contract_failures, max_contract_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "ci_signal_contract_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "ci_signal_contract_failures_pending", message)
+
+
+func _resolve_stability_tier(
+	score: float,
+	avg_warnings: float,
+	total_blockers: int,
+	tracking_failures: int,
+	confidence: float,
+	tier_cfg: Dictionary
+) -> Dictionary:
+	var default_tier: String = str(tier_cfg.get("default_tier", "D"))
+	var tiers: Array = tier_cfg.get("tiers", [])
+	for tier_variant in tiers:
+		if not (tier_variant is Dictionary):
+			continue
+		var tier_row: Dictionary = tier_variant
+		var min_score: float = float(tier_row.get("min_score", 0.0))
+		var max_avg_warnings: float = float(tier_row.get("max_avg_warnings", 999.0))
+		var max_total_blockers: int = int(tier_row.get("max_total_blockers", 999))
+		var max_tracking_failures: int = int(tier_row.get("max_tracking_failures", 999))
+		var min_confidence: float = float(tier_row.get("min_confidence", 0.0))
+		if score < min_score:
+			continue
+		if avg_warnings > max_avg_warnings:
+			continue
+		if total_blockers > max_total_blockers:
+			continue
+		if tracking_failures > max_tracking_failures:
+			continue
+		if confidence < min_confidence:
+			continue
+		return {
+			"tier": str(tier_row.get("name", default_tier)),
+			"matched": true,
+			"rule": tier_row,
+		}
+	return {
+		"tier": default_tier,
+		"matched": false,
+		"rule": {},
+	}
+
+
+func _tier_rank(tier_name: String, tier_cfg: Dictionary) -> int:
+	var tiers: Array = tier_cfg.get("tiers", [])
+	var index: int = 0
+	for tier_variant in tiers:
+		if not (tier_variant is Dictionary):
+			index += 1
+			continue
+		var tier_row: Dictionary = tier_variant
+		if str(tier_row.get("name", "")) == tier_name:
+			return tiers.size() - index
+		index += 1
+	return 0
+
+
+func _metric_stats_from_history(history: Array, metric_name: String) -> Dictionary:
+	var count: int = 0
+	var total: float = 0.0
+	for entry in history:
+		if not (entry is Dictionary):
+			continue
+		var row: Dictionary = entry
+		if not row.has(metric_name):
+			continue
+		count += 1
+		total += float(row.get(metric_name, 0.0))
+	var average: float = 0.0
+	if count > 0:
+		average = total / float(count)
+	return {
+		"count": count,
+		"sum": total,
+		"average": average,
+	}
+
+
+func _evaluate_convergence_trend_reinforcement(
+	report: Dictionary,
+	trend_cfg: Dictionary,
+	run_mode: String
+) -> void:
+	if trend_cfg.is_empty():
+		return
+
+	var history_file: String = str(trend_cfg.get("history_file", "user://visual_snapshot_approval_archive.json"))
+	var long_window: int = maxi(10, int(trend_cfg.get("long_window", 40)))
+	var short_window: int = maxi(3, int(trend_cfg.get("short_window", 12)))
+	short_window = mini(short_window, long_window)
+	var min_samples: int = maxi(1, int(trend_cfg.get("min_samples", 6)))
+	var required_metrics: Array[String] = _sanitize_string_array(trend_cfg.get("required_metrics", []))
+	var max_worsening_metrics: int = maxi(0, int(trend_cfg.get("max_worsening_metrics", 1)))
+	var max_worsening_delta: float = maxf(0.0, float(trend_cfg.get("max_worsening_delta", 0.25)))
+	var min_improving_metrics: int = maxi(0, int(trend_cfg.get("min_improving_metrics", 0)))
+	var min_improvement_delta: float = maxf(0.0, float(trend_cfg.get("min_improvement_delta", 0.1)))
+	var max_trend_failures: int = maxi(0, int(trend_cfg.get("max_trend_failures", 0)))
+
+	var archive_history: Array = []
+	if FileAccess.file_exists(history_file):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(history_file))
+		if parsed is Array:
+			archive_history = parsed
+
+	var long_start: int = maxi(0, archive_history.size() - long_window)
+	var long_history: Array = archive_history.slice(long_start, archive_history.size())
+	var short_start: int = maxi(0, archive_history.size() - short_window)
+	var short_history: Array = archive_history.slice(short_start, archive_history.size())
+
+	var trend_items: Array = []
+	var trend_failures: int = 0
+
+	trend_items.append({
+		"type": "min_samples_long_window",
+		"value": long_history.size(),
+		"limit": min_samples,
+		"ok": long_history.size() >= min_samples,
+	})
+	if long_history.size() < min_samples:
+		trend_failures += 1
+
+	trend_items.append({
+		"type": "min_samples_short_window",
+		"value": short_history.size(),
+		"limit": min_samples,
+		"ok": short_history.size() >= min_samples,
+	})
+	if short_history.size() < min_samples:
+		trend_failures += 1
+
+	var metric_deltas: Dictionary = {}
+	var missing_metrics: Array = []
+	var worsening_metrics: Array = []
+	var improving_metrics: Array = []
+
+	for metric_name in required_metrics:
+		var long_stats: Dictionary = _metric_stats_from_history(long_history, metric_name)
+		var short_stats: Dictionary = _metric_stats_from_history(short_history, metric_name)
+		var long_count: int = int(long_stats.get("count", 0))
+		var short_count: int = int(short_stats.get("count", 0))
+		if long_count == 0 or short_count == 0:
+			missing_metrics.append(metric_name)
+			continue
+		var long_avg: float = float(long_stats.get("average", 0.0))
+		var short_avg: float = float(short_stats.get("average", 0.0))
+		var delta: float = short_avg - long_avg
+		metric_deltas[metric_name] = {
+			"long_avg": long_avg,
+			"short_avg": short_avg,
+			"delta": delta,
+		}
+		if delta > max_worsening_delta:
+			worsening_metrics.append(metric_name)
+		if delta <= -min_improvement_delta:
+			improving_metrics.append(metric_name)
+
+	trend_items.append({
+		"type": "missing_metrics",
+		"value": missing_metrics,
+		"ok": missing_metrics.is_empty(),
+	})
+	if not missing_metrics.is_empty():
+		trend_failures += 1
+
+	trend_items.append({
+		"type": "max_worsening_metrics",
+		"value": worsening_metrics.size(),
+		"limit": max_worsening_metrics,
+		"metrics": worsening_metrics,
+		"ok": worsening_metrics.size() <= max_worsening_metrics,
+	})
+	if worsening_metrics.size() > max_worsening_metrics:
+		trend_failures += 1
+
+	trend_items.append({
+		"type": "min_improving_metrics",
+		"value": improving_metrics.size(),
+		"limit": min_improving_metrics,
+		"metrics": improving_metrics,
+		"ok": improving_metrics.size() >= min_improving_metrics,
+	})
+	if improving_metrics.size() < min_improving_metrics:
+		trend_failures += 1
+
+	var trend_row: Dictionary = report.get("convergence_trend", {})
+	trend_row["history_file"] = history_file
+	trend_row["long_window"] = long_window
+	trend_row["short_window"] = short_window
+	trend_row["min_samples"] = min_samples
+	trend_row["required_metrics"] = required_metrics
+	trend_row["max_worsening_metrics"] = max_worsening_metrics
+	trend_row["max_worsening_delta"] = max_worsening_delta
+	trend_row["min_improving_metrics"] = min_improving_metrics
+	trend_row["min_improvement_delta"] = min_improvement_delta
+	trend_row["max_trend_failures"] = max_trend_failures
+	trend_row["long_sample_count"] = long_history.size()
+	trend_row["short_sample_count"] = short_history.size()
+	trend_row["metric_deltas"] = metric_deltas
+	trend_row["missing_metrics"] = missing_metrics
+	trend_row["worsening_metrics"] = worsening_metrics
+	trend_row["improving_metrics"] = improving_metrics
+	trend_row["trend_failures"] = trend_failures
+	trend_row["items"] = trend_items
+	report["convergence_trend"] = trend_row
+
+	if trend_failures > max_trend_failures:
+		var message: String = "convergence trend failures %d exceeds %d" % [trend_failures, max_trend_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "convergence_trend_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "convergence_trend_failures_pending", message)
+
+
+func _evaluate_exception_lifecycle_linkage(
+	report: Dictionary,
+	linkage_cfg: Dictionary,
+	run_mode: String
+) -> void:
+	if linkage_cfg.is_empty():
+		return
+
+	var whitelist_row: Dictionary = report.get("whitelist", {})
+	var lifecycle: Dictionary = whitelist_row.get("lifecycle", {})
+	var expired_entries: Array = whitelist_row.get("expired_entries", [])
+	var reclaim_candidates: Array = whitelist_row.get("reclaim_candidates", [])
+
+	var required_states: Array[String] = _sanitize_string_array(linkage_cfg.get("required_states", []))
+	var stale_idle_runs: int = maxi(1, int(linkage_cfg.get("stale_idle_runs", 1)))
+	var min_transition_count: int = maxi(0, int(linkage_cfg.get("min_transition_count", 0)))
+	var max_orphan_entries: int = maxi(0, int(linkage_cfg.get("max_orphan_entries", 0)))
+	var max_unlinked_reclaims: int = maxi(0, int(linkage_cfg.get("max_unlinked_reclaims", 0)))
+	var max_unlinked_expired: int = maxi(0, int(linkage_cfg.get("max_unlinked_expired", 0)))
+	var max_linkage_failures: int = maxi(0, int(linkage_cfg.get("max_linkage_failures", 0)))
+
+	var lifecycle_keys: Dictionary = {}
+	for key_var in lifecycle.keys():
+		lifecycle_keys[str(key_var)] = true
+
+	var expired_keys: Dictionary = {}
+	var orphan_entries: Array = []
+	var unlinked_expired: Array = []
+	for entry in expired_entries:
+		if not (entry is Dictionary):
+			continue
+		var row: Dictionary = entry
+		var key: String = str(row.get("key", "")).strip_edges()
+		if key.is_empty():
+			var snapshot_id: String = str(row.get("snapshot", "")).strip_edges()
+			var rule_id: String = str(row.get("id", "")).strip_edges()
+			if not snapshot_id.is_empty() and not rule_id.is_empty():
+				key = "%s|%s" % [snapshot_id, rule_id]
+		if key.is_empty():
+			continue
+		expired_keys[key] = true
+		if not lifecycle_keys.has(key):
+			orphan_entries.append(key)
+		var idle_runs: int = maxi(0, int(row.get("idle_runs", 0)))
+		var expire_limit: int = maxi(1, int(row.get("expire_idle_runs", stale_idle_runs + 1)))
+		if idle_runs < expire_limit:
+			unlinked_expired.append(key)
+
+	var reclaim_keys: Dictionary = {}
+	var unlinked_reclaims: Array = []
+	for entry in reclaim_candidates:
+		if not (entry is Dictionary):
+			continue
+		var row: Dictionary = entry
+		var key: String = str(row.get("key", "")).strip_edges()
+		if key.is_empty():
+			var snapshot_id: String = str(row.get("snapshot", "")).strip_edges()
+			var rule_id: String = str(row.get("id", "")).strip_edges()
+			if not snapshot_id.is_empty() and not rule_id.is_empty():
+				key = "%s|%s" % [snapshot_id, rule_id]
+		if key.is_empty():
+			continue
+		reclaim_keys[key] = true
+		if not lifecycle_keys.has(key):
+			orphan_entries.append(key)
+		if not row.has("suggested_limit"):
+			unlinked_reclaims.append(key)
+
+	var state_counts: Dictionary = {
+		"active": 0,
+		"stale": 0,
+		"reclaim_candidate": 0,
+		"expired": 0,
+		"idle": 0,
+	}
+	for key_var in lifecycle.keys():
+		var key: String = str(key_var)
+		var row_variant: Variant = lifecycle.get(key_var, {})
+		if not (row_variant is Dictionary):
+			continue
+		var row: Dictionary = row_variant
+		var hit_streak: int = maxi(0, int(row.get("hit_streak", 0)))
+		var idle_runs: int = maxi(0, int(row.get("idle_runs", 0)))
+		var total_hits: int = maxi(0, int(row.get("total_hits", 0)))
+		var state_name: String = "idle"
+		if expired_keys.has(key):
+			state_name = "expired"
+		elif reclaim_keys.has(key):
+			state_name = "reclaim_candidate"
+		elif idle_runs >= stale_idle_runs:
+			state_name = "stale"
+		elif hit_streak > 0 or total_hits > 0:
+			state_name = "active"
+		state_counts[state_name] = int(state_counts.get(state_name, 0)) + 1
+
+	var missing_required_states: Array = []
+	for state_name in required_states:
+		if int(state_counts.get(state_name, 0)) <= 0:
+			missing_required_states.append(state_name)
+
+	var transition_count: int = int(state_counts.get("stale", 0)) + int(state_counts.get("reclaim_candidate", 0)) + int(state_counts.get("expired", 0))
+	var linkage_failures: int = 0
+	var linkage_items: Array = []
+
+	linkage_items.append({
+		"type": "max_orphan_entries",
+		"value": orphan_entries.size(),
+		"limit": max_orphan_entries,
+		"ok": orphan_entries.size() <= max_orphan_entries,
+		"entries": orphan_entries,
+	})
+	if orphan_entries.size() > max_orphan_entries:
+		linkage_failures += 1
+
+	linkage_items.append({
+		"type": "max_unlinked_reclaims",
+		"value": unlinked_reclaims.size(),
+		"limit": max_unlinked_reclaims,
+		"ok": unlinked_reclaims.size() <= max_unlinked_reclaims,
+		"entries": unlinked_reclaims,
+	})
+	if unlinked_reclaims.size() > max_unlinked_reclaims:
+		linkage_failures += 1
+
+	linkage_items.append({
+		"type": "max_unlinked_expired",
+		"value": unlinked_expired.size(),
+		"limit": max_unlinked_expired,
+		"ok": unlinked_expired.size() <= max_unlinked_expired,
+		"entries": unlinked_expired,
+	})
+	if unlinked_expired.size() > max_unlinked_expired:
+		linkage_failures += 1
+
+	linkage_items.append({
+		"type": "required_states",
+		"value": missing_required_states,
+		"ok": missing_required_states.is_empty(),
+	})
+	if not missing_required_states.is_empty():
+		linkage_failures += 1
+
+	linkage_items.append({
+		"type": "min_transition_count",
+		"value": transition_count,
+		"limit": min_transition_count,
+		"ok": transition_count >= min_transition_count,
+	})
+	if transition_count < min_transition_count:
+		linkage_failures += 1
+
+	var linkage_row: Dictionary = report.get("exception_lifecycle_linkage", {})
+	linkage_row["required_states"] = required_states
+	linkage_row["stale_idle_runs"] = stale_idle_runs
+	linkage_row["min_transition_count"] = min_transition_count
+	linkage_row["max_orphan_entries"] = max_orphan_entries
+	linkage_row["max_unlinked_reclaims"] = max_unlinked_reclaims
+	linkage_row["max_unlinked_expired"] = max_unlinked_expired
+	linkage_row["max_linkage_failures"] = max_linkage_failures
+	linkage_row["state_counts"] = state_counts
+	linkage_row["orphan_entries"] = orphan_entries
+	linkage_row["unlinked_reclaims"] = unlinked_reclaims
+	linkage_row["unlinked_expired"] = unlinked_expired
+	linkage_row["missing_required_states"] = missing_required_states
+	linkage_row["transition_count"] = transition_count
+	linkage_row["linkage_failures"] = linkage_failures
+	linkage_row["items"] = linkage_items
+	report["exception_lifecycle_linkage"] = linkage_row
+
+	if linkage_failures > max_linkage_failures:
+		var message: String = "exception lifecycle linkage failures %d exceeds %d" % [linkage_failures, max_linkage_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "exception_lifecycle_linkage_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "exception_lifecycle_linkage_failures_pending", message)
+
+
+func _index_baseline_scenarios(rows: Array) -> Dictionary:
+	var index: Dictionary = {}
+	for row_var in rows:
+		if not (row_var is Dictionary):
+			continue
+		var row: Dictionary = row_var
+		var scenario_id: String = str(row.get("id", "")).strip_edges()
+		if scenario_id.is_empty():
+			continue
+		index[scenario_id] = row
+	return index
+
+
+func _evaluate_visual_performance_cogate(
+	report: Dictionary,
+	cogate_cfg: Dictionary,
+	run_mode: String
+) -> void:
+	if cogate_cfg.is_empty():
+		return
+
+	var cogate_row: Dictionary = report.get("visual_performance_cogate", {})
+	var required_run_modes: Array[String] = _sanitize_string_array(cogate_cfg.get("required_run_modes", []))
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	var baseline_report: String = str(cogate_cfg.get("baseline_report", "user://quality_baseline_latest.json"))
+	var max_alert_total: int = maxi(0, int(cogate_cfg.get("max_alert_total", 0)))
+	var max_alert_critical: int = maxi(0, int(cogate_cfg.get("max_alert_critical", 0)))
+	var max_alert_warning: int = maxi(0, int(cogate_cfg.get("max_alert_warning", 0)))
+	var max_scenario_failures: int = maxi(0, int(cogate_cfg.get("max_scenario_failures", 0)))
+	var required_scenarios: Array[String] = _sanitize_string_array(cogate_cfg.get("required_scenarios", []))
+	var max_frame_ms_ratio: float = maxf(1.0, float(cogate_cfg.get("max_frame_ms_ratio", 1.15)))
+	var max_memory_mb_ratio: float = maxf(1.0, float(cogate_cfg.get("max_memory_mb_ratio", 1.1)))
+	var max_cogate_failures: int = maxi(0, int(cogate_cfg.get("max_cogate_failures", 0)))
+
+	cogate_row["baseline_report"] = baseline_report
+	cogate_row["required_run_modes"] = required_run_modes
+	cogate_row["enabled_for_mode"] = enabled_for_mode
+	cogate_row["max_alert_total"] = max_alert_total
+	cogate_row["max_alert_critical"] = max_alert_critical
+	cogate_row["max_alert_warning"] = max_alert_warning
+	cogate_row["max_scenario_failures"] = max_scenario_failures
+	cogate_row["required_scenarios"] = required_scenarios
+	cogate_row["max_frame_ms_ratio"] = max_frame_ms_ratio
+	cogate_row["max_memory_mb_ratio"] = max_memory_mb_ratio
+	cogate_row["max_cogate_failures"] = max_cogate_failures
+
+	if not enabled_for_mode:
+		cogate_row["cogate_failures"] = 0
+		cogate_row["scenario_failures"] = 0
+		cogate_row["alerts"] = {"total": 0, "critical": 0, "warning": 0}
+		cogate_row["items"] = [
+			{
+				"type": "run_mode_skipped",
+				"value": run_mode,
+				"required_run_modes": required_run_modes,
+				"ok": true,
+			}
+		]
+		report["visual_performance_cogate"] = cogate_row
+		return
+
+	var cogate_items: Array = []
+	var cogate_failures: int = 0
+	var scenario_failures: int = 0
+
+	if not FileAccess.file_exists(baseline_report):
+		cogate_items.append({
+			"type": "baseline_report_exists",
+			"path": baseline_report,
+			"ok": false,
+		})
+		cogate_failures += 1
+		cogate_row["cogate_failures"] = cogate_failures
+		cogate_row["scenario_failures"] = scenario_failures
+		cogate_row["alerts"] = {"total": 0, "critical": 0, "warning": 0}
+		cogate_row["items"] = cogate_items
+		report["visual_performance_cogate"] = cogate_row
+		if cogate_failures > max_cogate_failures:
+			var missing_message: String = "visual-performance co-gate failures %d exceeds %d" % [cogate_failures, max_cogate_failures]
+			if run_mode == "release_blocking":
+				_push_result(report, "global", "visual_performance_cogate_failures_exceeded", false, missing_message)
+			else:
+				_push_warning(report, "global", "visual_performance_cogate_failures_pending", missing_message)
+		return
+
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(baseline_report))
+	if not (parsed is Dictionary):
+		cogate_items.append({
+			"type": "baseline_report_parse",
+			"path": baseline_report,
+			"ok": false,
+		})
+		cogate_failures += 1
+		cogate_row["cogate_failures"] = cogate_failures
+		cogate_row["scenario_failures"] = scenario_failures
+		cogate_row["alerts"] = {"total": 0, "critical": 0, "warning": 0}
+		cogate_row["items"] = cogate_items
+		report["visual_performance_cogate"] = cogate_row
+		if cogate_failures > max_cogate_failures:
+			var parse_message: String = "visual-performance co-gate failures %d exceeds %d" % [cogate_failures, max_cogate_failures]
+			if run_mode == "release_blocking":
+				_push_result(report, "global", "visual_performance_cogate_failures_exceeded", false, parse_message)
+			else:
+				_push_warning(report, "global", "visual_performance_cogate_failures_pending", parse_message)
+		return
+
+	var baseline: Dictionary = parsed
+	var alerts: Dictionary = baseline.get("alerts", {})
+	var total_alerts: int = maxi(0, int(alerts.get("total", 0)))
+	var critical_alerts: int = maxi(0, int(alerts.get("critical", 0)))
+	var warning_alerts: int = maxi(0, int(alerts.get("warning", 0)))
+
+	for row in [
+		{"type": "max_alert_total", "value": total_alerts, "limit": max_alert_total},
+		{"type": "max_alert_critical", "value": critical_alerts, "limit": max_alert_critical},
+		{"type": "max_alert_warning", "value": warning_alerts, "limit": max_alert_warning},
+	]:
+		var ok: bool = int(row.get("value", 0)) <= int(row.get("limit", 0))
+		cogate_items.append({
+			"type": str(row.get("type", "")),
+			"value": int(row.get("value", 0)),
+			"limit": int(row.get("limit", 0)),
+			"ok": ok,
+		})
+		if not ok:
+			cogate_failures += 1
+
+	var scenarios_variant: Variant = baseline.get("scenarios", [])
+	var scenarios: Array = scenarios_variant if scenarios_variant is Array else []
+	var scenario_index: Dictionary = _index_baseline_scenarios(scenarios)
+	var baseline_targets: Dictionary = baseline.get("targets", {})
+	var frame_targets: Dictionary = baseline_targets.get("frame_time_ms", {})
+	var memory_targets: Dictionary = baseline_targets.get("memory_mb", {})
+
+	var evaluation_scenarios: Array[String] = required_scenarios
+	if evaluation_scenarios.is_empty():
+		evaluation_scenarios = _sanitize_string_array(scenario_index.keys())
+
+	for scenario_id in evaluation_scenarios:
+		if not scenario_index.has(scenario_id):
+			scenario_failures += 1
+			cogate_items.append({
+				"type": "required_scenario_missing",
+				"scenario": scenario_id,
+				"ok": false,
+			})
+			continue
+
+		var scenario_row_variant: Variant = scenario_index.get(scenario_id, {})
+		if not (scenario_row_variant is Dictionary):
+			scenario_failures += 1
+			cogate_items.append({
+				"type": "scenario_row_invalid",
+				"scenario": scenario_id,
+				"ok": false,
+			})
+			continue
+
+		var scenario_row: Dictionary = scenario_row_variant
+		if scenario_row.has("error"):
+			scenario_failures += 1
+			cogate_items.append({
+				"type": "scenario_runtime_error",
+				"scenario": scenario_id,
+				"error": str(scenario_row.get("error", "")),
+				"ok": false,
+			})
+			continue
+
+		var frame_target: Dictionary = frame_targets.get(scenario_id, {})
+		var memory_target: Dictionary = memory_targets.get(scenario_id, {})
+		var avg_frame_ms: float = float(scenario_row.get("avg_frame_ms", 0.0))
+		var p95_frame_ms: float = float(scenario_row.get("p95_frame_ms", 0.0))
+		var peak_memory_mb: float = float(scenario_row.get("peak_memory_mb", 0.0))
+
+		if frame_target is Dictionary and not frame_target.is_empty():
+			var avg_limit: float = float(frame_target.get("avg_max", avg_frame_ms)) * max_frame_ms_ratio
+			var p95_limit: float = float(frame_target.get("p95_max", p95_frame_ms)) * max_frame_ms_ratio
+			var avg_ok: bool = avg_frame_ms <= avg_limit
+			var p95_ok: bool = p95_frame_ms <= p95_limit
+			cogate_items.append({
+				"type": "scenario_frame_avg",
+				"scenario": scenario_id,
+				"value": avg_frame_ms,
+				"limit": avg_limit,
+				"ok": avg_ok,
+			})
+			cogate_items.append({
+				"type": "scenario_frame_p95",
+				"scenario": scenario_id,
+				"value": p95_frame_ms,
+				"limit": p95_limit,
+				"ok": p95_ok,
+			})
+			if not avg_ok:
+				scenario_failures += 1
+			if not p95_ok:
+				scenario_failures += 1
+
+		if memory_target is Dictionary and not memory_target.is_empty():
+			var memory_limit: float = float(memory_target.get("peak_max", peak_memory_mb)) * max_memory_mb_ratio
+			var memory_ok: bool = peak_memory_mb <= memory_limit
+			cogate_items.append({
+				"type": "scenario_peak_memory",
+				"scenario": scenario_id,
+				"value": peak_memory_mb,
+				"limit": memory_limit,
+				"ok": memory_ok,
+			})
+			if not memory_ok:
+				scenario_failures += 1
+
+	cogate_items.append({
+		"type": "max_scenario_failures",
+		"value": scenario_failures,
+		"limit": max_scenario_failures,
+		"ok": scenario_failures <= max_scenario_failures,
+	})
+	if scenario_failures > max_scenario_failures:
+		cogate_failures += 1
+
+	cogate_row["alerts"] = {
+		"total": total_alerts,
+		"critical": critical_alerts,
+		"warning": warning_alerts,
+	}
+	cogate_row["scenario_failures"] = scenario_failures
+	cogate_row["cogate_failures"] = cogate_failures
+	cogate_row["items"] = cogate_items
+	report["visual_performance_cogate"] = cogate_row
+
+	if cogate_failures > max_cogate_failures:
+		var message: String = "visual-performance co-gate failures %d exceeds %d" % [cogate_failures, max_cogate_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "visual_performance_cogate_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "visual_performance_cogate_failures_pending", message)
+
+
+func _evaluate_cogate_threshold_template(
+	report: Dictionary,
+	template_errors: Array[String],
+	run_mode: String
+) -> void:
+	var template_row: Dictionary = report.get("cogate_template", {})
+	template_row["run_mode"] = run_mode
+	template_row["errors"] = template_errors
+	report["cogate_template"] = template_row
+
+	for err in template_errors:
+		var message: String = str(err)
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "cogate_threshold_template_invalid", false, message)
+		else:
+			_push_warning(report, "global", "cogate_threshold_template_pending", message)
+
+
+func _evaluate_cross_platform_alignment(
+	report: Dictionary,
+	alignment_cfg: Dictionary,
+	run_mode: String,
+	backend_tag: String
+) -> void:
+	if alignment_cfg.is_empty():
+		return
+
+	var alignment_row: Dictionary = report.get("cross_platform_alignment", {})
+	var history_file: String = str(alignment_cfg.get("history_file", "user://visual_snapshot_approval_archive.json"))
+	var aggregation_window: int = maxi(1, int(alignment_cfg.get("aggregation_window", 80)))
+	var required_run_modes: Array[String] = _sanitize_string_array(alignment_cfg.get("required_run_modes", []))
+	var required_backends: Array[String] = _sanitize_string_array(alignment_cfg.get("required_backends", []))
+	var metric_limits: Dictionary = alignment_cfg.get("metric_limits", {})
+	var max_missing_backends: int = maxi(0, int(alignment_cfg.get("max_missing_backends", 0)))
+	var max_missing_run_modes: int = maxi(0, int(alignment_cfg.get("max_missing_run_modes", 0)))
+	var max_alignment_failures: int = maxi(0, int(alignment_cfg.get("max_alignment_failures", 0)))
+
+	alignment_row["history_file"] = history_file
+	alignment_row["aggregation_window"] = aggregation_window
+	alignment_row["required_run_modes"] = required_run_modes
+	alignment_row["required_backends"] = required_backends
+	alignment_row["metric_limits"] = metric_limits
+	alignment_row["max_missing_backends"] = max_missing_backends
+	alignment_row["max_missing_run_modes"] = max_missing_run_modes
+	alignment_row["max_alignment_failures"] = max_alignment_failures
+
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	alignment_row["enabled_for_mode"] = enabled_for_mode
+	if not enabled_for_mode:
+		alignment_row["alignment_failures"] = 0
+		alignment_row["items"] = [{
+			"type": "run_mode_skipped",
+			"value": run_mode,
+			"required_run_modes": required_run_modes,
+			"ok": true,
+		}]
+		report["cross_platform_alignment"] = alignment_row
+		return
+
+	var items: Array = []
+	var alignment_failures: int = 0
+
+	if not FileAccess.file_exists(history_file):
+		items.append({
+			"type": "history_file_exists",
+			"path": history_file,
+			"ok": false,
+		})
+		alignment_failures += 1
+		alignment_row["alignment_failures"] = alignment_failures
+		alignment_row["items"] = items
+		report["cross_platform_alignment"] = alignment_row
+		if alignment_failures > max_alignment_failures:
+			var missing_message: String = "cross-platform alignment failures %d exceeds %d" % [alignment_failures, max_alignment_failures]
+			if run_mode == "release_blocking":
+				_push_result(report, "global", "cross_platform_alignment_failures_exceeded", false, missing_message)
+			else:
+				_push_warning(report, "global", "cross_platform_alignment_failures_pending", missing_message)
+		return
+
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(history_file))
+	if not (parsed is Dictionary):
+		items.append({
+			"type": "history_file_parse",
+			"path": history_file,
+			"ok": false,
+		})
+		alignment_failures += 1
+		alignment_row["alignment_failures"] = alignment_failures
+		alignment_row["items"] = items
+		report["cross_platform_alignment"] = alignment_row
+		if alignment_failures > max_alignment_failures:
+			var parse_message: String = "cross-platform alignment failures %d exceeds %d" % [alignment_failures, max_alignment_failures]
+			if run_mode == "release_blocking":
+				_push_result(report, "global", "cross_platform_alignment_failures_exceeded", false, parse_message)
+			else:
+				_push_warning(report, "global", "cross_platform_alignment_failures_pending", parse_message)
+		return
+
+	var history_root: Dictionary = parsed
+	var history_variant: Variant = history_root.get("history", [])
+	var history_rows: Array = history_variant if history_variant is Array else []
+	if history_rows.is_empty():
+		items.append({
+			"type": "history_entries",
+			"value": 0,
+			"limit": 1,
+			"ok": false,
+		})
+		alignment_failures += 1
+		alignment_row["alignment_failures"] = alignment_failures
+		alignment_row["items"] = items
+		report["cross_platform_alignment"] = alignment_row
+		if alignment_failures > max_alignment_failures:
+			var empty_message: String = "cross-platform alignment failures %d exceeds %d" % [alignment_failures, max_alignment_failures]
+			if run_mode == "release_blocking":
+				_push_result(report, "global", "cross_platform_alignment_failures_exceeded", false, empty_message)
+			else:
+				_push_warning(report, "global", "cross_platform_alignment_failures_pending", empty_message)
+		return
+
+	var sample_count: int = mini(aggregation_window, history_rows.size())
+	var sample_slice: Array = history_rows.slice(history_rows.size() - sample_count, history_rows.size())
+
+	var discovered_backends: Dictionary = {}
+	var backend_mode_index: Dictionary = {}
+	for row_var in sample_slice:
+		if not (row_var is Dictionary):
+			continue
+		var row: Dictionary = row_var
+		var row_backend: String = str(row.get("backend_tag", "")).strip_edges()
+		var row_mode: String = str(row.get("run_mode", "")).strip_edges()
+		if row_backend.is_empty() or row_mode.is_empty():
+			continue
+		discovered_backends[row_backend] = true
+		var mode_index: Dictionary = backend_mode_index.get(row_backend, {})
+		mode_index[row_mode] = row
+		backend_mode_index[row_backend] = mode_index
+
+	if required_backends.is_empty():
+		required_backends = _sanitize_string_array(discovered_backends.keys())
+
+	var missing_backends: Array = []
+	for backend_name in required_backends:
+		if not backend_mode_index.has(backend_name):
+			missing_backends.append(backend_name)
+	items.append({
+		"type": "missing_backends",
+		"value": missing_backends.size(),
+		"limit": max_missing_backends,
+		"ok": missing_backends.size() <= max_missing_backends,
+		"entries": missing_backends,
+	})
+	if missing_backends.size() > max_missing_backends:
+		alignment_failures += 1
+
+	var missing_run_mode_entries: Array = []
+	for backend_name in required_backends:
+		if not backend_mode_index.has(backend_name):
+			continue
+		var mode_rows: Dictionary = backend_mode_index.get(backend_name, {})
+		for mode_name in required_run_modes:
+			if not mode_rows.has(mode_name):
+				missing_run_mode_entries.append("%s:%s" % [backend_name, mode_name])
+	items.append({
+		"type": "missing_run_modes",
+		"value": missing_run_mode_entries.size(),
+		"limit": max_missing_run_modes,
+		"ok": missing_run_mode_entries.size() <= max_missing_run_modes,
+		"entries": missing_run_mode_entries,
+	})
+	if missing_run_mode_entries.size() > max_missing_run_modes:
+		alignment_failures += 1
+
+	var metric_deltas: Dictionary = {}
+	for metric_var in metric_limits.keys():
+		var metric_name: String = str(metric_var).strip_edges()
+		if metric_name.is_empty():
+			continue
+		var metric_limit: int = maxi(0, int(metric_limits.get(metric_var, 0)))
+		var values: Array[float] = []
+		for backend_name in required_backends:
+			if not backend_mode_index.has(backend_name):
+				continue
+			var mode_rows: Dictionary = backend_mode_index.get(backend_name, {})
+			for mode_name in required_run_modes:
+				if not mode_rows.has(mode_name):
+					continue
+				var row_variant: Variant = mode_rows.get(mode_name, {})
+				if not (row_variant is Dictionary):
+					continue
+				values.append(float((row_variant as Dictionary).get(metric_name, 0.0)))
+		if values.size() < 2:
+			metric_deltas[metric_name] = {
+				"min": 0.0,
+				"max": 0.0,
+				"delta": 0.0,
+				"samples": values.size(),
+			}
+			items.append({
+				"type": "metric_alignment",
+				"metric": metric_name,
+				"delta": 0.0,
+				"limit": metric_limit,
+				"samples": values.size(),
+				"ok": true,
+			})
+			continue
+
+		var min_value: float = values[0]
+		var max_value: float = values[0]
+		for metric_value in values:
+			min_value = minf(min_value, metric_value)
+			max_value = maxf(max_value, metric_value)
+		var delta: float = max_value - min_value
+		metric_deltas[metric_name] = {
+			"min": min_value,
+			"max": max_value,
+			"delta": delta,
+			"samples": values.size(),
+		}
+		var metric_ok: bool = delta <= float(metric_limit)
+		items.append({
+			"type": "metric_alignment",
+			"metric": metric_name,
+			"delta": delta,
+			"limit": metric_limit,
+			"samples": values.size(),
+			"ok": metric_ok,
+		})
+		if not metric_ok:
+			alignment_failures += 1
+
+	alignment_row["active_backend"] = backend_tag
+	alignment_row["sample_count"] = sample_count
+	alignment_row["missing_backends"] = missing_backends
+	alignment_row["missing_run_mode_entries"] = missing_run_mode_entries
+	alignment_row["metric_deltas"] = metric_deltas
+	alignment_row["alignment_failures"] = alignment_failures
+	alignment_row["items"] = items
+	report["cross_platform_alignment"] = alignment_row
+
+	if alignment_failures > max_alignment_failures:
+		var message: String = "cross-platform alignment failures %d exceeds %d" % [alignment_failures, max_alignment_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "cross_platform_alignment_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "cross_platform_alignment_failures_pending", message)
+
+
+func _evaluate_pressure_scenario_standardization(
+	report: Dictionary,
+	standard_cfg: Dictionary,
+	run_mode: String
+) -> void:
+	if standard_cfg.is_empty():
+		return
+
+	var standard_row: Dictionary = report.get("pressure_scenario_standardization", {})
+	var baseline_targets_file: String = str(standard_cfg.get("baseline_targets_file", "res://data/balance/quality_baseline_targets.json"))
+	var baseline_report: String = str(standard_cfg.get("baseline_report", "user://quality_baseline_latest.json"))
+	var required_run_modes: Array[String] = _sanitize_string_array(standard_cfg.get("required_run_modes", []))
+	var required_scenarios: Array[String] = _sanitize_string_array(standard_cfg.get("required_scenarios", []))
+	var max_avg_ratio: float = maxf(1.0, float(standard_cfg.get("max_avg_frame_ms_ratio", 1.1)))
+	var max_p95_ratio: float = maxf(1.0, float(standard_cfg.get("max_p95_frame_ms_ratio", 1.12)))
+	var max_memory_ratio: float = maxf(1.0, float(standard_cfg.get("max_peak_memory_mb_ratio", 1.1)))
+	var max_standardization_failures: int = maxi(0, int(standard_cfg.get("max_standardization_failures", 0)))
+
+	standard_row["baseline_targets_file"] = baseline_targets_file
+	standard_row["baseline_report"] = baseline_report
+	standard_row["required_run_modes"] = required_run_modes
+	standard_row["required_scenarios"] = required_scenarios
+	standard_row["max_avg_frame_ms_ratio"] = max_avg_ratio
+	standard_row["max_p95_frame_ms_ratio"] = max_p95_ratio
+	standard_row["max_peak_memory_mb_ratio"] = max_memory_ratio
+	standard_row["max_standardization_failures"] = max_standardization_failures
+
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	standard_row["enabled_for_mode"] = enabled_for_mode
+	if not enabled_for_mode:
+		standard_row["standardization_failures"] = 0
+		standard_row["items"] = [{
+			"type": "run_mode_skipped",
+			"value": run_mode,
+			"required_run_modes": required_run_modes,
+			"ok": true,
+		}]
+		report["pressure_scenario_standardization"] = standard_row
+		return
+
+	var items: Array = []
+	var standardization_failures: int = 0
+
+	var targets_root: Dictionary = _read_json(baseline_targets_file)
+	if targets_root.is_empty():
+		items.append({
+			"type": "baseline_targets_file_parse",
+			"path": baseline_targets_file,
+			"ok": false,
+		})
+		standardization_failures += 1
+
+	var report_root: Dictionary = _read_json(baseline_report)
+	if report_root.is_empty():
+		items.append({
+			"type": "baseline_report_parse",
+			"path": baseline_report,
+			"ok": false,
+		})
+		standardization_failures += 1
+
+	var target_frame: Dictionary = {}
+	var target_memory: Dictionary = {}
+	if not targets_root.is_empty():
+		var targets_row: Dictionary = targets_root.get("targets", {})
+		target_frame = targets_row.get("frame_time_ms", {})
+		target_memory = targets_row.get("memory_mb", {})
+		if required_scenarios.is_empty():
+			required_scenarios = _sanitize_string_array(targets_root.get("scenarios", []))
+
+	var report_scenarios_variant: Variant = report_root.get("scenarios", []) if not report_root.is_empty() else []
+	var report_scenarios: Array = report_scenarios_variant if report_scenarios_variant is Array else []
+	var report_index: Dictionary = _index_baseline_scenarios(report_scenarios)
+
+	for scenario_id in required_scenarios:
+		if not report_index.has(scenario_id):
+			standardization_failures += 1
+			items.append({
+				"type": "required_scenario_missing",
+				"scenario": scenario_id,
+				"ok": false,
+			})
+			continue
+
+		var scenario_row_variant: Variant = report_index.get(scenario_id, {})
+		if not (scenario_row_variant is Dictionary):
+			standardization_failures += 1
+			items.append({
+				"type": "scenario_row_invalid",
+				"scenario": scenario_id,
+				"ok": false,
+			})
+			continue
+
+		var scenario_row: Dictionary = scenario_row_variant
+		if scenario_row.has("error"):
+			standardization_failures += 1
+			items.append({
+				"type": "scenario_runtime_error",
+				"scenario": scenario_id,
+				"error": str(scenario_row.get("error", "")),
+				"ok": false,
+			})
+			continue
+
+		var frame_target_row: Dictionary = target_frame.get(scenario_id, {})
+		var memory_target_row: Dictionary = target_memory.get(scenario_id, {})
+		if frame_target_row.is_empty() or memory_target_row.is_empty():
+			standardization_failures += 1
+			items.append({
+				"type": "scenario_target_missing",
+				"scenario": scenario_id,
+				"ok": false,
+			})
+			continue
+
+		var avg_frame_ms: float = float(scenario_row.get("avg_frame_ms", 0.0))
+		var p95_frame_ms: float = float(scenario_row.get("p95_frame_ms", 0.0))
+		var peak_memory_mb: float = float(scenario_row.get("peak_memory_mb", 0.0))
+
+		var avg_limit: float = float(frame_target_row.get("avg_max", avg_frame_ms)) * max_avg_ratio
+		var p95_limit: float = float(frame_target_row.get("p95_max", p95_frame_ms)) * max_p95_ratio
+		var memory_limit: float = float(memory_target_row.get("peak_max", peak_memory_mb)) * max_memory_ratio
+
+		var avg_ok: bool = avg_frame_ms <= avg_limit
+		var p95_ok: bool = p95_frame_ms <= p95_limit
+		var memory_ok: bool = peak_memory_mb <= memory_limit
+
+		items.append({
+			"type": "scenario_avg_frame_ms",
+			"scenario": scenario_id,
+			"value": avg_frame_ms,
+			"limit": avg_limit,
+			"ok": avg_ok,
+		})
+		items.append({
+			"type": "scenario_p95_frame_ms",
+			"scenario": scenario_id,
+			"value": p95_frame_ms,
+			"limit": p95_limit,
+			"ok": p95_ok,
+		})
+		items.append({
+			"type": "scenario_peak_memory_mb",
+			"scenario": scenario_id,
+			"value": peak_memory_mb,
+			"limit": memory_limit,
+			"ok": memory_ok,
+		})
+
+		if not avg_ok:
+			standardization_failures += 1
+		if not p95_ok:
+			standardization_failures += 1
+		if not memory_ok:
+			standardization_failures += 1
+
+	items.append({
+		"type": "max_standardization_failures",
+		"value": standardization_failures,
+		"limit": max_standardization_failures,
+		"ok": standardization_failures <= max_standardization_failures,
+	})
+
+	standard_row["required_scenarios"] = required_scenarios
+	standard_row["standardization_failures"] = standardization_failures
+	standard_row["items"] = items
+	report["pressure_scenario_standardization"] = standard_row
+
+	if standardization_failures > max_standardization_failures:
+		var message: String = "pressure standardization failures %d exceeds %d" % [standardization_failures, max_standardization_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "pressure_scenario_standardization_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "pressure_scenario_standardization_failures_pending", message)
+
+
+func _evaluate_alignment_dashboard_refinement(
+	report: Dictionary,
+	dashboard_cfg: Dictionary,
+	run_mode: String
+) -> void:
+	if dashboard_cfg.is_empty():
+		return
+
+	var dashboard_row: Dictionary = report.get("alignment_dashboard_refinement", {})
+	var required_run_modes: Array[String] = _sanitize_string_array(dashboard_cfg.get("required_run_modes", []))
+	var metric_weights: Dictionary = dashboard_cfg.get("metric_weights", {})
+	var missing_backend_weight: float = maxf(0.0, float(dashboard_cfg.get("missing_backend_weight", 1.0)))
+	var missing_run_mode_weight: float = maxf(0.0, float(dashboard_cfg.get("missing_run_mode_weight", 1.0)))
+	var watch_score_threshold: float = maxf(0.0, float(dashboard_cfg.get("watch_score_threshold", 0.35)))
+	var critical_score_threshold: float = maxf(watch_score_threshold, float(dashboard_cfg.get("critical_score_threshold", 0.7)))
+	var max_dashboard_failures: int = maxi(0, int(dashboard_cfg.get("max_dashboard_failures", 0)))
+
+	dashboard_row["required_run_modes"] = required_run_modes
+	dashboard_row["metric_weights"] = metric_weights
+	dashboard_row["missing_backend_weight"] = missing_backend_weight
+	dashboard_row["missing_run_mode_weight"] = missing_run_mode_weight
+	dashboard_row["watch_score_threshold"] = watch_score_threshold
+	dashboard_row["critical_score_threshold"] = critical_score_threshold
+	dashboard_row["max_dashboard_failures"] = max_dashboard_failures
+
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	dashboard_row["enabled_for_mode"] = enabled_for_mode
+	if not enabled_for_mode:
+		dashboard_row["score"] = 0.0
+		dashboard_row["severity"] = "skipped"
+		dashboard_row["dashboard_failures"] = 0
+		dashboard_row["items"] = [{
+			"type": "run_mode_skipped",
+			"value": run_mode,
+			"required_run_modes": required_run_modes,
+			"ok": true,
+		}]
+		report["alignment_dashboard_refinement"] = dashboard_row
+		return
+
+	var alignment_row: Dictionary = report.get("cross_platform_alignment", {})
+	var metric_deltas: Dictionary = alignment_row.get("metric_deltas", {})
+	var metric_limits: Dictionary = alignment_row.get("metric_limits", {})
+	var missing_backends: Array = alignment_row.get("missing_backends", [])
+	var missing_run_modes: Array = alignment_row.get("missing_run_mode_entries", [])
+
+	var items: Array = []
+	var score: float = 0.0
+	var dashboard_failures: int = 0
+	var missing_metrics: Array = []
+
+	for metric_var in metric_weights.keys():
+		var metric_name: String = str(metric_var).strip_edges()
+		var weight: float = clampf(float(metric_weights.get(metric_var, 0.0)), 0.0, 5.0)
+		if metric_name.is_empty() or weight <= 0.0:
+			continue
+		if not metric_deltas.has(metric_name):
+			missing_metrics.append(metric_name)
+			continue
+
+		var metric_row_variant: Variant = metric_deltas.get(metric_name, {})
+		if not (metric_row_variant is Dictionary):
+			missing_metrics.append(metric_name)
+			continue
+
+		var metric_row: Dictionary = metric_row_variant
+		var delta: float = float(metric_row.get("delta", 0.0))
+		var limit: float = float(metric_limits.get(metric_name, 0.0))
+		var normalized_delta: float = 0.0
+		if limit <= 0.0:
+			normalized_delta = 1.0 if delta > 0.0 else 0.0
+		else:
+			normalized_delta = delta / limit
+		var weighted_value: float = normalized_delta * weight
+		score += weighted_value
+		items.append({
+			"type": "metric_score",
+			"metric": metric_name,
+			"delta": delta,
+			"limit": limit,
+			"weight": weight,
+			"weighted": weighted_value,
+			"ok": normalized_delta <= 1.0,
+		})
+
+	if not missing_metrics.is_empty():
+		dashboard_failures += 1
+		items.append({
+			"type": "missing_metrics",
+			"entries": missing_metrics,
+			"ok": false,
+		})
+
+	if missing_backends.size() > 0:
+		var missing_backend_weighted: float = float(missing_backends.size()) * missing_backend_weight
+		score += missing_backend_weighted
+		items.append({
+			"type": "missing_backends_weighted",
+			"count": missing_backends.size(),
+			"weight": missing_backend_weight,
+			"weighted": missing_backend_weighted,
+			"ok": false,
+		})
+
+	if missing_run_modes.size() > 0:
+		var missing_run_mode_weighted: float = float(missing_run_modes.size()) * missing_run_mode_weight
+		score += missing_run_mode_weighted
+		items.append({
+			"type": "missing_run_modes_weighted",
+			"count": missing_run_modes.size(),
+			"weight": missing_run_mode_weight,
+			"weighted": missing_run_mode_weighted,
+			"ok": false,
+		})
+
+	var severity: String = "ok"
+	if score >= critical_score_threshold:
+		severity = "critical"
+		dashboard_failures += 1
+	elif score >= watch_score_threshold:
+		severity = "watch"
+
+	items.append({
+		"type": "dashboard_severity",
+		"value": severity,
+		"score": score,
+		"watch_score_threshold": watch_score_threshold,
+		"critical_score_threshold": critical_score_threshold,
+		"ok": severity != "critical",
+	})
+
+	dashboard_row["score"] = score
+	dashboard_row["severity"] = severity
+	dashboard_row["missing_metrics"] = missing_metrics
+	dashboard_row["dashboard_failures"] = dashboard_failures
+	dashboard_row["items"] = items
+	report["alignment_dashboard_refinement"] = dashboard_row
+
+	if dashboard_failures > max_dashboard_failures:
+		var message: String = "alignment dashboard failures %d exceeds %d" % [dashboard_failures, max_dashboard_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "alignment_dashboard_refinement_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "alignment_dashboard_refinement_failures_pending", message)
+
+
+func _evaluate_pressure_alignment_convergence_gate(
+	report: Dictionary,
+	convergence_cfg: Dictionary,
+	run_mode: String,
+	backend_tag: String
+) -> void:
+	if convergence_cfg.is_empty():
+		return
+
+	var gate_row: Dictionary = report.get("pressure_alignment_convergence_gate", {})
+	var required_run_modes: Array[String] = _sanitize_string_array(convergence_cfg.get("required_run_modes", []))
+	var required_backends: Array[String] = _sanitize_string_array(convergence_cfg.get("required_backends", []))
+	var max_standardization_failures: int = maxi(0, int(convergence_cfg.get("max_standardization_failures", 0)))
+	var max_alignment_failures: int = maxi(0, int(convergence_cfg.get("max_alignment_failures", 0)))
+	var max_dashboard_failures: int = maxi(0, int(convergence_cfg.get("max_dashboard_failures", 0)))
+	var max_critical_severity_count: int = maxi(0, int(convergence_cfg.get("max_critical_severity_count", 0)))
+	var max_convergence_failures: int = maxi(0, int(convergence_cfg.get("max_convergence_failures", 0)))
+
+	gate_row["required_run_modes"] = required_run_modes
+	gate_row["required_backends"] = required_backends
+	gate_row["max_standardization_failures"] = max_standardization_failures
+	gate_row["max_alignment_failures"] = max_alignment_failures
+	gate_row["max_dashboard_failures"] = max_dashboard_failures
+	gate_row["max_critical_severity_count"] = max_critical_severity_count
+	gate_row["max_convergence_failures"] = max_convergence_failures
+
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	gate_row["enabled_for_mode"] = enabled_for_mode
+	if not enabled_for_mode:
+		gate_row["convergence_failures"] = 0
+		gate_row["items"] = [{
+			"type": "run_mode_skipped",
+			"value": run_mode,
+			"required_run_modes": required_run_modes,
+			"ok": true,
+		}]
+		report["pressure_alignment_convergence_gate"] = gate_row
+		return
+
+	var standard_row: Dictionary = report.get("pressure_scenario_standardization", {})
+	var alignment_row: Dictionary = report.get("cross_platform_alignment", {})
+	var dashboard_row: Dictionary = report.get("alignment_dashboard_refinement", {})
+
+	var standardization_failures: int = int(standard_row.get("standardization_failures", 0))
+	var alignment_failures: int = int(alignment_row.get("alignment_failures", 0))
+	var dashboard_failures: int = int(dashboard_row.get("dashboard_failures", 0))
+	var dashboard_severity: String = str(dashboard_row.get("severity", "ok"))
+	var critical_severity_count: int = 1 if dashboard_severity == "critical" else 0
+
+	var items: Array = []
+	var convergence_failures: int = 0
+
+	var backend_ok: bool = required_backends.is_empty() or required_backends.has(backend_tag)
+	items.append({
+		"type": "active_backend_covered",
+		"backend": backend_tag,
+		"required_backends": required_backends,
+		"ok": backend_ok,
+	})
+	if not backend_ok:
+		convergence_failures += 1
+
+	var standardization_ok: bool = standardization_failures <= max_standardization_failures
+	items.append({
+		"type": "standardization_failures",
+		"value": standardization_failures,
+		"limit": max_standardization_failures,
+		"ok": standardization_ok,
+	})
+	if not standardization_ok:
+		convergence_failures += 1
+
+	var alignment_ok: bool = alignment_failures <= max_alignment_failures
+	items.append({
+		"type": "alignment_failures",
+		"value": alignment_failures,
+		"limit": max_alignment_failures,
+		"ok": alignment_ok,
+	})
+	if not alignment_ok:
+		convergence_failures += 1
+
+	var dashboard_ok: bool = dashboard_failures <= max_dashboard_failures
+	items.append({
+		"type": "dashboard_failures",
+		"value": dashboard_failures,
+		"limit": max_dashboard_failures,
+		"severity": dashboard_severity,
+		"ok": dashboard_ok,
+	})
+	if not dashboard_ok:
+		convergence_failures += 1
+
+	var critical_ok: bool = critical_severity_count <= max_critical_severity_count
+	items.append({
+		"type": "critical_severity_count",
+		"value": critical_severity_count,
+		"limit": max_critical_severity_count,
+		"ok": critical_ok,
+	})
+	if not critical_ok:
+		convergence_failures += 1
+
+	gate_row["backend_tag"] = backend_tag
+	gate_row["standardization_failures"] = standardization_failures
+	gate_row["alignment_failures"] = alignment_failures
+	gate_row["dashboard_failures"] = dashboard_failures
+	gate_row["dashboard_severity"] = dashboard_severity
+	gate_row["critical_severity_count"] = critical_severity_count
+	gate_row["convergence_failures"] = convergence_failures
+	gate_row["items"] = items
+	report["pressure_alignment_convergence_gate"] = gate_row
+
+	if convergence_failures > max_convergence_failures:
+		var message: String = "pressure alignment convergence failures %d exceeds %d" % [convergence_failures, max_convergence_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "pressure_alignment_convergence_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "pressure_alignment_convergence_failures_pending", message)
+
+
+func _evaluate_regression_cycle_window_governance(
+	report: Dictionary,
+	cycle_cfg: Dictionary,
+	run_mode: String,
+	backend_tag: String
+) -> void:
+	if cycle_cfg.is_empty():
+		return
+
+	var cycle_row: Dictionary = report.get("regression_cycle_window_governance", {})
+	var history_file: String = str(cycle_cfg.get("history_file", "user://visual_snapshot_approval_archive.json"))
+	var cycle_window_size: int = maxi(10, int(cycle_cfg.get("cycle_window_size", 20)))
+	var min_cycle_entries: int = maxi(1, int(cycle_cfg.get("min_cycle_entries", 8)))
+	var required_run_modes: Array[String] = _sanitize_string_array(cycle_cfg.get("required_run_modes", []))
+	var required_backends: Array[String] = _sanitize_string_array(cycle_cfg.get("required_backends", []))
+	var max_warning_delta: int = maxi(0, int(cycle_cfg.get("max_warning_delta", 1)))
+	var max_blocker_delta: int = maxi(0, int(cycle_cfg.get("max_blocker_delta", 0)))
+	var max_alignment_score_delta: float = maxf(0.0, float(cycle_cfg.get("max_alignment_score_delta", 0.2)))
+	var max_cycle_failures: int = maxi(0, int(cycle_cfg.get("max_cycle_failures", 0)))
+
+	cycle_row["history_file"] = history_file
+	cycle_row["cycle_window_size"] = cycle_window_size
+	cycle_row["min_cycle_entries"] = min_cycle_entries
+	cycle_row["required_run_modes"] = required_run_modes
+	cycle_row["required_backends"] = required_backends
+	cycle_row["max_warning_delta"] = max_warning_delta
+	cycle_row["max_blocker_delta"] = max_blocker_delta
+	cycle_row["max_alignment_score_delta"] = max_alignment_score_delta
+	cycle_row["max_cycle_failures"] = max_cycle_failures
+
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	cycle_row["enabled_for_mode"] = enabled_for_mode
+	if not enabled_for_mode:
+		cycle_row["cycle_failures"] = 0
+		cycle_row["items"] = [{
+			"type": "run_mode_skipped",
+			"value": run_mode,
+			"required_run_modes": required_run_modes,
+			"ok": true,
+		}]
+		report["regression_cycle_window_governance"] = cycle_row
+		return
+
+	var items: Array = []
+	var cycle_failures: int = 0
+
+	if not FileAccess.file_exists(history_file):
+		cycle_failures += 1
+		items.append({
+			"type": "history_file_missing",
+			"path": history_file,
+			"ok": false,
+		})
+		cycle_row["window_entries"] = 0
+		cycle_row["cycle_failures"] = cycle_failures
+		cycle_row["items"] = items
+		report["regression_cycle_window_governance"] = cycle_row
+		var missing_message: String = "regression cycle history file is missing: %s" % history_file
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "regression_cycle_window_history_missing", false, missing_message)
+		else:
+			_push_warning(report, "global", "regression_cycle_window_history_pending", missing_message)
+		return
+
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(history_file))
+	if not (parsed is Array):
+		cycle_failures += 1
+		items.append({
+			"type": "history_file_parse",
+			"path": history_file,
+			"ok": false,
+		})
+		cycle_row["window_entries"] = 0
+		cycle_row["cycle_failures"] = cycle_failures
+		cycle_row["items"] = items
+		report["regression_cycle_window_governance"] = cycle_row
+		var parse_message: String = "regression cycle history file parse failed: %s" % history_file
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "regression_cycle_window_history_parse_failed", false, parse_message)
+		else:
+			_push_warning(report, "global", "regression_cycle_window_history_parse_pending", parse_message)
+		return
+
+	var history_rows: Array = parsed
+	var filtered_rows: Array = []
+	for row_variant in history_rows:
+		if not (row_variant is Dictionary):
+			continue
+		var row: Dictionary = row_variant
+		var row_run_mode: String = str(row.get("run_mode", "")).strip_edges()
+		var row_backend: String = str(row.get("backend_tag", "")).strip_edges()
+		if not required_run_modes.is_empty() and not required_run_modes.has(row_run_mode):
+			continue
+		if not required_backends.is_empty() and not required_backends.has(row_backend):
+			continue
+		filtered_rows.append(row)
+
+	var window_rows: Array = []
+	if filtered_rows.size() > cycle_window_size:
+		window_rows = filtered_rows.slice(filtered_rows.size() - cycle_window_size, filtered_rows.size())
+	else:
+		window_rows = filtered_rows
+
+	var window_entries: int = window_rows.size()
+	cycle_row["window_entries"] = window_entries
+
+	var entry_count_ok: bool = window_entries >= min_cycle_entries
+	items.append({
+		"type": "min_cycle_entries",
+		"value": window_entries,
+		"limit": min_cycle_entries,
+		"ok": entry_count_ok,
+	})
+	if not entry_count_ok:
+		cycle_failures += 1
+
+	var missing_backend_entries: Array = []
+	for backend_name in required_backends:
+		var backend_found: bool = false
+		for row_variant in window_rows:
+			if row_variant is Dictionary and str((row_variant as Dictionary).get("backend_tag", "")).strip_edges() == backend_name:
+				backend_found = true
+				break
+		if not backend_found:
+			missing_backend_entries.append(backend_name)
+	items.append({
+		"type": "missing_backends",
+		"value": missing_backend_entries,
+		"ok": missing_backend_entries.is_empty(),
+	})
+	if not missing_backend_entries.is_empty():
+		cycle_failures += 1
+
+	var missing_mode_entries: Array = []
+	for mode_name in required_run_modes:
+		var mode_found: bool = false
+		for row_variant in window_rows:
+			if row_variant is Dictionary and str((row_variant as Dictionary).get("run_mode", "")).strip_edges() == mode_name:
+				mode_found = true
+				break
+		if not mode_found:
+			missing_mode_entries.append(mode_name)
+	items.append({
+		"type": "missing_run_modes",
+		"value": missing_mode_entries,
+		"ok": missing_mode_entries.is_empty(),
+	})
+	if not missing_mode_entries.is_empty():
+		cycle_failures += 1
+
+	var warning_min: int = 0
+	var warning_max: int = 0
+	var blocker_min: int = 0
+	var blocker_max: int = 0
+	var alignment_min: float = 0.0
+	var alignment_max: float = 0.0
+	if window_entries > 0:
+		warning_min = int((window_rows[0] as Dictionary).get("warnings", 0))
+		warning_max = warning_min
+		blocker_min = int((window_rows[0] as Dictionary).get("blockers", 0))
+		blocker_max = blocker_min
+		alignment_min = float((window_rows[0] as Dictionary).get("alignment_dashboard_score", 0.0))
+		alignment_max = alignment_min
+		for row_variant in window_rows:
+			if not (row_variant is Dictionary):
+				continue
+			var row: Dictionary = row_variant
+			var row_warnings: int = int(row.get("warnings", 0))
+			var row_blockers: int = int(row.get("blockers", 0))
+			var row_alignment_score: float = float(row.get("alignment_dashboard_score", 0.0))
+			warning_min = mini(warning_min, row_warnings)
+			warning_max = maxi(warning_max, row_warnings)
+			blocker_min = mini(blocker_min, row_blockers)
+			blocker_max = maxi(blocker_max, row_blockers)
+			alignment_min = minf(alignment_min, row_alignment_score)
+			alignment_max = maxf(alignment_max, row_alignment_score)
+
+	var warning_delta: int = warning_max - warning_min
+	var blocker_delta: int = blocker_max - blocker_min
+	var alignment_score_delta: float = alignment_max - alignment_min
+
+	var warning_delta_ok: bool = warning_delta <= max_warning_delta
+	items.append({
+		"type": "warning_delta",
+		"value": warning_delta,
+		"limit": max_warning_delta,
+		"ok": warning_delta_ok,
+	})
+	if not warning_delta_ok:
+		cycle_failures += 1
+
+	var blocker_delta_ok: bool = blocker_delta <= max_blocker_delta
+	items.append({
+		"type": "blocker_delta",
+		"value": blocker_delta,
+		"limit": max_blocker_delta,
+		"ok": blocker_delta_ok,
+	})
+	if not blocker_delta_ok:
+		cycle_failures += 1
+
+	var alignment_score_delta_ok: bool = alignment_score_delta <= max_alignment_score_delta
+	items.append({
+		"type": "alignment_score_delta",
+		"value": alignment_score_delta,
+		"limit": max_alignment_score_delta,
+		"ok": alignment_score_delta_ok,
+	})
+	if not alignment_score_delta_ok:
+		cycle_failures += 1
+
+	cycle_row["active_backend"] = backend_tag
+	cycle_row["warning_delta"] = warning_delta
+	cycle_row["blocker_delta"] = blocker_delta
+	cycle_row["alignment_score_delta"] = alignment_score_delta
+	cycle_row["cycle_failures"] = cycle_failures
+	cycle_row["items"] = items
+	report["regression_cycle_window_governance"] = cycle_row
+
+	if cycle_failures > max_cycle_failures:
+		var message: String = "regression cycle failures %d exceeds %d" % [cycle_failures, max_cycle_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "regression_cycle_window_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "regression_cycle_window_failures_pending", message)
+
+
+func _extract_metric_series(rows: Array, metric_name: String) -> Array[float]:
+	var values: Array[float] = []
+	for row_variant in rows:
+		if not (row_variant is Dictionary):
+			continue
+		values.append(float((row_variant as Dictionary).get(metric_name, 0.0)))
+	return values
+
+
+func _calculate_series_slope(values: Array[float]) -> float:
+	if values.size() <= 1:
+		return 0.0
+	var first_value: float = values[0]
+	var last_value: float = values[values.size() - 1]
+	return (last_value - first_value) / float(maxi(1, values.size() - 1))
+
+
+func _is_feedback_clean_row(row: Dictionary, issue_metrics: Array[String]) -> bool:
+	for metric_name in issue_metrics:
+		if float(row.get(metric_name, 0.0)) > 0.0:
+			return false
+	return true
+
+
+func _evaluate_multi_cycle_adaptive_gate(
+	report: Dictionary,
+	adaptive_cfg: Dictionary,
+	run_mode: String,
+	backend_tag: String
+) -> void:
+	if adaptive_cfg.is_empty():
+		return
+
+	var adaptive_row: Dictionary = report.get("multi_cycle_adaptive_gate", {})
+	var history_file: String = str(adaptive_cfg.get("history_file", "user://visual_snapshot_approval_archive.json"))
+	var window_sizes: Dictionary = adaptive_cfg.get("window_sizes", {})
+	var min_window_entries: int = maxi(1, int(adaptive_cfg.get("min_window_entries", 6)))
+	var required_run_modes: Array[String] = _sanitize_string_array(adaptive_cfg.get("required_run_modes", []))
+	var required_backends: Array[String] = _sanitize_string_array(adaptive_cfg.get("required_backends", []))
+	var max_warning_slopes: Dictionary = adaptive_cfg.get("max_warning_slopes", {})
+	var max_blocker_slopes: Dictionary = adaptive_cfg.get("max_blocker_slopes", {})
+	var max_missing_run_modes: int = maxi(0, int(adaptive_cfg.get("max_missing_run_modes", 0)))
+	var max_missing_backends: int = maxi(0, int(adaptive_cfg.get("max_missing_backends", 0)))
+	var max_adaptive_failures: int = maxi(0, int(adaptive_cfg.get("max_adaptive_failures", 0)))
+
+	adaptive_row["history_file"] = history_file
+	adaptive_row["window_sizes"] = window_sizes
+	adaptive_row["min_window_entries"] = min_window_entries
+	adaptive_row["required_run_modes"] = required_run_modes
+	adaptive_row["required_backends"] = required_backends
+	adaptive_row["max_warning_slopes"] = max_warning_slopes
+	adaptive_row["max_blocker_slopes"] = max_blocker_slopes
+	adaptive_row["max_missing_run_modes"] = max_missing_run_modes
+	adaptive_row["max_missing_backends"] = max_missing_backends
+	adaptive_row["max_adaptive_failures"] = max_adaptive_failures
+
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	adaptive_row["enabled_for_mode"] = enabled_for_mode
+	if not enabled_for_mode:
+		adaptive_row["adaptive_failures"] = 0
+		adaptive_row["items"] = [{
+			"type": "run_mode_skipped",
+			"value": run_mode,
+			"required_run_modes": required_run_modes,
+			"ok": true,
+		}]
+		report["multi_cycle_adaptive_gate"] = adaptive_row
+		return
+
+	var items: Array = []
+	var adaptive_failures: int = 0
+
+	if not FileAccess.file_exists(history_file):
+		adaptive_failures += 1
+		items.append({
+			"type": "history_file_missing",
+			"path": history_file,
+			"ok": false,
+		})
+		adaptive_row["adaptive_failures"] = adaptive_failures
+		adaptive_row["window_analysis"] = {}
+		adaptive_row["items"] = items
+		report["multi_cycle_adaptive_gate"] = adaptive_row
+		var missing_message: String = "multi-cycle adaptive history file is missing: %s" % history_file
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "multi_cycle_adaptive_history_missing", false, missing_message)
+		else:
+			_push_warning(report, "global", "multi_cycle_adaptive_history_pending", missing_message)
+		return
+
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(history_file))
+	if not (parsed is Array):
+		adaptive_failures += 1
+		items.append({
+			"type": "history_file_parse",
+			"path": history_file,
+			"ok": false,
+		})
+		adaptive_row["adaptive_failures"] = adaptive_failures
+		adaptive_row["window_analysis"] = {}
+		adaptive_row["items"] = items
+		report["multi_cycle_adaptive_gate"] = adaptive_row
+		var parse_message: String = "multi-cycle adaptive history file parse failed: %s" % history_file
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "multi_cycle_adaptive_history_parse_failed", false, parse_message)
+		else:
+			_push_warning(report, "global", "multi_cycle_adaptive_history_parse_pending", parse_message)
+		return
+
+	var history_rows: Array = parsed
+	var filtered_rows: Array = []
+	for row_variant in history_rows:
+		if not (row_variant is Dictionary):
+			continue
+		var row: Dictionary = row_variant
+		var row_run_mode: String = str(row.get("run_mode", "")).strip_edges()
+		var row_backend: String = str(row.get("backend_tag", "")).strip_edges()
+		if not required_run_modes.is_empty() and not required_run_modes.has(row_run_mode):
+			continue
+		if not required_backends.is_empty() and not required_backends.has(row_backend):
+			continue
+		filtered_rows.append(row)
+
+	var backend_ok: bool = required_backends.is_empty() or required_backends.has(backend_tag)
+	items.append({
+		"type": "active_backend_covered",
+		"backend": backend_tag,
+		"required_backends": required_backends,
+		"ok": backend_ok,
+	})
+	if not backend_ok:
+		adaptive_failures += 1
+
+	var window_labels: Array[String] = ["short", "mid", "long"]
+	var window_analysis: Dictionary = {}
+	var coverage_rows: Array = []
+	for label in window_labels:
+		var window_size: int = maxi(1, int(window_sizes.get(label, min_window_entries)))
+		var window_rows: Array = []
+		if filtered_rows.size() > window_size:
+			window_rows = filtered_rows.slice(filtered_rows.size() - window_size, filtered_rows.size())
+		else:
+			window_rows = filtered_rows
+		if label == "long":
+			coverage_rows = window_rows
+
+		var entries: int = window_rows.size()
+		var entries_ok: bool = entries >= min_window_entries
+		items.append({
+			"type": "%s_window_entries" % label,
+			"value": entries,
+			"limit": min_window_entries,
+			"ok": entries_ok,
+		})
+		if not entries_ok:
+			adaptive_failures += 1
+
+		var warning_slope: float = _calculate_series_slope(_extract_metric_series(window_rows, "warnings"))
+		var blocker_slope: float = _calculate_series_slope(_extract_metric_series(window_rows, "blockers"))
+		var warning_limit: float = maxf(0.0, float(max_warning_slopes.get(label, 0.0)))
+		var blocker_limit: float = maxf(0.0, float(max_blocker_slopes.get(label, 0.0)))
+		var warning_ok: bool = warning_slope <= warning_limit
+		var blocker_ok: bool = blocker_slope <= blocker_limit
+
+		items.append({
+			"type": "%s_warning_slope" % label,
+			"value": warning_slope,
+			"limit": warning_limit,
+			"ok": warning_ok,
+		})
+		if not warning_ok:
+			adaptive_failures += 1
+
+		items.append({
+			"type": "%s_blocker_slope" % label,
+			"value": blocker_slope,
+			"limit": blocker_limit,
+			"ok": blocker_ok,
+		})
+		if not blocker_ok:
+			adaptive_failures += 1
+
+		window_analysis[label] = {
+			"window_size": window_size,
+			"entries": entries,
+			"warning_slope": warning_slope,
+			"max_warning_slope": warning_limit,
+			"blocker_slope": blocker_slope,
+			"max_blocker_slope": blocker_limit,
+		}
+
+	if coverage_rows.is_empty():
+		coverage_rows = filtered_rows
+	var seen_backends: Dictionary = {}
+	var seen_run_modes: Dictionary = {}
+	for row_variant in coverage_rows:
+		if not (row_variant is Dictionary):
+			continue
+		var row: Dictionary = row_variant
+		var row_backend: String = str(row.get("backend_tag", "")).strip_edges()
+		var row_mode: String = str(row.get("run_mode", "")).strip_edges()
+		if not row_backend.is_empty():
+			seen_backends[row_backend] = true
+		if not row_mode.is_empty():
+			seen_run_modes[row_mode] = true
+
+	var missing_backends: Array = []
+	for backend_name in required_backends:
+		if not seen_backends.has(backend_name):
+			missing_backends.append(backend_name)
+	var missing_run_modes: Array = []
+	for mode_name in required_run_modes:
+		if not seen_run_modes.has(mode_name):
+			missing_run_modes.append(mode_name)
+
+	var missing_backends_ok: bool = missing_backends.size() <= max_missing_backends
+	items.append({
+		"type": "missing_backends",
+		"value": missing_backends,
+		"limit": max_missing_backends,
+		"ok": missing_backends_ok,
+	})
+	if not missing_backends_ok:
+		adaptive_failures += 1
+
+	var missing_modes_ok: bool = missing_run_modes.size() <= max_missing_run_modes
+	items.append({
+		"type": "missing_run_modes",
+		"value": missing_run_modes,
+		"limit": max_missing_run_modes,
+		"ok": missing_modes_ok,
+	})
+	if not missing_modes_ok:
+		adaptive_failures += 1
+
+	adaptive_row["window_entries"] = {
+		"filtered_rows": filtered_rows.size(),
+		"coverage_window_entries": coverage_rows.size(),
+	}
+	adaptive_row["window_analysis"] = window_analysis
+	adaptive_row["missing_backends"] = missing_backends
+	adaptive_row["missing_run_modes"] = missing_run_modes
+	adaptive_row["adaptive_failures"] = adaptive_failures
+	adaptive_row["items"] = items
+	report["multi_cycle_adaptive_gate"] = adaptive_row
+
+	if adaptive_failures > max_adaptive_failures:
+		var message: String = "multi-cycle adaptive failures %d exceeds %d" % [adaptive_failures, max_adaptive_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "multi_cycle_adaptive_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "multi_cycle_adaptive_failures_pending", message)
+
+
+func _evaluate_release_feedback_governance(
+	report: Dictionary,
+	feedback_cfg: Dictionary,
+	run_mode: String,
+	backend_tag: String
+) -> void:
+	if feedback_cfg.is_empty():
+		return
+
+	var feedback_row: Dictionary = report.get("release_feedback_governance", {})
+	var history_file: String = str(feedback_cfg.get("history_file", "user://visual_snapshot_approval_archive.json"))
+	var feedback_window_size: int = maxi(5, int(feedback_cfg.get("feedback_window_size", 24)))
+	var min_feedback_entries: int = maxi(1, int(feedback_cfg.get("min_feedback_entries", 8)))
+	var required_run_modes: Array[String] = _sanitize_string_array(feedback_cfg.get("required_run_modes", []))
+	var required_backends: Array[String] = _sanitize_string_array(feedback_cfg.get("required_backends", []))
+	var issue_metrics: Array[String] = _sanitize_string_array(feedback_cfg.get("issue_metrics", []))
+	var min_closure_rate: float = clampf(float(feedback_cfg.get("min_closure_rate", 0.7)), 0.0, 1.0)
+	var max_unresolved_issues: int = maxi(0, int(feedback_cfg.get("max_unresolved_issues", 2)))
+	var max_missing_run_modes: int = maxi(0, int(feedback_cfg.get("max_missing_run_modes", 0)))
+	var max_missing_backends: int = maxi(0, int(feedback_cfg.get("max_missing_backends", 0)))
+	var max_feedback_failures: int = maxi(0, int(feedback_cfg.get("max_feedback_failures", 0)))
+
+	feedback_row["history_file"] = history_file
+	feedback_row["feedback_window_size"] = feedback_window_size
+	feedback_row["min_feedback_entries"] = min_feedback_entries
+	feedback_row["required_run_modes"] = required_run_modes
+	feedback_row["required_backends"] = required_backends
+	feedback_row["issue_metrics"] = issue_metrics
+	feedback_row["min_closure_rate"] = min_closure_rate
+	feedback_row["max_unresolved_issues"] = max_unresolved_issues
+	feedback_row["max_missing_run_modes"] = max_missing_run_modes
+	feedback_row["max_missing_backends"] = max_missing_backends
+	feedback_row["max_feedback_failures"] = max_feedback_failures
+
+	var enabled_for_mode: bool = required_run_modes.is_empty() or required_run_modes.has(run_mode)
+	feedback_row["enabled_for_mode"] = enabled_for_mode
+	if not enabled_for_mode:
+		feedback_row["feedback_failures"] = 0
+		feedback_row["items"] = [{
+			"type": "run_mode_skipped",
+			"value": run_mode,
+			"required_run_modes": required_run_modes,
+			"ok": true,
+		}]
+		report["release_feedback_governance"] = feedback_row
+		return
+
+	var items: Array = []
+	var feedback_failures: int = 0
+
+	if not FileAccess.file_exists(history_file):
+		feedback_failures += 1
+		items.append({
+			"type": "history_file_missing",
+			"path": history_file,
+			"ok": false,
+		})
+		feedback_row["feedback_failures"] = feedback_failures
+		feedback_row["window_entries"] = 0
+		feedback_row["items"] = items
+		report["release_feedback_governance"] = feedback_row
+		var missing_message: String = "release feedback history file is missing: %s" % history_file
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "release_feedback_history_missing", false, missing_message)
+		else:
+			_push_warning(report, "global", "release_feedback_history_pending", missing_message)
+		return
+
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(history_file))
+	if not (parsed is Array):
+		feedback_failures += 1
+		items.append({
+			"type": "history_file_parse",
+			"path": history_file,
+			"ok": false,
+		})
+		feedback_row["feedback_failures"] = feedback_failures
+		feedback_row["window_entries"] = 0
+		feedback_row["items"] = items
+		report["release_feedback_governance"] = feedback_row
+		var parse_message: String = "release feedback history file parse failed: %s" % history_file
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "release_feedback_history_parse_failed", false, parse_message)
+		else:
+			_push_warning(report, "global", "release_feedback_history_parse_pending", parse_message)
+		return
+
+	var history_rows: Array = parsed
+	var filtered_rows: Array = []
+	for row_variant in history_rows:
+		if not (row_variant is Dictionary):
+			continue
+		var row: Dictionary = row_variant
+		var row_run_mode: String = str(row.get("run_mode", "")).strip_edges()
+		var row_backend: String = str(row.get("backend_tag", "")).strip_edges()
+		if not required_run_modes.is_empty() and not required_run_modes.has(row_run_mode):
+			continue
+		if not required_backends.is_empty() and not required_backends.has(row_backend):
+			continue
+		filtered_rows.append(row)
+
+	var window_rows: Array = []
+	if filtered_rows.size() > feedback_window_size:
+		window_rows = filtered_rows.slice(filtered_rows.size() - feedback_window_size, filtered_rows.size())
+	else:
+		window_rows = filtered_rows
+
+	var window_entries: int = window_rows.size()
+	feedback_row["window_entries"] = window_entries
+
+	var backend_ok: bool = required_backends.is_empty() or required_backends.has(backend_tag)
+	items.append({
+		"type": "active_backend_covered",
+		"backend": backend_tag,
+		"required_backends": required_backends,
+		"ok": backend_ok,
+	})
+	if not backend_ok:
+		feedback_failures += 1
+
+	var entries_ok: bool = window_entries >= min_feedback_entries
+	items.append({
+		"type": "min_feedback_entries",
+		"value": window_entries,
+		"limit": min_feedback_entries,
+		"ok": entries_ok,
+	})
+	if not entries_ok:
+		feedback_failures += 1
+
+	var seen_backends: Dictionary = {}
+	var seen_run_modes: Dictionary = {}
+	for row_variant in window_rows:
+		if not (row_variant is Dictionary):
+			continue
+		var row: Dictionary = row_variant
+		var row_backend: String = str(row.get("backend_tag", "")).strip_edges()
+		var row_mode: String = str(row.get("run_mode", "")).strip_edges()
+		if not row_backend.is_empty():
+			seen_backends[row_backend] = true
+		if not row_mode.is_empty():
+			seen_run_modes[row_mode] = true
+
+	var missing_backends: Array = []
+	for backend_name in required_backends:
+		if not seen_backends.has(backend_name):
+			missing_backends.append(backend_name)
+	var missing_run_modes: Array = []
+	for mode_name in required_run_modes:
+		if not seen_run_modes.has(mode_name):
+			missing_run_modes.append(mode_name)
+
+	var missing_backends_ok: bool = missing_backends.size() <= max_missing_backends
+	items.append({
+		"type": "missing_backends",
+		"value": missing_backends,
+		"limit": max_missing_backends,
+		"ok": missing_backends_ok,
+	})
+	if not missing_backends_ok:
+		feedback_failures += 1
+
+	var missing_modes_ok: bool = missing_run_modes.size() <= max_missing_run_modes
+	items.append({
+		"type": "missing_run_modes",
+		"value": missing_run_modes,
+		"limit": max_missing_run_modes,
+		"ok": missing_modes_ok,
+	})
+	if not missing_modes_ok:
+		feedback_failures += 1
+
+	var issue_count: int = 0
+	var closed_issue_count: int = 0
+	var unresolved_issues: Array = []
+	for row_index in range(window_rows.size()):
+		var row_variant: Variant = window_rows[row_index]
+		if not (row_variant is Dictionary):
+			continue
+		var row: Dictionary = row_variant
+		if _is_feedback_clean_row(row, issue_metrics):
+			continue
+		issue_count += 1
+		var resolved: bool = false
+		for next_index in range(row_index + 1, window_rows.size()):
+			var next_variant: Variant = window_rows[next_index]
+			if not (next_variant is Dictionary):
+				continue
+			if _is_feedback_clean_row(next_variant as Dictionary, issue_metrics):
+				resolved = true
+				break
+		if resolved:
+			closed_issue_count += 1
+		else:
+			unresolved_issues.append({
+				"index": row_index,
+				"timestamp": int(row.get("timestamp", 0)),
+				"run_mode": str(row.get("run_mode", "")),
+				"backend_tag": str(row.get("backend_tag", "")),
+			})
+
+	var closure_rate: float = 1.0
+	if issue_count > 0:
+		closure_rate = float(closed_issue_count) / float(issue_count)
+
+	var closure_rate_ok: bool = closure_rate >= min_closure_rate
+	items.append({
+		"type": "closure_rate",
+		"value": closure_rate,
+		"limit": min_closure_rate,
+		"issues": issue_count,
+		"closed": closed_issue_count,
+		"ok": closure_rate_ok,
+	})
+	if not closure_rate_ok:
+		feedback_failures += 1
+
+	var unresolved_ok: bool = unresolved_issues.size() <= max_unresolved_issues
+	items.append({
+		"type": "unresolved_issues",
+		"value": unresolved_issues.size(),
+		"limit": max_unresolved_issues,
+		"ok": unresolved_ok,
+	})
+	if not unresolved_ok:
+		feedback_failures += 1
+
+	feedback_row["issue_count"] = issue_count
+	feedback_row["closed_issue_count"] = closed_issue_count
+	feedback_row["unresolved_issues"] = unresolved_issues
+	feedback_row["closure_rate"] = closure_rate
+	feedback_row["missing_backends"] = missing_backends
+	feedback_row["missing_run_modes"] = missing_run_modes
+	feedback_row["feedback_failures"] = feedback_failures
+	feedback_row["items"] = items
+	report["release_feedback_governance"] = feedback_row
+
+	if feedback_failures > max_feedback_failures:
+		var message: String = "release feedback governance failures %d exceeds %d" % [feedback_failures, max_feedback_failures]
+		if run_mode == "release_blocking":
+			_push_result(report, "global", "release_feedback_governance_failures_exceeded", false, message)
+		else:
+			_push_warning(report, "global", "release_feedback_governance_failures_pending", message)
 
 
 func _sanitize_cross_version_baseline(raw: Variant, snapshots_raw: Variant) -> Dictionary:
@@ -2755,6 +6098,131 @@ func _write_reports(report: Dictionary) -> void:
 		int(tracking_row.get("tracking_failures", 0)),
 		int(tracking_row.get("max_tracking_failures", 0)),
 	])
+	var stability_row: Dictionary = report.get("stability_scoring", {})
+	lines.append("- stability_scoring: score=%.3f, tier=%s, confidence=%.3f/%.3f, failures=%d" % [
+		float(stability_row.get("score", 0.0)),
+		str(stability_row.get("tier", "D")),
+		float(stability_row.get("confidence", 0.0)),
+		float(stability_row.get("min_confidence", 0.0)),
+		int(stability_row.get("scoring_failures", 0)),
+	])
+	var dashboard_row: Dictionary = report.get("convergence_dashboard", {})
+	lines.append("- convergence_dashboard: failures=%d/%d, blockers=%d/%d, warnings=%d/%d" % [
+		int(dashboard_row.get("dashboard_failures", 0)),
+		int(dashboard_row.get("max_dashboard_failures", 0)),
+		int(dashboard_row.get("blockers", 0)),
+		int(dashboard_row.get("max_blockers", 0)),
+		int(dashboard_row.get("warnings", 0)),
+		int(dashboard_row.get("max_warnings", 0)),
+	])
+	var ci_signal_row: Dictionary = report.get("ci_signal", {})
+	var ci_signal_payload: Dictionary = ci_signal_row.get("signal", {})
+	lines.append("- ci_signal_contract: run_mode=%s, tier=%s, required_fields=%d, failures=%d/%d" % [
+		str(ci_signal_payload.get("run_mode", "")),
+		str(ci_signal_payload.get("stability_tier", "")),
+		(ci_signal_row.get("required_fields", []) as Array).size(),
+		int(ci_signal_row.get("contract_failures", 0)),
+		int(ci_signal_row.get("max_contract_failures", 0)),
+	])
+	var convergence_trend_row: Dictionary = report.get("convergence_trend", {})
+	lines.append("- convergence_trend: failures=%d/%d, worsening=%d/%d, improving=%d/%d" % [
+		int(convergence_trend_row.get("trend_failures", 0)),
+		int(convergence_trend_row.get("max_trend_failures", 0)),
+		(convergence_trend_row.get("worsening_metrics", []) as Array).size(),
+		int(convergence_trend_row.get("max_worsening_metrics", 0)),
+		(convergence_trend_row.get("improving_metrics", []) as Array).size(),
+		int(convergence_trend_row.get("min_improving_metrics", 0)),
+	])
+	var lifecycle_linkage_row: Dictionary = report.get("exception_lifecycle_linkage", {})
+	lines.append("- exception_lifecycle_linkage: failures=%d/%d, transitions=%d/%d, missing_states=%d" % [
+		int(lifecycle_linkage_row.get("linkage_failures", 0)),
+		int(lifecycle_linkage_row.get("max_linkage_failures", 0)),
+		int(lifecycle_linkage_row.get("transition_count", 0)),
+		int(lifecycle_linkage_row.get("min_transition_count", 0)),
+		(lifecycle_linkage_row.get("missing_required_states", []) as Array).size(),
+	])
+	var cogate_row: Dictionary = report.get("visual_performance_cogate", {})
+	var cogate_alerts: Dictionary = cogate_row.get("alerts", {})
+	lines.append("- visual_performance_cogate: failures=%d/%d, alerts(total=%d,critical=%d,warning=%d), scenario_failures=%d/%d" % [
+		int(cogate_row.get("cogate_failures", 0)),
+		int(cogate_row.get("max_cogate_failures", 0)),
+		int(cogate_alerts.get("total", 0)),
+		int(cogate_alerts.get("critical", 0)),
+		int(cogate_alerts.get("warning", 0)),
+		int(cogate_row.get("scenario_failures", 0)),
+		int(cogate_row.get("max_scenario_failures", 0)),
+	])
+	var cogate_template_row: Dictionary = report.get("cogate_template", {})
+	lines.append("- cogate_template: run_mode=%s, template=%s, errors=%d" % [
+		str(cogate_template_row.get("run_mode", "")),
+		str(cogate_template_row.get("template", "")),
+		(cogate_template_row.get("errors", []) as Array).size(),
+	])
+	var alignment_row: Dictionary = report.get("cross_platform_alignment", {})
+	lines.append("- cross_platform_alignment: failures=%d/%d, samples=%d, missing_backends=%d/%d, missing_run_modes=%d/%d" % [
+		int(alignment_row.get("alignment_failures", 0)),
+		int(alignment_row.get("max_alignment_failures", 0)),
+		int(alignment_row.get("sample_count", 0)),
+		(alignment_row.get("missing_backends", []) as Array).size(),
+		int(alignment_row.get("max_missing_backends", 0)),
+		(alignment_row.get("missing_run_mode_entries", []) as Array).size(),
+		int(alignment_row.get("max_missing_run_modes", 0)),
+	])
+	var standardization_summary_row: Dictionary = report.get("pressure_scenario_standardization", {})
+	lines.append("- pressure_scenario_standardization: failures=%d/%d, scenario_failures=%d, scenarios=%d" % [
+		int(standardization_summary_row.get("standardization_failures", 0)),
+		int(standardization_summary_row.get("max_standardization_failures", 0)),
+		int(standardization_summary_row.get("scenario_failures", 0)),
+		(_sanitize_string_array(standardization_summary_row.get("required_scenarios", []))).size(),
+	])
+	var refinement_summary_row: Dictionary = report.get("alignment_dashboard_refinement", {})
+	lines.append("- alignment_dashboard_refinement: score=%.3f, severity=%s, failures=%d/%d" % [
+		float(refinement_summary_row.get("score", 0.0)),
+		str(refinement_summary_row.get("severity", "normal")),
+		int(refinement_summary_row.get("dashboard_failures", 0)),
+		int(refinement_summary_row.get("max_dashboard_failures", 0)),
+	])
+	var convergence_gate_summary_row: Dictionary = report.get("pressure_alignment_convergence_gate", {})
+	lines.append("- pressure_alignment_convergence_gate: failures=%d/%d, standardization=%d, alignment=%d, dashboard=%d" % [
+		int(convergence_gate_summary_row.get("convergence_failures", 0)),
+		int(convergence_gate_summary_row.get("max_convergence_failures", 0)),
+		int(convergence_gate_summary_row.get("standardization_failures", 0)),
+		int(convergence_gate_summary_row.get("alignment_failures", 0)),
+		int(convergence_gate_summary_row.get("dashboard_failures", 0)),
+	])
+	var cycle_summary_row: Dictionary = report.get("regression_cycle_window_governance", {})
+	lines.append("- regression_cycle_window_governance: failures=%d/%d, window_entries=%d, warning_delta=%d, blocker_delta=%d, alignment_score_delta=%.3f" % [
+		int(cycle_summary_row.get("cycle_failures", 0)),
+		int(cycle_summary_row.get("max_cycle_failures", 0)),
+		int(cycle_summary_row.get("window_entries", 0)),
+		int(cycle_summary_row.get("warning_delta", 0)),
+		int(cycle_summary_row.get("blocker_delta", 0)),
+		float(cycle_summary_row.get("alignment_score_delta", 0.0)),
+	])
+	var adaptive_summary_row: Dictionary = report.get("multi_cycle_adaptive_gate", {})
+	var adaptive_windows: Dictionary = adaptive_summary_row.get("window_analysis", {})
+	var adaptive_short: Dictionary = adaptive_windows.get("short", {})
+	var adaptive_mid: Dictionary = adaptive_windows.get("mid", {})
+	var adaptive_long: Dictionary = adaptive_windows.get("long", {})
+	lines.append("- multi_cycle_adaptive_gate: failures=%d/%d, short(w=%.3f,b=%.3f), mid(w=%.3f,b=%.3f), long(w=%.3f,b=%.3f)" % [
+		int(adaptive_summary_row.get("adaptive_failures", 0)),
+		int(adaptive_summary_row.get("max_adaptive_failures", 0)),
+		float(adaptive_short.get("warning_slope", 0.0)),
+		float(adaptive_short.get("blocker_slope", 0.0)),
+		float(adaptive_mid.get("warning_slope", 0.0)),
+		float(adaptive_mid.get("blocker_slope", 0.0)),
+		float(adaptive_long.get("warning_slope", 0.0)),
+		float(adaptive_long.get("blocker_slope", 0.0)),
+	])
+	var feedback_summary_row: Dictionary = report.get("release_feedback_governance", {})
+	lines.append("- release_feedback_governance: failures=%d/%d, closure_rate=%.3f, unresolved=%d/%d, issues=%d" % [
+		int(feedback_summary_row.get("feedback_failures", 0)),
+		int(feedback_summary_row.get("max_feedback_failures", 0)),
+		float(feedback_summary_row.get("closure_rate", 1.0)),
+		(feedback_summary_row.get("unresolved_issues", []) as Array).size(),
+		int(feedback_summary_row.get("max_unresolved_issues", 0)),
+		int(feedback_summary_row.get("issue_count", 0)),
+	])
 	lines.append("")
 	lines.append("## Snapshots")
 	var snapshots: Dictionary = report.get("snapshots", {})
@@ -3009,6 +6477,391 @@ func _write_reports(report: Dictionary) -> void:
 			var ok: bool = bool(row.get("ok", false))
 			var status: String = "OK" if ok else "FAIL"
 			lines.append("- [%s] %s -> %s" % [status, str(row.get("type", "")), str(row.get("value", row.get("limit", "")))])
+
+	lines.append("")
+	lines.append("## Stability Scoring")
+	lines.append("- score: %.3f" % float(stability_row.get("score", 0.0)))
+	lines.append("- tier: %s" % str(stability_row.get("tier", "D")))
+	lines.append("- confidence: %.3f / %.3f" % [
+		float(stability_row.get("confidence", 0.0)),
+		float(stability_row.get("min_confidence", 0.0)),
+	])
+	lines.append("- components: matching=%.3f warnings=%.3f blockers=%.3f tracking=%.3f" % [
+		float(stability_row.get("matching_component", 0.0)),
+		float(stability_row.get("warnings_component", 0.0)),
+		float(stability_row.get("blockers_component", 0.0)),
+		float(stability_row.get("tracking_component", 0.0)),
+	])
+	var scoring_items: Array = stability_row.get("items", [])
+	for item in scoring_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s" % [status, str(row.get("type", "")), str(row.get("value", row.get("limit", "")))])
+
+	lines.append("")
+	lines.append("## Convergence Dashboard")
+	lines.append("- dashboard_failures: %d / %d" % [
+		int(dashboard_row.get("dashboard_failures", 0)),
+		int(dashboard_row.get("max_dashboard_failures", 0)),
+	])
+	var dashboard_items: Array = dashboard_row.get("items", [])
+	for item in dashboard_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", 0)),
+				str(row.get("limit", 0)),
+			])
+
+	lines.append("")
+	lines.append("## CI Signal Contract")
+	lines.append("- signal_run_mode: %s" % str(ci_signal_payload.get("run_mode", "")))
+	lines.append("- signal_strategy: %s" % str(ci_signal_payload.get("strategy", "")))
+	lines.append("- signal_tier: %s" % str(ci_signal_payload.get("stability_tier", "")))
+	lines.append("- signal_score: %.3f" % float(ci_signal_payload.get("stability_score", 0.0)))
+	lines.append("- contract_failures: %d / %d" % [
+		int(ci_signal_row.get("contract_failures", 0)),
+		int(ci_signal_row.get("max_contract_failures", 0)),
+	])
+	var ci_items: Array = ci_signal_row.get("items", [])
+	for item in ci_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			if str(row.get("type", "")) == "required_field":
+				lines.append("- [%s] required_field %s" % [status, str(row.get("field", ""))])
+			else:
+				lines.append("- [%s] %s -> %s / %s" % [
+					status,
+					str(row.get("type", "")),
+					str(row.get("value", "")),
+					str(row.get("limit", "")),
+				])
+
+	lines.append("")
+	lines.append("## Convergence Trend Reinforcement")
+	lines.append("- history_file: %s" % str(convergence_trend_row.get("history_file", "")))
+	lines.append("- sample_windows: short=%d, long=%d, min_samples=%d" % [
+		int(convergence_trend_row.get("short_sample_count", 0)),
+		int(convergence_trend_row.get("long_sample_count", 0)),
+		int(convergence_trend_row.get("min_samples", 0)),
+	])
+	lines.append("- trend_failures: %d / %d" % [
+		int(convergence_trend_row.get("trend_failures", 0)),
+		int(convergence_trend_row.get("max_trend_failures", 0)),
+	])
+	var metric_deltas: Dictionary = convergence_trend_row.get("metric_deltas", {})
+	for metric_name in metric_deltas.keys():
+		var row_variant: Variant = metric_deltas.get(metric_name, {})
+		if row_variant is Dictionary:
+			var row: Dictionary = row_variant
+			lines.append("- %s: short_avg=%.3f long_avg=%.3f delta=%.3f" % [
+				str(metric_name),
+				float(row.get("short_avg", 0.0)),
+				float(row.get("long_avg", 0.0)),
+				float(row.get("delta", 0.0)),
+			])
+	var trend_items: Array = convergence_trend_row.get("items", [])
+	for item in trend_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s" % [status, str(row.get("type", "")), str(row.get("value", row.get("limit", "")))])
+
+	lines.append("")
+	lines.append("## Exception Lifecycle Linkage")
+	lines.append("- linkage_failures: %d / %d" % [
+		int(lifecycle_linkage_row.get("linkage_failures", 0)),
+		int(lifecycle_linkage_row.get("max_linkage_failures", 0)),
+	])
+	lines.append("- transition_count: %d / %d" % [
+		int(lifecycle_linkage_row.get("transition_count", 0)),
+		int(lifecycle_linkage_row.get("min_transition_count", 0)),
+	])
+	lines.append("- state_counts: %s" % JSON.stringify(lifecycle_linkage_row.get("state_counts", {})))
+	var linkage_items: Array = lifecycle_linkage_row.get("items", [])
+	for item in linkage_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s" % [status, str(row.get("type", "")), str(row.get("value", row.get("limit", "")))])
+
+	lines.append("")
+	lines.append("## Visual-Performance Co-Gate")
+	lines.append("- baseline_report: %s" % str(cogate_row.get("baseline_report", "")))
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(cogate_row.get("required_run_modes", []))))
+	lines.append("- alerts: total=%d/%d, critical=%d/%d, warning=%d/%d" % [
+		int(cogate_alerts.get("total", 0)),
+		int(cogate_row.get("max_alert_total", 0)),
+		int(cogate_alerts.get("critical", 0)),
+		int(cogate_row.get("max_alert_critical", 0)),
+		int(cogate_alerts.get("warning", 0)),
+		int(cogate_row.get("max_alert_warning", 0)),
+	])
+	lines.append("- scenario_failures: %d/%d" % [
+		int(cogate_row.get("scenario_failures", 0)),
+		int(cogate_row.get("max_scenario_failures", 0)),
+	])
+	lines.append("- cogate_failures: %d/%d" % [
+		int(cogate_row.get("cogate_failures", 0)),
+		int(cogate_row.get("max_cogate_failures", 0)),
+	])
+	var cogate_items: Array = cogate_row.get("items", [])
+	for item in cogate_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("scenario", ""))),
+				str(row.get("limit", "")),
+			])
+
+	lines.append("")
+	lines.append("## Co-Gate Threshold Template")
+	lines.append("- run_mode: %s" % str(cogate_template_row.get("run_mode", "")))
+	lines.append("- template: %s" % str(cogate_template_row.get("template", "")))
+	var cogate_template_errors: Array = cogate_template_row.get("errors", [])
+	for template_error in cogate_template_errors:
+		lines.append("- error: %s" % str(template_error))
+
+	lines.append("")
+	lines.append("## Cross-Platform Alignment")
+	lines.append("- history_file: %s" % str(alignment_row.get("history_file", "")))
+	lines.append("- aggregation_window: %d" % int(alignment_row.get("aggregation_window", 0)))
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(alignment_row.get("required_run_modes", []))))
+	lines.append("- required_backends: %s" % ", ".join(_sanitize_string_array(alignment_row.get("required_backends", []))))
+	lines.append("- alignment_failures: %d/%d" % [
+		int(alignment_row.get("alignment_failures", 0)),
+		int(alignment_row.get("max_alignment_failures", 0)),
+	])
+	lines.append("- missing_backends: %s" % ", ".join(_sanitize_string_array(alignment_row.get("missing_backends", []))))
+	lines.append("- missing_run_mode_entries: %s" % ", ".join(_sanitize_string_array(alignment_row.get("missing_run_mode_entries", []))))
+	var alignment_metric_deltas: Dictionary = alignment_row.get("metric_deltas", {})
+	for metric_name in alignment_metric_deltas.keys():
+		var metric_row_variant: Variant = alignment_metric_deltas.get(metric_name, {})
+		if metric_row_variant is Dictionary:
+			var metric_row: Dictionary = metric_row_variant
+			lines.append("- %s: min=%.3f max=%.3f delta=%.3f samples=%d" % [
+				str(metric_name),
+				float(metric_row.get("min", 0.0)),
+				float(metric_row.get("max", 0.0)),
+				float(metric_row.get("delta", 0.0)),
+				int(metric_row.get("samples", 0)),
+			])
+	var alignment_items: Array = alignment_row.get("items", [])
+	for item in alignment_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("delta", row.get("entries", "")))),
+				str(row.get("limit", "")),
+			])
+
+	var pressure_standard_row: Dictionary = report.get("pressure_scenario_standardization", {})
+	lines.append("")
+	lines.append("## Pressure Scenario Standardization")
+	lines.append("- baseline_targets_file: %s" % str(pressure_standard_row.get("baseline_targets_file", "")))
+	lines.append("- baseline_report: %s" % str(pressure_standard_row.get("baseline_report", "")))
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(pressure_standard_row.get("required_run_modes", []))))
+	lines.append("- required_scenarios: %s" % ", ".join(_sanitize_string_array(pressure_standard_row.get("required_scenarios", []))))
+	lines.append("- standardization_failures: %d/%d" % [
+		int(pressure_standard_row.get("standardization_failures", 0)),
+		int(pressure_standard_row.get("max_standardization_failures", 0)),
+	])
+	var pressure_standard_items: Array = pressure_standard_row.get("items", [])
+	for item in pressure_standard_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("scenario", ""))),
+				str(row.get("limit", "")),
+			])
+
+	var refinement_row: Dictionary = report.get("alignment_dashboard_refinement", {})
+	lines.append("")
+	lines.append("## Alignment Dashboard Refinement")
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(refinement_row.get("required_run_modes", []))))
+	lines.append("- score: %.3f" % float(refinement_row.get("score", 0.0)))
+	lines.append("- severity: %s" % str(refinement_row.get("severity", "normal")))
+	lines.append("- dashboard_failures: %d/%d" % [
+		int(refinement_row.get("dashboard_failures", 0)),
+		int(refinement_row.get("max_dashboard_failures", 0)),
+	])
+	var refinement_items: Array = refinement_row.get("items", [])
+	for item in refinement_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("score", ""))),
+				str(row.get("limit", "")),
+			])
+
+	var convergence_gate_row: Dictionary = report.get("pressure_alignment_convergence_gate", {})
+	lines.append("")
+	lines.append("## Pressure Alignment Convergence Gate")
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(convergence_gate_row.get("required_run_modes", []))))
+	lines.append("- required_backends: %s" % ", ".join(_sanitize_string_array(convergence_gate_row.get("required_backends", []))))
+	lines.append("- convergence_failures: %d/%d" % [
+		int(convergence_gate_row.get("convergence_failures", 0)),
+		int(convergence_gate_row.get("max_convergence_failures", 0)),
+	])
+	lines.append("- standardization_failures: %d/%d" % [
+		int(convergence_gate_row.get("standardization_failures", 0)),
+		int(convergence_gate_row.get("max_standardization_failures", 0)),
+	])
+	lines.append("- alignment_failures: %d/%d" % [
+		int(convergence_gate_row.get("alignment_failures", 0)),
+		int(convergence_gate_row.get("max_alignment_failures", 0)),
+	])
+	lines.append("- dashboard_failures: %d/%d severity=%s" % [
+		int(convergence_gate_row.get("dashboard_failures", 0)),
+		int(convergence_gate_row.get("max_dashboard_failures", 0)),
+		str(convergence_gate_row.get("dashboard_severity", "ok")),
+	])
+	var convergence_gate_items: Array = convergence_gate_row.get("items", [])
+	for item in convergence_gate_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("backend", ""))),
+				str(row.get("limit", "")),
+			])
+
+	var cycle_row: Dictionary = report.get("regression_cycle_window_governance", {})
+	lines.append("")
+	lines.append("## Regression Cycle Window Governance")
+	lines.append("- history_file: %s" % str(cycle_row.get("history_file", "")))
+	lines.append("- cycle_window_size: %d" % int(cycle_row.get("cycle_window_size", 0)))
+	lines.append("- min_cycle_entries: %d" % int(cycle_row.get("min_cycle_entries", 0)))
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(cycle_row.get("required_run_modes", []))))
+	lines.append("- required_backends: %s" % ", ".join(_sanitize_string_array(cycle_row.get("required_backends", []))))
+	lines.append("- window_entries: %d" % int(cycle_row.get("window_entries", 0)))
+	lines.append("- cycle_failures: %d/%d" % [
+		int(cycle_row.get("cycle_failures", 0)),
+		int(cycle_row.get("max_cycle_failures", 0)),
+	])
+	lines.append("- warning_delta: %d / %d" % [
+		int(cycle_row.get("warning_delta", 0)),
+		int(cycle_row.get("max_warning_delta", 0)),
+	])
+	lines.append("- blocker_delta: %d / %d" % [
+		int(cycle_row.get("blocker_delta", 0)),
+		int(cycle_row.get("max_blocker_delta", 0)),
+	])
+	lines.append("- alignment_score_delta: %.3f / %.3f" % [
+		float(cycle_row.get("alignment_score_delta", 0.0)),
+		float(cycle_row.get("max_alignment_score_delta", 0.0)),
+	])
+	var cycle_items: Array = cycle_row.get("items", [])
+	for item in cycle_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("entries", ""))),
+				str(row.get("limit", "")),
+			])
+
+	var adaptive_row: Dictionary = report.get("multi_cycle_adaptive_gate", {})
+	lines.append("")
+	lines.append("## Multi-Cycle Adaptive Gate")
+	lines.append("- history_file: %s" % str(adaptive_row.get("history_file", "")))
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(adaptive_row.get("required_run_modes", []))))
+	lines.append("- required_backends: %s" % ", ".join(_sanitize_string_array(adaptive_row.get("required_backends", []))))
+	lines.append("- adaptive_failures: %d/%d" % [
+		int(adaptive_row.get("adaptive_failures", 0)),
+		int(adaptive_row.get("max_adaptive_failures", 0)),
+	])
+	var adaptive_window_analysis: Dictionary = adaptive_row.get("window_analysis", {})
+	for window_name in ["short", "mid", "long"]:
+		var window_row: Dictionary = adaptive_window_analysis.get(window_name, {})
+		if window_row.is_empty():
+			continue
+		lines.append("- %s_window: entries=%d/%d, warning_slope=%.3f/%.3f, blocker_slope=%.3f/%.3f" % [
+			window_name,
+			int(window_row.get("entries", 0)),
+			int(adaptive_row.get("min_window_entries", 0)),
+			float(window_row.get("warning_slope", 0.0)),
+			float(window_row.get("max_warning_slope", 0.0)),
+			float(window_row.get("blocker_slope", 0.0)),
+			float(window_row.get("max_blocker_slope", 0.0)),
+		])
+	var adaptive_items: Array = adaptive_row.get("items", [])
+	for item in adaptive_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("backend", ""))),
+				str(row.get("limit", "")),
+			])
+
+	var feedback_row: Dictionary = report.get("release_feedback_governance", {})
+	lines.append("")
+	lines.append("## Release Feedback Governance")
+	lines.append("- history_file: %s" % str(feedback_row.get("history_file", "")))
+	lines.append("- feedback_window_size: %d" % int(feedback_row.get("feedback_window_size", 0)))
+	lines.append("- min_feedback_entries: %d" % int(feedback_row.get("min_feedback_entries", 0)))
+	lines.append("- required_run_modes: %s" % ", ".join(_sanitize_string_array(feedback_row.get("required_run_modes", []))))
+	lines.append("- required_backends: %s" % ", ".join(_sanitize_string_array(feedback_row.get("required_backends", []))))
+	lines.append("- feedback_failures: %d/%d" % [
+		int(feedback_row.get("feedback_failures", 0)),
+		int(feedback_row.get("max_feedback_failures", 0)),
+	])
+	lines.append("- closure_rate: %.3f / %.3f" % [
+		float(feedback_row.get("closure_rate", 1.0)),
+		float(feedback_row.get("min_closure_rate", 0.0)),
+	])
+	lines.append("- unresolved_issues: %d / %d" % [
+		(feedback_row.get("unresolved_issues", []) as Array).size(),
+		int(feedback_row.get("max_unresolved_issues", 0)),
+	])
+	var feedback_items: Array = feedback_row.get("items", [])
+	for item in feedback_items:
+		if item is Dictionary:
+			var row: Dictionary = item
+			var ok: bool = bool(row.get("ok", false))
+			var status: String = "OK" if ok else "FAIL"
+			lines.append("- [%s] %s -> %s / %s" % [
+				status,
+				str(row.get("type", "")),
+				str(row.get("value", row.get("issues", ""))),
+				str(row.get("limit", "")),
+			])
 
 	lines.append("")
 	lines.append("## Items")

@@ -112,6 +112,96 @@
       "boss_color": "#ff6848"
     }
   },
+  "route_arc_profiles": {
+    "balance": {
+      "title": "Dusk Path",
+      "summary": "You walk between grace and ruin, preserving both endings until the final threshold decides which will answer.",
+      "camp_focus": "Use camp pauses to steady both gauges and keep route choices flexible.",
+      "fragment_hint": "Balanced runs reveal fragments tied to thresholds, choirs and forgotten oaths."
+    },
+    "redeem": {
+      "title": "Road of Grace",
+      "summary": "Mercy and restraint sharpen your march, turning each chapter into a vow to hold the line for those behind you.",
+      "camp_focus": "Spend camp windows on sustain, purification and route safety to preserve the redeem ending axis.",
+      "fragment_hint": "Redeem-heavy runs favor shrine, survivor and benediction fragments."
+    },
+    "fall": {
+      "title": "Crown of Ruin",
+      "summary": "Power answers quickly when you choose appetite over mercy, but every shortcut tightens the abyss around the camp.",
+      "camp_focus": "Use camp pauses to convert pressure into offense before corruption overwhelms the route.",
+      "fragment_hint": "Fallen routes expose arena, threshold and throne-side fragments sooner."
+    }
+  },
+  "camp_reflections": {
+    "chapter_1": {
+      "balance": {
+        "title": "Ashen Embers",
+        "body": "The first camp still smells of rain and ash. You have not chosen who to become, and the silence keeps asking.",
+        "fragment_hint": "Search the shrine and survivor events to recover the camp's first missing memories."
+      },
+      "redeem": {
+        "title": "Held Oath",
+        "body": "The camp sees your restraint and answers with steadier hands; every ration shared here strengthens the vows ahead.",
+        "fragment_hint": "Grace-aligned choices in chapter_1 reveal the earliest chapel fragments."
+      },
+      "fall": {
+        "title": "Ashen Appetite",
+        "body": "Your answers come faster when they cost someone else. The camp grows quiet, but your power grows louder.",
+        "fragment_hint": "Void-leaning choices in chapter_1 uncover relic and afterglow fragments tied to the fall route."
+      }
+    },
+    "chapter_2": {
+      "balance": {
+        "title": "Forge Interlude",
+        "body": "The forge room offers a pause to weigh steel against hunger. Neither can carry the whole war alone.",
+        "fragment_hint": "Chapter_2 event rooms carry forge and arena memories that shape both middle endings."
+      },
+      "redeem": {
+        "title": "Tempered Faith",
+        "body": "At the furnace halt, each tempered edge feels like a promise not to let strength outrun purpose.",
+        "fragment_hint": "Choose tempered routes and defensive chapter effects to preserve redeem momentum into the cathedral."
+      },
+      "fall": {
+        "title": "Greedy Slag",
+        "body": "The foundry teaches you how easily survival becomes appetite when every spark can be sold for one more blade.",
+        "fragment_hint": "Arena and salvage choices in chapter_2 accelerate fall-aligned fragment discovery."
+      }
+    },
+    "chapter_3": {
+      "balance": {
+        "title": "Aurora Vigil",
+        "body": "The cathedral frost preserves every doubt. At this camp, balance means carrying both halo and abyss without surrendering to either.",
+        "fragment_hint": "Chapter_3 whispers and reliquary fragments reveal the road of dusk more clearly than any prayer."
+      },
+      "redeem": {
+        "title": "Frozen Benediction",
+        "body": "The aurora camp feels almost holy; every careful choice here keeps the choir within reach of forgiveness.",
+        "fragment_hint": "Redeem momentum in chapter_3 favors cathedral and guardian-style memory fragments."
+      },
+      "fall": {
+        "title": "Whispered Ruin",
+        "body": "The frost no longer quiets your hunger. Even the choir begins to sound like a door worth breaking.",
+        "fragment_hint": "Void pressure and whisper bargains in chapter_3 point toward the fall ending."
+      }
+    },
+    "chapter_4": {
+      "balance": {
+        "title": "Last Ember",
+        "body": "No route remains untouched in the final camp. Balance now means choosing what survives the throne, not what stays pure.",
+        "fragment_hint": "Threshold and route fragments decide which ending still listens when the void opens."
+      },
+      "redeem": {
+        "title": "Grace Before Dawn",
+        "body": "This final ember is small, but it is enough. The camp waits on your last answer, not your loudest weapon.",
+        "fragment_hint": "Benediction and threshold choices set the redeem ending arc before the final boss."
+      },
+      "fall": {
+        "title": "Crown Before Collapse",
+        "body": "The last camp is no refuge now, only a staging ground. The throne ahead already knows your name.",
+        "fragment_hint": "The final threshold and ruin-side choices complete the fall route memory chain."
+      }
+    }
+  },
   "chapter_events": {
     "chapter_1": [
       {
@@ -633,6 +723,301 @@
     "memory_meta_reliquary": {
       "title": "Fragment XXII: Reliquary Oath",
       "text": "Back at camp, the reliquary glowed with stolen starlight, reminding you that every run rewrites your covenant."
+    },
+    "memory_ch1_event_shrine": {
+      "title": "Fragment XXIII: Shrine Dust",
+      "text": "The ruined shrine kept a trace of incense in its stones, and for one heartbeat you remembered the choir that once answered your prayer."
+    },
+    "memory_ch1_event_survivor": {
+      "title": "Fragment XXIV: Borrowed Rations",
+      "text": "You learned that a single loaf shared in darkness can bind a camp more tightly than any decree shouted in daylight."
+    },
+    "memory_ch1_afterglow": {
+      "title": "Fragment XXV: Afterglow Debt",
+      "text": "The old light did not absolve you; it only showed how many promises were still unpaid beneath the ash."
+    },
+    "memory_ch2_event_arena": {
+      "title": "Fragment XXVI: Arena Brand",
+      "text": "Every circle of scorched iron bore witness to the bargains heroes made when victory started to feel like appetite."
+    },
+    "memory_ch3_event_whispers": {
+      "title": "Fragment XXVII: Icebound Names",
+      "text": "In the cathedral frost, names of the fallen drifted like breath, and each one struck with more weight than steel."
+    },
+    "memory_ch4_event_threshold": {
+      "title": "Fragment XXVIII: Last Threshold",
+      "text": "Before the final gate, grace and ruin stood so close that only the steadiness of your steps kept them apart."
+    },
+    "memory_route_redeem": {
+      "title": "Fragment XXIX: Road of Grace",
+      "text": "Redemption was never a single choice, but a road paved by refusing power each time it begged to be easy."
+    },
+    "memory_route_fall": {
+      "title": "Fragment XXX: Road of Ruin",
+      "text": "Every cruel shortcut carved a straighter line to the throne, until the throne itself began to look like mercy."
+    },
+    "memory_route_balance": {
+      "title": "Fragment XXXI: Road of Dusk",
+      "text": "To walk between hymn and curse meant carrying both, and letting neither decide who would rise from the dust."
+    },
+    "memory_camp_blacksmith": {
+      "title": "Fragment XXXII: Hammer Between Worlds",
+      "text": "At the camp forge, each repaired edge reminded you that survival is built as much in the quiet between battles as in the strike itself."
+    },
+    "memory_camp_oracle": {
+      "title": "Fragment XXXIII: Quiet Beneath Embers",
+      "text": "When the altar dimmed and the camp fell silent, the memories that remained were the ones no ending could take from you."
+    },
+    "memory_fs1_balance": {
+      "title": "Fragment XXXIV: Rift Between Bells",
+      "text": "Inside the broken hours of the rift, dusk taught you that memory survives by learning how to loop without surrendering to either hymn or ruin."
+    },
+    "memory_fs1_redeem": {
+      "title": "Fragment XXXV: Choir Beneath the Rift",
+      "text": "The choir answered from below the ward, proving that vows kept in the upper halls can still echo through the fractures under time itself."
+    },
+    "memory_fs1_fall": {
+      "title": "Fragment XXXVI: Reliquary of Broken Hours",
+      "text": "Every shattered minute in the rift stacked like a relic, and each one remembered the bargains that first taught you to wear ruin without flinching."
+    },
+    "memory_fs2_balance": {
+      "title": "Fragment XXXVII: Forge of Dusk",
+      "text": "In the genesis chain, balance was not restraint but craft: a way to temper grace and ruin until neither could break the other outright."
+    },
+    "memory_fs2_redeem": {
+      "title": "Fragment XXXVIII: Hearth of First Flame",
+      "text": "The forge remembered a first fire older than the camp, and in its glow every rescued vow returned as metal that refused to bend toward despair."
+    },
+    "memory_fs2_fall": {
+      "title": "Fragment XXXIX: Anvil of Ruin",
+      "text": "At the last anvil, ruin ceased to feel like a curse and became a method: hammer, spark, and hunger shaping the same relentless edge."
+    }
+  },
+  "ending_payoff_profiles": {
+    "nar_ending_redeem": {
+      "title": "Grace Restored",
+      "summary": "Your vows hold through the final gate, turning the whole run into proof that restraint can still outlast the abyss.",
+      "legacy": "The camp survives because you chose to carry everyone through the last threshold, not just yourself.",
+      "fragment_hook": "Redeem endings complete the choir-side fragment chain and strengthen shrine/survivor memory routes."
+    },
+    "nar_ending_fall": {
+      "title": "Ruin Enthroned",
+      "summary": "The run resolves as conquest: every shortcut, bargain, and appetite now crowns the fall ending with deliberate force.",
+      "legacy": "The camp remembers your victories with fear, and the abyss answers your name before any prayer can rise.",
+      "fragment_hook": "Fall endings complete arena, threshold, and throne-side fragments that only ruthless routes can expose."
+    },
+    "nar_ending_balance": {
+      "title": "Dusk Kept Intact",
+      "summary": "Neither halo nor abyss claims the final word; the run lands in the narrow space where both are forced to coexist.",
+      "legacy": "The borderlands endure because you kept every chapter from collapsing fully into grace or ruin.",
+      "fragment_hook": "Balance endings bind the threshold, reliquary, and route-memory fragments into a complete dusk archive."
+    }
+  },
+  "epilogue_chains": {
+    "nar_ending_redeem": [
+      "At first light the choir returns to the camp in broken harmony, answering the vows you carried through the final gate.",
+      "The survivors rebuild the first ward with your fragments laid into the stone, turning memory into shelter.",
+      "When the embers dim, the reliquary still glows - proof that grace survived the run because someone chose to keep it costly."
+    ],
+    "nar_ending_fall": [
+      "The ash wind bends before you, and the camp learns that safety can arrive wearing the same face as dread.",
+      "Relics once buried under chapel stone now answer faster than prayers, each one sharpened by the bargains you accepted.",
+      "At the final watch, the throne no longer feels distant; it waits in every silence the camp can no longer fill."
+    ],
+    "nar_ending_balance": [
+      "Twilight settles over the camp without surrendering to either hymn or curse, and the borderlands breathe for one more cycle.",
+      "The fragments you gathered no longer argue over who was right; together they map the price of surviving both paths.",
+      "When the altar fades, dusk remains - not as compromise, but as a route only this run could have defended."
+    ]
+  },
+  "epilogue_branch_profiles": {
+    "nar_ending_redeem": {
+      "first_unlock": {
+        "title": "Choir Restored",
+        "body": "Your first redeem ending restores the choir's answer in full, proving the camp can survive without surrendering to the void."
+      },
+      "repeat_unlock": {
+        "title": "Grace Remembered",
+        "body": "Each return along the redeem route reveals new names, hymns, and vows inside the same dawn."
+      },
+      "archive_hook": "The altar now archives choir-side threads that point toward a sealed path beneath the first ward."
+    },
+    "nar_ending_fall": {
+      "first_unlock": {
+        "title": "Throne Claimed",
+        "body": "Your first fall ending teaches the camp that ruin can protect just as surely as it can consume."
+      },
+      "repeat_unlock": {
+        "title": "Ruin Rehearsed",
+        "body": "Repeated fall endings reveal how the throne keeps changing shape each time the abyss answers you."
+      },
+      "archive_hook": "Fragments tied to the final threshold now whisper about a lower vault that only broken vows can open."
+    },
+    "nar_ending_balance": {
+      "first_unlock": {
+        "title": "Dusk Archive Opened",
+        "body": "Your first balance ending reveals that the borderlands were always an archive, not a compromise."
+      },
+      "repeat_unlock": {
+        "title": "Twilight Refrain",
+        "body": "Each balance repeat clarifies another route between grace and ruin, widening the archive without breaking it."
+      },
+      "archive_hook": "The reliquary begins to chart hidden crossings that hint at a second sealed stratum below the altar."
+    }
+  },
+  "fragment_recap_profiles": {
+    "balance": {
+      "title": "Dusk Archive",
+      "summary": "Balanced triggers now read like a stitched archive, linking shrines, reliquaries, and thresholds into one route memory.",
+      "pace_hint": "Keep rotating camp, event, and transition fragments to preserve the dusk cadence."
+    },
+    "redeem": {
+      "title": "Grace Ledger",
+      "summary": "Redeem triggers resolve as a ledger of rescued vows, revealing how camp choices soften later endings.",
+      "pace_hint": "Chapter transitions and camp reflections are the fastest way to complete the choir-side fragment chain."
+    },
+    "fall": {
+      "title": "Ruin Chronicle",
+      "summary": "Fall triggers collect as a ruthless chronicle, where arena, threshold, and throne fragments tighten into one descent.",
+      "pace_hint": "Void-leaning event resolutions and late camp echoes accelerate the ruin-side fragment tempo."
+    }
+  },
+  "hidden_layer_hooks": {
+    "balance": {
+      "target_layer": "FS2",
+      "title": "Twilight Archive Gate",
+      "teaser": "The altar records crossings that do not exist on the main route map.",
+      "unlock_hint": "Sustain the dusk route and complete the archive recap chain to expose the second hidden stratum."
+    },
+    "redeem": {
+      "target_layer": "FS1",
+      "title": "Choir Undercrypt",
+      "teaser": "Beneath the restored ward, a sealed choir path answers only to vows kept at the final gate.",
+      "unlock_hint": "Finish redeem-side fragments and preserve the grace route through the last camp to uncover FS1."
+    },
+    "fall": {
+      "target_layer": "FS1",
+      "title": "Abyssal Reliquary",
+      "teaser": "The throne's echo now points below the chapel floor, where failed oaths are stacked like relics.",
+      "unlock_hint": "Complete ruin-side fragment chains and carry a fall ending into the archive to uncover FS1."
+    }
+  },
+  "hidden_layer_story_profiles": {
+    "FS1": {
+      "balance": {
+        "title": "Time Rift: Dusk Loop",
+        "body": "The rift archives a path where dusk survives by learning every possible ending without kneeling to any one of them.",
+        "archive_echo": "Each loop keeps a different bell note, and together they chart a route only the borderlands can hold.",
+        "ending_link": "nar_ending_balance",
+        "fragment_id": "memory_fs1_balance"
+      },
+      "redeem": {
+        "title": "Time Rift: Choir Refrain",
+        "body": "Grace survives the fracture by returning as rhythm: a choir hidden below the ward, answering every vow you carried into the broken hours.",
+        "archive_echo": "The undercrypt remembers which promises held when time itself started to split.",
+        "ending_link": "nar_ending_redeem",
+        "fragment_id": "memory_fs1_redeem"
+      },
+      "fall": {
+        "title": "Time Rift: Broken Hours",
+        "body": "In the reliquary below the chapel floor, ruin keeps perfect time, preserving every bargain that once made victory feel easier than mercy.",
+        "archive_echo": "The rift does not condemn the fall; it catalogs how often power first arrived disguised as necessity.",
+        "ending_link": "nar_ending_fall",
+        "fragment_id": "memory_fs1_fall"
+      }
+    },
+    "FS2": {
+      "balance": {
+        "title": "Genesis Forge: Dusk Temper",
+        "body": "The forge proves that balance can be built, not merely endured, when grace and ruin are tempered into one deliberate edge.",
+        "archive_echo": "Every trial leaves a seam between opposites, and the archive records how those seams keep the world from splitting apart.",
+        "ending_link": "nar_ending_balance",
+        "fragment_id": "memory_fs2_balance"
+      },
+      "redeem": {
+        "title": "Genesis Forge: First Flame",
+        "body": "At the sealed hearth, the first flame answers the redeemed path by teaching the forge to remember salvation as labor instead of miracle.",
+        "archive_echo": "What the camp once called grace now returns as a craft the survivors can hold in their own hands.",
+        "ending_link": "nar_ending_redeem",
+        "fragment_id": "memory_fs2_redeem"
+      },
+      "fall": {
+        "title": "Genesis Forge: Ruin Temper",
+        "body": "The genesis chain reveals how ruin can harden into method, turning appetite, relic, and fire into a doctrine the forge refuses to forget.",
+        "archive_echo": "Each strike on the anvil records a victory bought too quickly, then asks whether that speed was the point all along.",
+        "ending_link": "nar_ending_fall",
+        "fragment_id": "memory_fs2_fall"
+      }
+    }
+  },
+  "fragment_trigger_profiles": {
+    "chapter_1": {
+      "camp": {
+        "balance": "memory_meta_campfire",
+        "redeem": "memory_ch1_event_shrine",
+        "fall": "memory_ch1_afterglow"
+      },
+      "event": {
+        "balance": "memory_ch1_event_survivor",
+        "redeem": "memory_ch1_event_shrine",
+        "fall": "memory_ch1_afterglow"
+      },
+      "transition": {
+        "balance": "memory_route_balance",
+        "redeem": "memory_route_redeem",
+        "fall": "memory_route_fall"
+      }
+    },
+    "chapter_2": {
+      "camp": {
+        "balance": "memory_camp_blacksmith",
+        "redeem": "memory_ch2_event_forge",
+        "fall": "memory_ch2_event_arena"
+      },
+      "event": {
+        "balance": "memory_ch2_event_forge_ii",
+        "redeem": "memory_ch2_event_forge",
+        "fall": "memory_ch2_event_arena"
+      },
+      "transition": {
+        "balance": "memory_meta_reliquary",
+        "redeem": "memory_route_redeem",
+        "fall": "memory_route_fall"
+      }
+    },
+    "chapter_3": {
+      "camp": {
+        "balance": "memory_camp_oracle",
+        "redeem": "memory_ch3_event_sanctum",
+        "fall": "memory_ch3_event_whispers"
+      },
+      "event": {
+        "balance": "memory_ch3_event_sanctum_ii",
+        "redeem": "memory_ch3_event_sanctum",
+        "fall": "memory_ch3_event_whispers"
+      },
+      "transition": {
+        "balance": "memory_route_balance",
+        "redeem": "memory_route_redeem",
+        "fall": "memory_route_fall"
+      }
+    },
+    "chapter_4": {
+      "camp": {
+        "balance": "memory_camp_oracle",
+        "redeem": "memory_ch4_event_threshold",
+        "fall": "memory_ch4_event_void"
+      },
+      "event": {
+        "balance": "memory_meta_reliquary",
+        "redeem": "memory_ch4_event_threshold",
+        "fall": "memory_ch4_event_void_ii"
+      },
+      "transition": {
+        "balance": "memory_route_balance",
+        "redeem": "memory_route_redeem",
+        "fall": "memory_route_fall"
+      }
     }
   },
   "endings": {

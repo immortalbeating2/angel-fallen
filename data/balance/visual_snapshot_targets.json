@@ -1,5 +1,5 @@
 {
-  "channel": "chapter_snapshot_v12",
+  "channel": "chapter_snapshot_v19",
   "snapshots": {
     "chapter_1_world": {
       "scene": "res://scenes/game/game_world.tscn",
@@ -401,7 +401,21 @@
       "Approval Audit Trail",
       "Approval History Archive",
       "Approval Template",
-      "Release Candidate Tracking"
+      "Release Candidate Tracking",
+      "Stability Scoring",
+      "Convergence Dashboard",
+      "CI Signal Contract",
+      "Convergence Trend Reinforcement",
+      "Exception Lifecycle Linkage",
+      "Visual-Performance Co-Gate",
+      "Co-Gate Threshold Template",
+      "Cross-Platform Alignment",
+      "Pressure Scenario Standardization",
+      "Alignment Dashboard Refinement",
+      "Pressure Alignment Convergence Gate",
+      "Regression Cycle Window Governance",
+      "Multi-Cycle Adaptive Gate",
+      "Release Feedback Governance"
     ],
     "require_zero_blockers": true,
     "require_zero_warnings_for_strategies": [
@@ -526,6 +540,334 @@
     "max_avg_warnings": 1.0,
     "max_total_blockers": 0,
     "max_tracking_failures": 0
+  },
+  "stability_scoring": {
+    "weights": {
+      "matching_runs": 0.3,
+      "avg_warnings": 0.25,
+      "total_blockers": 0.35,
+      "tracking_failures": 0.1
+    },
+    "failure_caps": {
+      "max_avg_warnings": 2.0,
+      "max_total_blockers": 2,
+      "max_tracking_failures": 2
+    },
+    "confidence": {
+      "reference_runs": 8,
+      "min_confidence": 0.4
+    },
+    "score_round_digits": 3
+  },
+  "stability_tiers": {
+    "default_tier": "D",
+    "tiers": [
+      {
+        "name": "S",
+        "min_score": 95.0,
+        "max_avg_warnings": 0.2,
+        "max_total_blockers": 0,
+        "max_tracking_failures": 0,
+        "min_confidence": 0.8
+      },
+      {
+        "name": "A",
+        "min_score": 85.0,
+        "max_avg_warnings": 0.5,
+        "max_total_blockers": 0,
+        "max_tracking_failures": 0,
+        "min_confidence": 0.7
+      },
+      {
+        "name": "B",
+        "min_score": 70.0,
+        "max_avg_warnings": 1.0,
+        "max_total_blockers": 0,
+        "max_tracking_failures": 1,
+        "min_confidence": 0.55
+      },
+      {
+        "name": "C",
+        "min_score": 50.0,
+        "max_avg_warnings": 1.5,
+        "max_total_blockers": 1,
+        "max_tracking_failures": 1,
+        "min_confidence": 0.4
+      },
+      {
+        "name": "D",
+        "min_score": 0.0,
+        "max_avg_warnings": 2.0,
+        "max_total_blockers": 2,
+        "max_tracking_failures": 2,
+        "min_confidence": 0.0
+      }
+    ]
+  },
+  "convergence_dashboard": {
+    "max_approval_failures": 0,
+    "max_tracking_failures": 0,
+    "max_trace_failures": 0,
+    "max_manifest_failures": 0,
+    "max_blockers": 0,
+    "max_warnings": 2,
+    "max_dashboard_failures": 0
+  },
+  "ci_signal_contract": {
+    "required_fields": [
+      "run_mode",
+      "strategy",
+      "stability_score",
+      "stability_tier",
+      "confidence",
+      "dashboard_failures"
+    ],
+    "tier_requirements": {
+      "rehearsal": "C",
+      "trend_gate": "B",
+      "release_candidate": "B",
+      "release_blocking": "A"
+    },
+    "max_contract_failures": 0
+  },
+  "convergence_trend_reinforcement": {
+    "history_file": "user://visual_snapshot_approval_archive.json",
+    "long_window": 40,
+    "short_window": 12,
+    "min_samples": 6,
+    "required_metrics": [
+      "warnings",
+      "blockers",
+      "approval_failures",
+      "tracking_failures",
+      "dashboard_failures"
+    ],
+    "max_worsening_metrics": 1,
+    "max_worsening_delta": 0.25,
+    "min_improving_metrics": 0,
+    "min_improvement_delta": 0.1,
+    "max_trend_failures": 0
+  },
+  "exception_lifecycle_linkage": {
+    "required_states": [],
+    "stale_idle_runs": 1,
+    "min_transition_count": 0,
+    "max_orphan_entries": 0,
+    "max_unlinked_reclaims": 0,
+    "max_unlinked_expired": 0,
+    "max_linkage_failures": 0
+  },
+  "visual_performance_cogate": {
+    "baseline_report": "user://quality_baseline_latest.json",
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "max_alert_total": 0,
+    "max_alert_critical": 0,
+    "max_alert_warning": 0,
+    "max_scenario_failures": 0,
+    "required_scenarios": [],
+    "max_frame_ms_ratio": 1.15,
+    "max_memory_mb_ratio": 1.1,
+    "max_cogate_failures": 0
+  },
+  "cogate_threshold_templates": {
+    "default_template": "standard",
+    "run_mode_templates": {
+      "rehearsal": "relaxed",
+      "trend_gate": "standard",
+      "release_candidate": "candidate",
+      "release_blocking": "blocking"
+    },
+    "templates": {
+      "relaxed": {
+        "max_alert_total": 2,
+        "max_alert_critical": 0,
+        "max_alert_warning": 2,
+        "max_scenario_failures": 1,
+        "max_frame_ms_ratio": 1.25,
+        "max_memory_mb_ratio": 1.2,
+        "max_cogate_failures": 1
+      },
+      "standard": {
+        "max_alert_total": 1,
+        "max_alert_critical": 0,
+        "max_alert_warning": 1,
+        "max_scenario_failures": 0,
+        "max_frame_ms_ratio": 1.2,
+        "max_memory_mb_ratio": 1.15,
+        "max_cogate_failures": 0
+      },
+      "candidate": {
+        "max_alert_total": 0,
+        "max_alert_critical": 0,
+        "max_alert_warning": 0,
+        "max_scenario_failures": 0,
+        "max_frame_ms_ratio": 1.15,
+        "max_memory_mb_ratio": 1.1,
+        "max_cogate_failures": 0
+      },
+      "blocking": {
+        "max_alert_total": 0,
+        "max_alert_critical": 0,
+        "max_alert_warning": 0,
+        "max_scenario_failures": 0,
+        "max_frame_ms_ratio": 1.1,
+        "max_memory_mb_ratio": 1.05,
+        "max_cogate_failures": 0
+      }
+    }
+  },
+  "cross_platform_alignment": {
+    "history_file": "user://visual_snapshot_approval_archive.json",
+    "aggregation_window": 80,
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "metric_limits": {
+      "performance_alert_total": 0,
+      "performance_alert_critical": 0,
+      "performance_alert_warning": 1,
+      "performance_scenario_failures": 0,
+      "performance_cogate_failures": 0
+    },
+    "max_missing_backends": 0,
+    "max_missing_run_modes": 0,
+    "max_alignment_failures": 0
+  },
+  "pressure_scenario_standardization": {
+    "baseline_targets_file": "res://data/balance/quality_baseline_targets.json",
+    "baseline_report": "user://quality_baseline_latest.json",
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_scenarios": [
+      "game_world_elite_pressure_medium",
+      "game_world_elite_pressure_high",
+      "game_world_elite_pressure_extreme",
+      "game_world_boss_pressure_endurance"
+    ],
+    "max_avg_frame_ms_ratio": 1.1,
+    "max_p95_frame_ms_ratio": 1.12,
+    "max_peak_memory_mb_ratio": 1.1,
+    "max_standardization_failures": 0
+  },
+  "alignment_dashboard_refinement": {
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "metric_weights": {
+      "performance_alert_total": 1.0,
+      "performance_alert_critical": 1.2,
+      "performance_alert_warning": 0.8,
+      "performance_scenario_failures": 1.2,
+      "performance_cogate_failures": 1.4
+    },
+    "missing_backend_weight": 1.0,
+    "missing_run_mode_weight": 1.0,
+    "watch_score_threshold": 0.35,
+    "critical_score_threshold": 0.7,
+    "max_dashboard_failures": 0
+  },
+  "pressure_alignment_convergence_gate": {
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "max_standardization_failures": 0,
+    "max_alignment_failures": 0,
+    "max_dashboard_failures": 0,
+    "max_critical_severity_count": 0,
+    "max_convergence_failures": 0
+  },
+  "regression_cycle_window_governance": {
+    "history_file": "user://visual_snapshot_approval_archive.json",
+    "cycle_window_size": 20,
+    "min_cycle_entries": 8,
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "max_warning_delta": 1,
+    "max_blocker_delta": 0,
+    "max_alignment_score_delta": 0.2,
+    "max_cycle_failures": 0
+  },
+  "multi_cycle_adaptive_gate": {
+    "history_file": "user://visual_snapshot_approval_archive.json",
+    "window_sizes": {
+      "short": 8,
+      "mid": 16,
+      "long": 32
+    },
+    "min_window_entries": 6,
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "max_warning_slopes": {
+      "short": 0.25,
+      "mid": 0.15,
+      "long": 0.1
+    },
+    "max_blocker_slopes": {
+      "short": 0.0,
+      "mid": 0.0,
+      "long": 0.0
+    },
+    "max_missing_run_modes": 0,
+    "max_missing_backends": 0,
+    "max_adaptive_failures": 0
+  },
+  "release_feedback_governance": {
+    "history_file": "user://visual_snapshot_approval_archive.json",
+    "feedback_window_size": 24,
+    "min_feedback_entries": 8,
+    "required_run_modes": [
+      "release_candidate",
+      "release_blocking"
+    ],
+    "required_backends": [
+      "linux_headless",
+      "windows_headless"
+    ],
+    "issue_metrics": [
+      "blockers",
+      "warnings",
+      "approval_failures",
+      "tracking_failures",
+      "dashboard_failures",
+      "contract_failures",
+      "performance_cogate_failures",
+      "performance_scenario_failures",
+      "pressure_standardization_failures",
+      "alignment_dashboard_failures"
+    ],
+    "min_closure_rate": 0.7,
+    "max_unresolved_issues": 2,
+    "max_missing_run_modes": 0,
+    "max_missing_backends": 0,
+    "max_feedback_failures": 0
   },
   "report_layers": {
     "world": {

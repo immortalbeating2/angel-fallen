@@ -3,6 +3,23 @@ extends GutTest
 const GAME_WORLD_SCENE_PATH := "res://scenes/game/game_world.tscn"
 
 
+func _set_room_plan(world: Node, room_index: int, chapter_id: String, room_type: String) -> void:
+	var room_plan_map_var: Variant = world.get("_room_plan_map")
+	var room_plan_map: Dictionary = {}
+	if room_plan_map_var is Dictionary:
+		room_plan_map = (room_plan_map_var as Dictionary).duplicate(true)
+
+	room_plan_map[room_index] = {
+		"chapter_id": chapter_id,
+		"chapter_index": int(chapter_id.trim_prefix("chapter_")),
+		"room_type": room_type,
+		"show_intro": false,
+		"next_rooms": [],
+		"previous_rooms": []
+	}
+	world.set("_room_plan_map", room_plan_map)
+
+
 func _find_room_index_for_chapter(world: Node, chapter_id: String) -> int:
 	var room_plan_map_var: Variant = world.get("_room_plan_map")
 	if not (room_plan_map_var is Dictionary):
@@ -342,6 +359,100 @@ func test_visual_profile_pulse_and_wave_factors_change_with_time() -> void:
 	var ambient_late: float = float(factors_late.get("ambient_wave", 0.0))
 	assert_ne(detail_early, detail_late, "Detail pulse factor should vary over time")
 	assert_ne(ambient_early, ambient_late, "Ambient wave factor should vary over time")
+
+
+func test_room_profiles_change_hazards_and_visual_profile_for_late_chapters() -> void:
+	var scene: PackedScene = load(GAME_WORLD_SCENE_PATH)
+	assert_not_null(scene, "game_world scene should load")
+	if scene == null:
+		return
+
+	var world: Node = scene.instantiate()
+	assert_not_null(world, "game_world scene should instantiate")
+	if world == null:
+		return
+
+	add_child_autofree(world)
+	await get_tree().process_frame
+
+	_set_room_plan(world, 101, "chapter_3", "combat")
+	_set_room_plan(world, 102, "chapter_3", "elite")
+	_set_room_plan(world, 103, "chapter_3", "boss")
+	_set_room_plan(world, 104, "chapter_3", "safe_camp")
+	_set_room_plan(world, 105, "chapter_4", "elite")
+
+	var chapter_3_combat: Array[String] = world.call("_get_hazards_for_room", 101)
+	var chapter_3_elite: Array[String] = world.call("_get_hazards_for_room", 102)
+	var chapter_3_boss: Array[String] = world.call("_get_hazards_for_room", 103)
+	var chapter_3_safe_camp: Array[String] = world.call("_get_hazards_for_room", 104)
+	var chapter_4_elite: Array[String] = world.call("_get_hazards_for_room", 105)
+	assert_eq(chapter_3_combat, ["ice_slide", "frostbite"], "chapter_3 combat hazards should keep the base frozen pair")
+	assert_true(chapter_3_elite.has("blizzard"), "chapter_3 elite hazards should add blizzard pressure")
+	assert_true(chapter_3_boss.has("crystal_reflection"), "chapter_3 boss hazards should add crystal_reflection")
+	assert_eq(chapter_3_safe_camp.size(), 0, "safe camp should clear active hazards")
+	assert_true(chapter_4_elite.has("spatial_distortion"), "chapter_4 elite hazards should add spatial_distortion")
+
+	var chapter_3_combat_profile: Dictionary = world.call("_get_chapter_visual_profile", 101)
+	var chapter_3_boss_profile: Dictionary = world.call("_get_chapter_visual_profile", 103)
+	assert_gt(float(chapter_3_boss_profile.get("detail_alpha", 0.0)), float(chapter_3_combat_profile.get("detail_alpha", 0.0)), "boss room visual profile should intensify detail alpha")
+	assert_eq(str(chapter_3_boss_profile.get("detail_tint", "")), "#E6F7FF", "boss room visual profile should apply the crystal reflection tint override")
+
+
+func test_new_environment_hazards_affect_status_and_speed() -> void:
+	var scene: PackedScene = load(GAME_WORLD_SCENE_PATH)
+	assert_not_null(scene, "game_world scene should load")
+	if scene == null:
+		return
+
+	var world: Node = scene.instantiate()
+	assert_not_null(world, "game_world scene should instantiate")
+	if world == null:
+		return
+
+	add_child_autofree(world)
+	await get_tree().process_frame
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player should exist")
+	if player == null:
+		return
+
+	var stats: Node = player.get_node_or_null("StatsComponent")
+	var movement: Node = player.get_node_or_null("MovementComponent")
+	assert_not_null(stats, "StatsComponent should exist")
+	assert_not_null(movement, "MovementComponent should exist")
+	if stats == null or movement == null:
+		return
+
+	_set_room_plan(world, 201, "chapter_3", "elite")
+	_set_room_plan(world, 202, "chapter_4", "elite")
+
+	stats.set("current_stamina", float(stats.get("stamina_max")))
+	world.set("_room_active", true)
+	world.set("_current_room_type", "elite")
+	world.set("_room_index", 201)
+	var chapter_3_hazards: Array[String] = world.call("_get_hazards_for_room", 201)
+	world.set("_active_hazards", chapter_3_hazards)
+	world.set("_hazard_tick_timer", 0.0)
+	world.set("_frostbite", 0.0)
+	world.set("_void_corruption", 0.0)
+
+	world.call("_process_environment_hazards", 1.0)
+
+	assert_gt(float(world.get("_frostbite")), 0.0, "blizzard should accumulate frostbite")
+	assert_lt(float(stats.get("current_stamina")), float(stats.get("stamina_max")), "blizzard should drain stamina")
+	assert_lt(float(movement.get("_environment_speed_multiplier")), 1.0, "new hazards should reduce movement speed")
+
+	world.set("_room_index", 202)
+	var chapter_4_hazards: Array[String] = world.call("_get_hazards_for_room", 202)
+	world.set("_active_hazards", chapter_4_hazards)
+	world.set("_hazard_tick_timer", 0.0)
+	world.set("_void_corruption", 0.0)
+
+	world.call("_process_environment_hazards", 1.0)
+
+	assert_gt(float(world.get("_void_corruption")), 0.0, "spatial_distortion should accumulate void corruption")
+	assert_lt(float(movement.get("_environment_speed_multiplier")), 1.0, "spatial distortion should also reduce movement speed")
 
 
 func test_tile_atlas_manifest_declares_handdrawn_profile() -> void:

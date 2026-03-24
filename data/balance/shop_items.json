@@ -17,6 +17,22 @@
     "bonus_trade_chance": 0.15,
     "bonus_gold": 4
   },
+  "forge_recipes": {
+    "damage": {
+      "ore_cost": 3,
+      "damage_mult": 1.1,
+      "anchor": "offense",
+      "anchor_amount": 1.1,
+      "success_text": "Forge complete: +10% weapon damage"
+    },
+    "speed": {
+      "ore_cost": 5,
+      "interval_mult": 0.93,
+      "anchor": "tempo",
+      "anchor_amount": 1.1,
+      "success_text": "Forge complete: faster attack interval"
+    }
+  },
   "chapter_overrides": {
     "chapter_1": {
       "price_mult": 0.93,

@@ -20,17 +20,57 @@ func _ready() -> void:
     visible = false
 
 
-func show_transition(chapter_index: int, current_alignment: float) -> void:
+func show_transition(
+    chapter_index: int,
+    current_alignment: float,
+    route_arc_text: String = "",
+    fragment_progress_text: String = "",
+    recent_choice_text: String = "",
+    camp_reflection_text: String = "",
+    camp_loop_text: String = "",
+    progression_summary_text: String = "",
+    hazard_forecast_text: String = "",
+    effect_forecast_text: String = "",
+    route_hint_text: String = "",
+    forward_note_text: String = "",
+    hidden_hook_text: String = "",
+    hidden_progress_text: String = "",
+    fragment_recap_text: String = ""
+) -> void:
     var data: Dictionary = _get_chapter_data(chapter_index)
     _chapter_id = str(data.get("chapter_id", "chapter_1"))
     _choice_1 = data.get("choice_1", {})
     _choice_2 = data.get("choice_2", {})
 
     _title_label.text = str(data.get("title", "Chapter Transition"))
-    _body_label.text = "%s\n\nCurrent Alignment: %.0f" % [
-        str(data.get("body", "")),
-        current_alignment
-    ]
+    var body_sections: Array[String] = [str(data.get("body", "")), "Current Alignment: %.0f" % current_alignment]
+    if route_arc_text.strip_edges() != "":
+        body_sections.append(route_arc_text)
+    if fragment_progress_text.strip_edges() != "":
+        body_sections.append(fragment_progress_text)
+    if progression_summary_text.strip_edges() != "":
+        body_sections.append(progression_summary_text)
+    if hazard_forecast_text.strip_edges() != "":
+        body_sections.append(hazard_forecast_text)
+    if effect_forecast_text.strip_edges() != "":
+        body_sections.append(effect_forecast_text)
+    if route_hint_text.strip_edges() != "":
+        body_sections.append(route_hint_text)
+    if camp_reflection_text.strip_edges() != "":
+        body_sections.append(camp_reflection_text)
+    if forward_note_text.strip_edges() != "":
+        body_sections.append(forward_note_text)
+    if hidden_hook_text.strip_edges() != "":
+        body_sections.append(hidden_hook_text)
+    if hidden_progress_text.strip_edges() != "":
+        body_sections.append(hidden_progress_text)
+    if fragment_recap_text.strip_edges() != "":
+        body_sections.append(fragment_recap_text)
+    if recent_choice_text.strip_edges() != "":
+        body_sections.append(recent_choice_text)
+    if camp_loop_text.strip_edges() != "":
+        body_sections.append(camp_loop_text)
+    _body_label.text = "\n\n".join(PackedStringArray(body_sections))
     _option_1.text = "1) %s (%+.0f)" % [
         str(_choice_1.get("label", "Holy Vow")),
         float(_choice_1.get("delta", 10.0))

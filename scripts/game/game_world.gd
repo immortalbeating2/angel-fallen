@@ -84,7 +84,10 @@ var _shop_route_max_discount_add: float = 0.0
 var _shop_route_high_markup_add: float = 0.0
 var _shop_route_exchange_gold_add: int = 0
 var _shop_message: String = ""
+var _forge_recipes: Dictionary = {}
 var _camp_message: String = ""
+var _level_up_system: Node = null
+var _run_fragment_triggers: Array[Dictionary] = []
 var _camp_route_chosen: bool = false
 var _run_kills: int = 0
 var _run_rooms_cleared: int = 0
@@ -98,6 +101,12 @@ var _pause_menu_pending: bool = false
 var _shown_chapter_intro: Dictionary = {}
 var _active_blessing_id: String = "none"
 var _equipped_accessories: Array[String] = []
+var _boss_accessory_claimed: Dictionary = {}
+var _run_boss_flawless_chapters: Array[String] = []
+var _boss_flawless_watch_active: bool = false
+var _boss_flawless_current_chapter: String = ""
+var _boss_flawless_previous_hp: float = 0.0
+var _boss_flawless_damaged: bool = false
 var _chapter_effect_timeline: Array[Dictionary] = []
 var _active_chapter_effects: Array[Dictionary] = []
 var _chapter_effects_this_room: Array[Dictionary] = []
@@ -121,6 +130,39 @@ var _room_plan_map: Dictionary = {}
 var _run_room_count: int = 15
 var _run_layout_cols: int = 5
 var _run_map_bounds: Dictionary = {}
+var _active_hidden_layer_id: String = ""
+var _active_challenge_layer_id: String = ""
+var _hidden_layer_entry_rooms_cleared: int = 0
+var _hidden_layer_entry_kills: int = 0
+var _challenge_layer_entry_rooms_cleared: int = 0
+var _challenge_layer_entry_kills: int = 0
+var _challenge_reward_offers: Array[Dictionary] = []
+var _challenge_reward_selected: Dictionary = {}
+var _hidden_layer_base_spawn_rate_mult: float = 1.0
+var _hidden_layer_base_enemy_hp_mult: float = 1.0
+var _hidden_layer_base_enemy_damage_mult: float = 1.0
+var _hidden_layer_spawn_rate_mult: float = 1.0
+var _hidden_layer_enemy_hp_mult: float = 1.0
+var _hidden_layer_enemy_damage_mult: float = 1.0
+var _hidden_layer_stage_spawn_step: float = 0.0
+var _hidden_layer_stage_hp_step: float = 0.0
+var _hidden_layer_stage_damage_step: float = 0.0
+var _hidden_layer_pressure_stage: int = 0
+var _hidden_layer_best_pressure_stage: int = 0
+var _hidden_layer_required_pressure_stage: int = 0
+var _hidden_layer_target_pressure_stage: int = 0
+var _hidden_layer_max_pressure_stage: int = 0
+var _hidden_layer_pressure_interval_seconds: float = 0.0
+var _hidden_layer_minimum_clear_seconds: float = 0.0
+var _hidden_layer_best_survival_seconds: float = 0.0
+var _hidden_layer_target_survival_seconds: float = 0.0
+var _hidden_layer_selected_boss_echo_id: String = ""
+var _hidden_layer_boss_echo_collection: Array = []
+var _hidden_layer_trial_depth: int = 0
+var _hidden_layer_max_trial_depth_reached: int = 0
+var _hidden_layer_trial_labels: Array = []
+var _hidden_layer_deepest_trial_label: String = ""
+var _hidden_layer_pressure_label: String = ""
 var _pending_next_rooms: Array[int] = []
 var _selected_next_room_slot: int = 0
 var _chapter_route_styles: Dictionary = {}
@@ -146,6 +188,16 @@ var _treasure_accessory_chance_base: float = 0.28
 var _treasure_accessory_chance_vanguard: float = 0.34
 var _treasure_accessory_chance_raider: float = 0.24
 var _treasure_rewards_deployed: bool = false
+var _difficulty_tier: int = 0
+var _difficulty_label: String = "Normal"
+var _difficulty_spawn_rate_mult: float = 1.0
+var _difficulty_enemy_hp_mult: float = 1.0
+var _difficulty_enemy_damage_mult: float = 1.0
+var _difficulty_hazard_mult: float = 1.0
+var _difficulty_xp_reward_mult: float = 1.0
+var _difficulty_gold_reward_mult: float = 1.0
+var _difficulty_ore_reward_mult: float = 1.0
+var _difficulty_treasure_reward_mult: float = 1.0
 
 const ROOM_TYPE_COMBAT: String = "combat"
 const ROOM_TYPE_BOSS: String = "boss"
@@ -154,6 +206,33 @@ const ROOM_TYPE_SHOP: String = "shop"
 const ROOM_TYPE_TREASURE: String = "treasure"
 const ROOM_TYPE_SAFE_CAMP: String = "safe_camp"
 const ROOM_TYPE_ELITE: String = "elite"
+const HIDDEN_LAYER_FS1: String = "FS1"
+const HIDDEN_LAYER_FS2: String = "FS2"
+const CHALLENGE_LAYER_CL1: String = "CL1"
+const FS1_ARCHIVE_BOSS_ECHOES: Array[String] = [
+    "boss_rock_colossus",
+    "boss_flame_lord",
+    "boss_frost_king",
+    "boss_void_lord"
+]
+const FS2_TRIAL_ARCHIVE_TOTAL: int = 5
+const FS1_MASTERY_BONUS_FRAGMENTS: int = 2
+const FS1_MASTERY_BONUS_REWINDS: int = 1
+const FS2_MASTERY_BONUS_DRAFTS: int = 1
+const FS2_MASTERY_BONUS_MERGES: int = 1
+const DIFFICULTY_STATUS_PREFIX: String = "Difficulty: "
+const CHAPTER_BOSS_ACCESSORY: Dictionary = {
+    "chapter_1": "acc_heart_of_mine",
+    "chapter_2": "acc_flame_core",
+    "chapter_3": "acc_zero_mark",
+    "chapter_4": "acc_void_eye"
+}
+const ACCESSORY_ANCHOR_BONUS: Dictionary = {
+    "acc_heart_of_mine": {"survival": 0.90},
+    "acc_flame_core": {"offense": 0.90},
+    "acc_zero_mark": {"precision": 0.85},
+    "acc_void_eye": {"offense": 0.55, "survival": 0.35}
+}
 const TILE_SOURCE_ID: int = 0
 const TILE_GRID_WIDTH: int = 40
 const TILE_GRID_HEIGHT: int = 23
@@ -225,6 +304,7 @@ func _ready() -> void:
         ObjectPool.register_scene("pickup_basic", pickup_scene, 32)
 
     _load_shop_economy_config()
+    _level_up_system = get_node_or_null("LevelUpSystem")
     _load_treasure_challenge_config()
     _build_run_plan()
     _run_kills = 0
@@ -238,6 +318,21 @@ func _ready() -> void:
     _pause_menu_pending = false
     _shown_chapter_intro = {}
     _active_blessing_id = "none"
+    _boss_accessory_claimed.clear()
+    _run_boss_flawless_chapters.clear()
+    _boss_flawless_watch_active = false
+    _boss_flawless_current_chapter = ""
+    _boss_flawless_previous_hp = 0.0
+    _boss_flawless_damaged = false
+    _active_hidden_layer_id = ""
+    _active_challenge_layer_id = ""
+    _hidden_layer_entry_rooms_cleared = 0
+    _hidden_layer_entry_kills = 0
+    _challenge_layer_entry_rooms_cleared = 0
+    _challenge_layer_entry_kills = 0
+    _challenge_reward_offers.clear()
+    _challenge_reward_selected = {}
+    _reset_hidden_layer_run_runtime()
     _chapter_effect_timeline.clear()
     _active_chapter_effects.clear()
     _chapter_effects_this_room.clear()
@@ -255,6 +350,7 @@ func _ready() -> void:
     _route_theme_blend = 0.0
     _route_boss_style_profile = {}
     _route_style_timeline.clear()
+    _run_fragment_triggers.clear()
     _load_route_style_profiles()
     _room_index = _get_run_start_room()
     _initialize_tile_layers()
@@ -262,6 +358,9 @@ func _ready() -> void:
     GameManager.set_state(GameManager.GameState.PLAYING)
     EventBus.enemy_killed.connect(_on_enemy_killed)
     EventBus.player_died.connect(_on_player_died)
+    EventBus.health_changed.connect(_on_player_health_changed)
+    if EventBus != null and EventBus.has_signal("settings_changed") and not EventBus.settings_changed.is_connected(_on_settings_changed):
+        EventBus.settings_changed.connect(_on_settings_changed)
     EventBus.gold_changed.emit(_gold)
     EventBus.ore_changed.emit(_ore)
     EventBus.route_changed.emit(_alignment)
@@ -293,6 +392,7 @@ func _ready() -> void:
         _run_result_panel.back_to_menu_requested.connect(_on_run_result_back_to_menu)
     if _pause_panel != null and _pause_panel.has_method("close_panel"):
         _pause_panel.close_panel()
+    _apply_runtime_settings()
     get_tree().paused = false
     _start_room()
 
@@ -304,8 +404,12 @@ func _process(delta: float) -> void:
         _room_timer_label.text = "-"
 
     _room_kill_label.text = "%d / %d" % [_kills_in_room, _required_kills]
+    _update_hidden_layer_runtime_pressure()
+    if _room_active and _is_hidden_layer_room(_room_index) and _kills_in_room >= _required_kills:
+        call_deferred("_try_clear_room")
     _process_environment_hazards(delta)
     _update_environment_visuals(delta)
+    _refresh_room_status_with_difficulty()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -362,6 +466,32 @@ func _unhandled_input(event: InputEvent) -> void:
             return
 
     if not _room_active and _current_room_type == ROOM_TYPE_SAFE_CAMP:
+        if _is_hidden_layer_settlement_room(_room_index) or _is_challenge_layer_settlement_room(_room_index):
+            if _is_challenge_layer_settlement_room(_room_index):
+                if event.is_action_pressed("shop_buy_1"):
+                    _try_buy_challenge_reward_slot(0)
+                    return
+                if event.is_action_pressed("shop_buy_2"):
+                    _try_buy_challenge_reward_slot(1)
+                    return
+                if event.is_action_pressed("shop_buy_3"):
+                    _try_buy_challenge_reward_slot(2)
+                    return
+            if event.is_action_pressed("camp_memory_altar"):
+                _open_memory_altar()
+                return
+            if event.is_action_pressed("camp_forge_damage") or event.is_action_pressed("camp_forge_speed") or event.is_action_pressed("camp_route_holy") or event.is_action_pressed("camp_route_void"):
+                return
+        else:
+            if event.is_action_pressed("camp_hidden_fs1"):
+                _try_enter_hidden_layer(HIDDEN_LAYER_FS1)
+                return
+            if event.is_action_pressed("camp_hidden_fs2"):
+                _try_enter_hidden_layer(HIDDEN_LAYER_FS2)
+                return
+            if event.is_action_pressed("camp_challenge_layer"):
+                _try_enter_challenge_layer(CHALLENGE_LAYER_CL1)
+                return
         if event.is_action_pressed("camp_forge_damage"):
             _try_forge_damage()
             return
@@ -397,7 +527,108 @@ func get_room_progress_text() -> String:
 
 
 func get_room_status_text() -> String:
-    return _room_status_label.text
+    return _apply_difficulty_status_suffix(_room_status_label.text)
+
+
+func _on_settings_changed(settings: Dictionary) -> void:
+    _apply_runtime_settings(settings)
+
+
+func _apply_runtime_settings(settings: Dictionary = {}) -> void:
+    var resolved: Dictionary = settings
+    if resolved.is_empty() and SaveManager != null and SaveManager.has_method("get_runtime_settings"):
+        resolved = SaveManager.get_runtime_settings()
+
+    var tier: int = clampi(int(resolved.get("difficulty_tier", 0)), 0, 2)
+    var profile: Dictionary = {}
+    if SaveManager != null and SaveManager.has_method("get_difficulty_profile"):
+        profile = SaveManager.get_difficulty_profile(tier)
+    else:
+        profile = {
+            "tier": tier,
+            "label": "Normal",
+            "spawn_rate_mult": 1.0,
+            "enemy_hp_mult": 1.0,
+            "enemy_damage_mult": 1.0,
+            "hazard_intensity_mult": 1.0,
+            "xp_reward_mult": 1.0,
+            "gold_reward_mult": 1.0,
+            "ore_reward_mult": 1.0,
+            "treasure_reward_mult": 1.0
+        }
+
+    _difficulty_tier = int(profile.get("tier", tier))
+    _difficulty_label = str(profile.get("label", "Normal")).strip_edges()
+    if _difficulty_label == "":
+        _difficulty_label = "Normal"
+    _difficulty_spawn_rate_mult = maxf(0.55, float(profile.get("spawn_rate_mult", 1.0)))
+    _difficulty_enemy_hp_mult = maxf(0.55, float(profile.get("enemy_hp_mult", 1.0)))
+    _difficulty_enemy_damage_mult = maxf(0.55, float(profile.get("enemy_damage_mult", 1.0)))
+    _difficulty_hazard_mult = maxf(0.5, float(profile.get("hazard_intensity_mult", 1.0)))
+    _difficulty_xp_reward_mult = maxf(0.5, float(profile.get("xp_reward_mult", 1.0)))
+    _difficulty_gold_reward_mult = maxf(0.5, float(profile.get("gold_reward_mult", 1.0)))
+    _difficulty_ore_reward_mult = maxf(0.5, float(profile.get("ore_reward_mult", 1.0)))
+    _difficulty_treasure_reward_mult = maxf(0.5, float(profile.get("treasure_reward_mult", 1.0)))
+    _apply_chapter_effect_runtime()
+    _refresh_room_status_with_difficulty()
+
+
+func _refresh_room_status_with_difficulty() -> void:
+    if _room_status_label == null:
+        return
+    var with_difficulty: String = _apply_difficulty_status_suffix(_room_status_label.text)
+    if _room_status_label.text != with_difficulty:
+        _room_status_label.text = with_difficulty
+
+
+func _apply_difficulty_status_suffix(text: String) -> String:
+    var base_text: String = _strip_difficulty_status_suffix(text).strip_edges()
+    if _difficulty_label == "":
+        return base_text
+    if base_text == "":
+        return "%s%s" % [DIFFICULTY_STATUS_PREFIX, _difficulty_label]
+    return "%s | %s%s" % [base_text, DIFFICULTY_STATUS_PREFIX, _difficulty_label]
+
+
+func _strip_difficulty_status_suffix(text: String) -> String:
+    var marker: String = " | %s" % DIFFICULTY_STATUS_PREFIX
+    var marker_index: int = text.find(marker)
+    if marker_index >= 0:
+        return text.substr(0, marker_index)
+    if text.begins_with(DIFFICULTY_STATUS_PREFIX):
+        return ""
+    return text
+
+
+func _get_difficulty_summary_text() -> String:
+    if SaveManager != null and SaveManager.has_method("get_difficulty_summary"):
+        return str(SaveManager.get_difficulty_summary(_difficulty_tier)).strip_edges()
+    return "Haz x%.2f | G x%.2f | O x%.2f | T x%.2f" % [
+        _difficulty_hazard_mult,
+        _difficulty_gold_reward_mult,
+        _difficulty_ore_reward_mult,
+        _difficulty_treasure_reward_mult
+    ]
+
+
+func _get_difficulty_risk_reward_line() -> String:
+    return "Difficulty tuning: %s" % _get_difficulty_summary_text()
+
+
+func _get_difficulty_reward_multiplier(reward_type: String, is_treasure: bool = false) -> float:
+    var reward_mult: float = 1.0
+    match reward_type:
+        "xp":
+            reward_mult = _difficulty_xp_reward_mult
+        "gold":
+            reward_mult = _difficulty_gold_reward_mult
+        "ore":
+            reward_mult = _difficulty_ore_reward_mult
+        _:
+            reward_mult = 1.0
+    if is_treasure:
+        reward_mult *= _difficulty_treasure_reward_mult
+    return maxf(0.5, reward_mult)
 
 
 func get_gold_amount() -> int:
@@ -627,9 +858,25 @@ func _room_type_to_minimap_marker(room_type: String) -> String:
 
 
 func _ensure_room_history(index: int, room_type: String) -> void:
+    var previous_var: Variant = _room_history.get(index, {})
+    var previous: Dictionary = {}
+    if previous_var is Dictionary:
+        previous = previous_var
+
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var route_tag: String = _get_room_profile_route_tag(index, room_type.to_upper())
+    var mainline_node: String = _get_chapter_mainline_node(index, room_type)
     _room_history[index] = {
         "type": room_type,
-        "completed": bool((_room_history.get(index, {}) as Dictionary).get("completed", false))
+        "completed": bool(previous.get("completed", false)),
+        "chapter_id": chapter_id,
+        "chapter_index": _get_chapter_index_for_room(index),
+        "route_tag": route_tag,
+        "pace_tag": _get_chapter_history_pace_tag(index, room_type),
+        "checkpoint": _get_room_checkpoint_label(index),
+        "mainline_node": mainline_node,
+        "clear_banner": str(previous.get("clear_banner", "")),
+        "clear_hint": str(previous.get("clear_hint", ""))
     }
 
 
@@ -639,7 +886,11 @@ func _mark_room_completed(index: int) -> void:
     var row_var: Variant = _room_history.get(index, {})
     if row_var is Dictionary:
         var row: Dictionary = row_var
+        var room_type: String = str(row.get("type", _resolve_room_type(index)))
         row["completed"] = true
+        row["mainline_node"] = _get_chapter_mainline_node(index, room_type)
+        row["clear_banner"] = _get_chapter_progression_text(index, "clear_banner", "Room Cleared!")
+        row["clear_hint"] = _get_room_profile_status_hint(index, "Room cleared.")
         _room_history[index] = row
 
 
@@ -659,6 +910,7 @@ func _start_room() -> void:
     _selected_next_room_slot = 0
     _current_room_type = _resolve_room_type(_room_index)
     _sync_route_style_for_room(_room_index)
+    _configure_hidden_layer_room_runtime(_room_index)
     if GameManager != null and GameManager.has_method("set_run_context"):
         GameManager.set_run_context(_room_index, _current_room_type, _get_chapter_id_for_room(_room_index))
     _ensure_room_history(_room_index, _current_room_type)
@@ -732,16 +984,30 @@ func _on_intro_closed() -> void:
 
 
 func _enter_combat_room() -> void:
-    _required_kills = 10 + _room_index * 3
+    var room_title: String = _get_room_profile_title(_room_index, "Combat Room")
+    var objective: String = _get_room_profile_objective(_room_index, "Defeat the enemy wave")
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
+    _required_kills = _get_room_required_kills(_room_index, 10 + _room_index * 3)
     _room_active = true
     _room_timer_label.text = "0.0 s"
-    _room_status_label.text = "Combat Room %d: Defeat %d enemies | Hazards: %s | Effects: %s" % [
+    _room_status_label.text = "%s %d: %s (%d) | Hazards: %s | Effects: %s" % [
+        room_title,
         _room_index,
+        objective,
         _required_kills,
         get_active_hazards_text(),
         _get_active_chapter_effects_text()
     ]
     _room_status_label.text += " | Style: %s" % _get_route_style_label()
+    if status_hint != "":
+        _room_status_label.text += " | %s" % status_hint
+    if _active_challenge_layer_id != "":
+        var challenge_risk_line: String = _get_difficulty_risk_reward_line()
+        if challenge_risk_line != "":
+            _room_status_label.text += " | %s" % challenge_risk_line
+    var hidden_runtime_hint: String = _get_hidden_layer_runtime_hint()
+    if hidden_runtime_hint != "":
+        _room_status_label.text += " | %s" % hidden_runtime_hint
     _set_doors_locked(true)
 
     if _spawner != null and _spawner.has_method("start_room_combat"):
@@ -749,16 +1015,26 @@ func _enter_combat_room() -> void:
 
 
 func _enter_elite_room() -> void:
-    _required_kills = 6 + _room_index * 2
+    var room_title: String = _get_room_profile_title(_room_index, "Elite Room")
+    var objective: String = _get_room_profile_objective(_room_index, "Eliminate the elite detachment")
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
+    _required_kills = _get_room_required_kills(_room_index, 6 + _room_index * 2)
     _room_active = true
     _room_timer_label.text = "0.0 s"
-    _room_status_label.text = "Elite Room %d: Eliminate %d elites | Hazards: %s | Effects: %s" % [
+    _room_status_label.text = "%s %d: %s (%d) | Hazards: %s | Effects: %s" % [
+        room_title,
         _room_index,
+        objective,
         _required_kills,
         get_active_hazards_text(),
         _get_active_chapter_effects_text()
     ]
     _room_status_label.text += " | Style: %s" % _get_route_style_label()
+    if status_hint != "":
+        _room_status_label.text += " | %s" % status_hint
+    var hidden_runtime_hint: String = _get_hidden_layer_runtime_hint()
+    if hidden_runtime_hint != "":
+        _room_status_label.text += " | %s" % hidden_runtime_hint
     _set_doors_locked(true)
 
     if _spawner != null and _spawner.has_method("start_room_combat"):
@@ -770,14 +1046,25 @@ func _enter_boss_room() -> void:
     _room_active = true
     _room_timer_label.text = "0.0 s"
     var boss_id: String = _get_boss_id_for_room(_room_index)
-    _room_status_label.text = "Boss Room %d: Defeat %s | Hazards: %s | Effects: %s" % [
+    var room_title: String = _get_room_profile_title(_room_index, "Boss Room")
+    var objective: String = _get_room_profile_objective(_room_index, "Defeat the chapter boss")
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
+    _room_status_label.text = "%s %d: %s | Boss: %s | Hazards: %s | Effects: %s" % [
+        room_title,
         _room_index,
+        objective,
         _get_boss_title(boss_id),
         get_active_hazards_text(),
         _get_active_chapter_effects_text()
     ]
     _room_status_label.text += " | Style: %s" % _get_route_style_label()
+    if status_hint != "":
+        _room_status_label.text += " | %s" % status_hint
+    var hidden_runtime_hint: String = _get_hidden_layer_runtime_hint()
+    if hidden_runtime_hint != "":
+        _room_status_label.text += " | %s" % hidden_runtime_hint
     _set_doors_locked(true)
+    _begin_boss_flawless_watch()
 
     if _spawner != null and _spawner.has_method("start_room_combat"):
         _spawner.start_room_combat(_room_index, "boss", boss_id, _route_boss_style_profile)
@@ -799,23 +1086,30 @@ func _enter_shop_room() -> void:
     _shop_restock_cost = _shop_restock_base_cost
     _shop_offers = _build_shop_offers()
     _prepare_next_room_candidates()
-    _shop_message = "Shop refreshed. Buy with 1-4."
+    _shop_message = "%s Buy with 1-4." % _get_room_profile_status_hint(_room_index, "Shop refreshed.")
     _update_shop_text()
 
 
 func _enter_treasure_room() -> void:
     if _treasure_challenge_enabled:
-        _required_kills = maxi(1, _treasure_required_kills_base + _room_index * _treasure_required_kills_per_room)
+        var room_title: String = _get_room_profile_title(_room_index, "Treasure Room")
+        var objective: String = _get_room_profile_objective(_room_index, "Clear the elite cache")
+        var status_hint: String = _get_room_profile_status_hint(_room_index)
+        _required_kills = _get_room_required_kills(_room_index, maxi(1, _treasure_required_kills_base + _room_index * _treasure_required_kills_per_room))
         _room_active = true
         _set_doors_locked(true)
         _room_timer_label.text = "0.0 s"
-        _room_status_label.text = "Treasure Room %d: Clear elite cache (%d) | Hazards: %s | Effects: %s | Style: %s" % [
+        _room_status_label.text = "%s %d: %s (%d) | Hazards: %s | Effects: %s | Style: %s" % [
+            room_title,
             _room_index,
+            objective,
             _required_kills,
             get_active_hazards_text(),
             _get_active_chapter_effects_text(),
             _get_route_style_label()
         ]
+        if status_hint != "":
+            _room_status_label.text += " | %s" % status_hint
 
         if _spawner != null and _spawner.has_method("start_room_combat"):
             _spawner.start_room_combat(_room_index, _treasure_challenge_combat_mode)
@@ -837,9 +1131,10 @@ func _deploy_treasure_rewards(status_prefix: String) -> void:
 
     _treasure_rewards_deployed = true
     var player_pos: Vector2 = _player.global_position if _player != null else global_position
-    var gold_reward: int = _scale_drop_amount(_treasure_gold_reward_base + _room_index * _treasure_gold_reward_per_room, _route_gold_drop_mult)
+    var reward_mult: float = _get_room_reward_mult(_room_index)
+    var gold_reward: int = _scale_reward_amount(int(round((_treasure_gold_reward_base + _room_index * _treasure_gold_reward_per_room) * reward_mult)), _route_gold_drop_mult, "gold", true)
     var ore_step_rooms: int = maxi(1, _treasure_ore_reward_step_rooms)
-    var ore_reward: int = _scale_drop_amount(_treasure_ore_reward_base + int((_room_index + 1) / ore_step_rooms), _route_ore_drop_mult)
+    var ore_reward: int = _scale_reward_amount(int(round((_treasure_ore_reward_base + int((_room_index + 1) / ore_step_rooms)) * reward_mult)), _route_ore_drop_mult, "ore", true)
     _spawn_direct_pickup("gold", gold_reward, "treasure_gold", player_pos + Vector2(-18.0, -8.0))
     _spawn_direct_pickup("ore", ore_reward, "treasure_ore", player_pos + Vector2(18.0, -10.0))
 
@@ -856,6 +1151,7 @@ func _deploy_treasure_rewards(status_prefix: String) -> void:
         accessory_note = " + accessory cache"
 
     _prepare_next_room_candidates()
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
     _room_status_label.text = "%s: Loot deployed (Gold +%d, Ore +%d%s) | Style: %s\n%s" % [
         status_prefix,
         gold_reward,
@@ -864,6 +1160,8 @@ func _deploy_treasure_rewards(status_prefix: String) -> void:
         _get_route_style_label(),
         _get_next_route_hint_text()
     ]
+    if status_hint != "":
+        _room_status_label.text += "\n" + status_hint
 
 
 func _enter_event_room() -> void:
@@ -882,9 +1180,14 @@ func _enter_event_room() -> void:
         _room_status_label.text = "Event Room: no event data. Press E for next room"
         return
 
+    var room_title: String = _get_room_profile_title(_room_index, "Event Room")
+    var objective: String = _get_room_profile_objective(_room_index, "Choose your path")
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
     _room_timer_label.text = "-"
     _prepare_next_room_candidates()
-    _room_status_label.text = "Event Room: choose your path | Effects: %s | Style: %s" % [_get_active_chapter_effects_text(), _get_route_style_label()]
+    _room_status_label.text = "%s: %s | Effects: %s | Style: %s" % [room_title, objective, _get_active_chapter_effects_text(), _get_route_style_label()]
+    if status_hint != "":
+        _room_status_label.text += " | %s" % status_hint
     _narrative_event_pending = true
     if _narrative_event_panel != null and _narrative_event_panel.has_method("show_event_panel"):
         _narrative_event_panel.show_event_panel(event_data, _alignment)
@@ -909,7 +1212,30 @@ func _enter_safe_camp_room() -> void:
     _set_void_corruption(maxf(0.0, _void_corruption - 40.0))
 
     _prepare_next_room_candidates()
+    if _is_challenge_layer_settlement_room(_room_index):
+        _camp_message = "Challenge settlement reached"
+        _update_camp_text()
+        return
+    if _is_challenge_layer_room(_room_index):
+        _camp_message = "Challenge layer staging"
+        _update_camp_text()
+        return
+    if _is_hidden_layer_settlement_room(_room_index):
+        _camp_message = "Hidden layer settlement reached"
+        _update_camp_text()
+        return
+
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
     _camp_message = "Recovered: +25 HP, stamina refilled"
+    if status_hint != "":
+        _camp_message = "%s %s" % [status_hint, _camp_message]
+    var progression_note: String = _get_chapter_progression_text(_room_index, "camp_recovery_note", "")
+    if progression_note != "":
+        _camp_message += " | %s" % progression_note
+    var camp_fragment_payload: Dictionary = _trigger_fragment_from_pacing("camp")
+    var camp_fragment_line: String = _get_fragment_trigger_line(camp_fragment_payload)
+    if camp_fragment_line != "":
+        _camp_message += " | %s" % camp_fragment_line
     _update_camp_text()
 
 
@@ -938,6 +1264,13 @@ func _try_clear_room() -> void:
         if _spawner.get_alive_count() > 0:
             return
 
+    if _is_hidden_layer_room(_room_index):
+        var elapsed_seconds: float = _get_active_room_elapsed_seconds()
+        if elapsed_seconds + 0.01 < _hidden_layer_minimum_clear_seconds:
+            return
+        if _hidden_layer_pressure_stage < _hidden_layer_required_pressure_stage:
+            return
+
     _room_active = false
     _run_rooms_cleared += 1
     _mark_room_completed(_room_index)
@@ -950,6 +1283,20 @@ func _try_clear_room() -> void:
     if _current_room_type == ROOM_TYPE_TREASURE:
         _deploy_treasure_rewards("Treasure cache secured")
     if _current_room_type == ROOM_TYPE_BOSS:
+        var chapter_id: String = _get_chapter_id_for_room(_room_index)
+        _end_boss_flawless_watch(true)
+        if _is_hidden_layer_room(_room_index):
+            if next_rooms.is_empty():
+                _finish_run("victory")
+                return
+            var hidden_clear_banner: String = _get_chapter_progression_text(_room_index, "clear_banner", "Hidden boss cleared!")
+            var hidden_clear_text: String = _get_room_profile_status_hint(_room_index, "Hidden route stabilized.")
+            _room_status_label.text = "%s %s | %s" % [hidden_clear_banner, hidden_clear_text, _get_next_route_hint_text()]
+            var hidden_mainline: String = _get_chapter_mainline_node(_room_index, _current_room_type)
+            if hidden_mainline != "":
+                _room_status_label.text += " | Mainline: %s" % hidden_mainline
+            return
+        _grant_boss_stage_accessory(chapter_id)
         if next_rooms.is_empty():
             _finish_run("victory")
             return
@@ -964,7 +1311,18 @@ func _try_clear_room() -> void:
         if next_rooms.is_empty():
             _finish_run("victory")
             return
-        _room_status_label.text = "Room Cleared! %s" % _get_next_route_hint_text()
+        var clear_banner: String = _get_chapter_progression_text(_room_index, "clear_banner", "Room Cleared!")
+        var clear_text: String = _get_room_profile_status_hint(_room_index, "Room cleared.")
+        _room_status_label.text = "%s %s | %s" % [clear_banner, clear_text, _get_next_route_hint_text()]
+        var checkpoint_label: String = _get_room_checkpoint_label(_room_index)
+        if checkpoint_label != "":
+            _room_status_label.text += " | Checkpoint: %s" % checkpoint_label
+        var mainline_node: String = _get_chapter_mainline_node(_room_index, _current_room_type)
+        if mainline_node != "":
+            _room_status_label.text += " | Mainline: %s" % mainline_node
+        var recap_text: String = _build_chapter_history_recap(_room_index)
+        if recap_text != "":
+            _room_status_label.text += " | %s" % recap_text
 
 
 func _on_player_died(_reason: String) -> void:
@@ -975,6 +1333,7 @@ func _finish_run(outcome: String) -> void:
     if _run_finished:
         return
     _run_finished = true
+    _end_boss_flawless_watch(false)
     _reset_pause_state()
 
     GameManager.set_state(GameManager.GameState.GAME_OVER)
@@ -987,7 +1346,7 @@ func _finish_run(outcome: String) -> void:
     if progression != null and progression.get("current_level") != null:
         level_reached = int(progression.current_level)
 
-    var run_result: Dictionary = SaveManager.submit_run_result({
+    var submit_payload: Dictionary = {
         "outcome": outcome,
         "rooms_cleared": _run_rooms_cleared,
         "kills": _run_kills,
@@ -995,16 +1354,32 @@ func _finish_run(outcome: String) -> void:
         "gold": _gold,
         "ore": _ore,
         "alignment": _alignment,
+        "difficulty_tier": _difficulty_tier,
+        "difficulty_label": _difficulty_label,
+        "difficulty_summary": _get_difficulty_summary_text(),
+        "route_style": _resolve_run_route_style_for_payoff(),
+        "boss_flawless_chapters": _run_boss_flawless_chapters.duplicate(),
+        "fragment_triggers": _run_fragment_triggers.duplicate(true),
         "narrative_choices": _narrative_system.get_run_choices() if _narrative_system != null and _narrative_system.has_method("get_run_choices") else [],
         "chapter_effect_timeline": _chapter_effect_timeline.duplicate(true),
         "chapter_route_styles": _chapter_route_styles.duplicate(true),
         "route_style_timeline": _route_style_timeline.duplicate(true)
-    })
+    }
+    var hidden_layer_result: Dictionary = _build_hidden_layer_result_payload(outcome)
+    for key_var: Variant in hidden_layer_result.keys():
+        submit_payload[str(key_var)] = hidden_layer_result.get(key_var)
+    var challenge_layer_result: Dictionary = _build_challenge_layer_result_payload(outcome)
+    for key_var: Variant in challenge_layer_result.keys():
+        submit_payload[str(key_var)] = challenge_layer_result.get(key_var)
+    submit_payload["fragment_triggers"] = _run_fragment_triggers.duplicate(true)
+
+    var run_result: Dictionary = SaveManager.submit_run_result(submit_payload)
 
     _room_status_label.text = "Run Ended: %s | Meta +%d" % [
         outcome.to_upper(),
         int(run_result.get("meta_reward", 0))
     ]
+    _refresh_room_status_with_difficulty()
 
     if _run_result_panel != null and _run_result_panel.has_method("show_result"):
         _run_result_panel.show_result(run_result)
@@ -1072,9 +1447,32 @@ func _on_pause_quit_to_menu_requested() -> void:
 
 func _begin_chapter_transition(chapter: int) -> void:
     _chapter_transition_pending = true
-    _room_status_label.text = "Boss down! Chapter %d cleared. Resolve chapter transition..." % chapter
+    var intro_text: String = _get_chapter_progression_text(_room_index, "transition_intro", "Boss down! Chapter %d cleared." % chapter)
+    _room_status_label.text = "%s Resolve chapter transition..." % intro_text
+    var mainline_node: String = _get_chapter_mainline_node(_room_index, _current_room_type)
+    if mainline_node != "":
+        _room_status_label.text += " | Mainline: %s" % mainline_node
+    var recap_text: String = _build_chapter_history_recap(_room_index)
+    if recap_text != "":
+        _room_status_label.text += " | %s" % recap_text
     if _chapter_transition_panel != null and _chapter_transition_panel.has_method("show_transition"):
-        _chapter_transition_panel.show_transition(chapter, _alignment)
+        _chapter_transition_panel.show_transition(
+            chapter,
+            _alignment,
+            _get_route_arc_line(),
+            _get_fragment_progress_line(),
+            _get_recent_choice_line(_get_chapter_id_for_room(_room_index)),
+            _get_transition_camp_reflection_text(),
+            _get_camp_loop_line(),
+            _get_transition_progression_summary_text(),
+            _get_transition_hazard_forecast_text(),
+            _get_transition_effect_forecast_text(),
+            _get_transition_route_hint_text(),
+            _get_transition_forward_note_text(),
+            _get_transition_hidden_hook_text(),
+            _get_transition_hidden_progress_text(),
+            _get_transition_fragment_recap_text()
+        )
 
 
 func _on_transition_choice_committed(chapter_id: String, choice_id: String, alignment_delta: float) -> void:
@@ -1096,7 +1494,21 @@ func _on_transition_choice_committed(chapter_id: String, choice_id: String, alig
 
 func _on_transition_closed() -> void:
     _chapter_transition_pending = false
-    _room_status_label.text = "Chapter transition resolved. %s" % _get_next_route_hint_text()
+    var resolved_text: String = _get_chapter_progression_text(_room_index, "transition_resolved", "Chapter transition resolved.")
+    _room_status_label.text = "%s %s" % [resolved_text, _get_next_route_hint_text()]
+    var checkpoint_label: String = _get_room_checkpoint_label(_room_index)
+    if checkpoint_label != "":
+        _room_status_label.text += " | Checkpoint: %s" % checkpoint_label
+    var mainline_node: String = _get_chapter_mainline_node(_room_index, _current_room_type)
+    if mainline_node != "":
+        _room_status_label.text += " | Mainline: %s" % mainline_node
+    var recap_text: String = _build_chapter_history_recap(_room_index)
+    if recap_text != "":
+        _room_status_label.text += " | %s" % recap_text
+    var fragment_payload: Dictionary = _trigger_fragment_from_pacing("transition")
+    var fragment_line: String = _get_fragment_trigger_line(fragment_payload)
+    if fragment_line != "":
+        _room_status_label.text += " | %s" % fragment_line
 
 
 func _on_event_choice_committed(event_id: String, choice_id: String, choice_data: Dictionary) -> void:
@@ -1116,7 +1528,18 @@ func _on_event_choice_committed(event_id: String, choice_id: String, choice_data
 
 func _on_event_closed() -> void:
     _narrative_event_pending = false
-    _room_status_label.text = "Event resolved. Next room effects: %s | %s" % [_get_pending_chapter_effects_text(), _get_next_route_hint_text()]
+    var event_text: String = _get_chapter_progression_text(_room_index, "event_resolved", "Event resolved.")
+    _room_status_label.text = "%s Next room effects: %s | %s" % [event_text, _get_pending_chapter_effects_text(), _get_next_route_hint_text()]
+    var mainline_node: String = _get_chapter_mainline_node(_room_index, _current_room_type)
+    if mainline_node != "":
+        _room_status_label.text += " | Mainline: %s" % mainline_node
+    var recap_text: String = _build_chapter_history_recap(_room_index)
+    if recap_text != "":
+        _room_status_label.text += " | %s" % recap_text
+    var fragment_payload: Dictionary = _trigger_fragment_from_pacing("event")
+    var fragment_line: String = _get_fragment_trigger_line(fragment_payload)
+    if fragment_line != "":
+        _room_status_label.text += " | %s" % fragment_line
 
 
 func _apply_event_choice_effects(choice_data: Dictionary) -> void:
@@ -1300,7 +1723,11 @@ func _apply_chapter_effect_runtime() -> void:
     var weapon: Node = _player.get_node_or_null("AutoWeapon")
 
     if _spawner != null and _spawner.has_method("set_runtime_modifiers"):
-        _spawner.set_runtime_modifiers(_chapter_effect_spawn_rate_mult, _chapter_effect_enemy_hp_mult, _chapter_effect_enemy_damage_mult)
+        _spawner.set_runtime_modifiers(
+            clampf(_chapter_effect_spawn_rate_mult * _hidden_layer_spawn_rate_mult * _difficulty_spawn_rate_mult, 0.55, 1.8),
+            clampf(_chapter_effect_enemy_hp_mult * _hidden_layer_enemy_hp_mult * _difficulty_enemy_hp_mult, 0.55, 1.8),
+            clampf(_chapter_effect_enemy_damage_mult * _hidden_layer_enemy_damage_mult * _difficulty_enemy_damage_mult, 0.55, 1.8)
+        )
 
     if weapon != null and weapon.get("external_damage_bonus_pct") != null:
         weapon.external_damage_bonus_pct = _chapter_effect_damage_bonus
@@ -1401,20 +1828,29 @@ func _get_active_blessing_text() -> String:
 
 
 func _build_run_plan() -> void:
-    _run_plan = {}
-    _room_plan_map = {}
-    _run_room_count = 15
-    _run_layout_cols = 5
-    _run_map_bounds = {}
+    _active_hidden_layer_id = ""
+    _active_challenge_layer_id = ""
+    _reset_hidden_layer_run_runtime()
 
     var config: Dictionary = ConfigManager.get_config("map_generation", {})
+    var plan: Dictionary = {}
     if _map_generator != null and _map_generator.has_method("generate_run_plan"):
-        _run_plan = _map_generator.generate_run_plan(config)
+        plan = _map_generator.generate_run_plan(config)
     elif not config.is_empty():
-        _run_plan = config
+        plan = config
+
+    _apply_run_plan(plan, 15, 5)
+
+
+func _apply_run_plan(plan: Dictionary, default_room_count: int = 15, default_layout_cols: int = 5) -> void:
+    _run_plan = plan.duplicate(true)
+    _room_plan_map = {}
+    _run_room_count = maxi(1, default_room_count)
+    _run_layout_cols = clampi(default_layout_cols, 3, 16)
+    _run_map_bounds = {}
 
     _run_room_count = maxi(1, int(_run_plan.get("room_count", 15)))
-    _run_layout_cols = clampi(int(_run_plan.get("layout_cols", 5)), 3, 8)
+    _run_layout_cols = clampi(int(_run_plan.get("layout_cols", _run_layout_cols)), 3, 16)
     var map_bounds_var: Variant = _run_plan.get("map_bounds", {})
     if map_bounds_var is Dictionary:
         _run_map_bounds = (map_bounds_var as Dictionary).duplicate(true)
@@ -1430,6 +1866,185 @@ func _build_run_plan() -> void:
                     continue
                 var row: Dictionary = item
                 _room_plan_map[int(row.get("index", 0))] = row
+
+
+func _try_enter_hidden_layer(layer_id: String) -> void:
+    if not _can_enter_hidden_layer(layer_id):
+        return
+
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    var config: Dictionary = ConfigManager.get_config("map_generation", {})
+    var plan: Dictionary = {}
+    if _map_generator != null and _map_generator.has_method("generate_hidden_layer_run_plan"):
+        plan = _map_generator.generate_hidden_layer_run_plan(layer_key, config)
+    if plan.is_empty():
+        _camp_message = "Hidden layer plan unavailable: %s" % layer_key
+        _update_camp_text()
+        return
+
+    _active_hidden_layer_id = layer_key
+    _hidden_layer_entry_rooms_cleared = _run_rooms_cleared
+    _hidden_layer_entry_kills = _run_kills
+    _reset_hidden_layer_run_runtime()
+    _chapter_route_styles[_get_hidden_layer_chapter_id(plan)] = _resolve_run_route_style_for_payoff()
+    _room_history.clear()
+    _camp_message = "Entering %s..." % _get_hidden_layer_title_from_plan(plan, layer_key)
+    _apply_run_plan(plan, int(plan.get("room_count", 1)), int(plan.get("layout_cols", 5)))
+    _room_index = _get_run_start_room()
+    _start_room()
+
+
+func _try_enter_challenge_layer(layer_id: String) -> void:
+    if not _can_enter_challenge_layer(layer_id):
+        return
+
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    var config: Dictionary = ConfigManager.get_config("map_generation", {})
+    var plan: Dictionary = {}
+    if _map_generator != null and _map_generator.has_method("generate_challenge_layer_run_plan"):
+        plan = _map_generator.generate_challenge_layer_run_plan(layer_key, config)
+    if plan.is_empty():
+        _camp_message = "Challenge layer plan unavailable: %s" % layer_key
+        _update_camp_text()
+        return
+
+    _active_challenge_layer_id = layer_key
+    _challenge_layer_entry_rooms_cleared = _run_rooms_cleared
+    _challenge_layer_entry_kills = _run_kills
+    _challenge_reward_offers.clear()
+    _challenge_reward_selected = {}
+    _room_history.clear()
+    _camp_message = "Entering %s..." % _get_challenge_layer_title_from_plan(plan, layer_key)
+    _apply_run_plan(plan, int(plan.get("room_count", 1)), int(plan.get("layout_cols", 3)))
+    _room_index = _get_run_start_room()
+    _start_room()
+
+
+func _can_enter_challenge_layer(layer_id: String) -> bool:
+    if _run_finished or _room_active or _current_room_type != ROOM_TYPE_SAFE_CAMP:
+        return false
+    if _is_hidden_layer_active() or _is_challenge_layer_active():
+        return false
+    return _get_unlocked_challenge_layer_ids().has(layer_id.strip_edges().to_upper())
+
+
+func _get_unlocked_challenge_layer_ids() -> Array[String]:
+    var rows: Array[String] = []
+    if SaveManager == null or not SaveManager.has_method("get_meta_return_profile"):
+        return rows
+    var profile: Dictionary = SaveManager.get_meta_return_profile()
+    var unlocked_ids: Array[String] = _as_string_array(profile.get("unlocked_ids", []))
+    if unlocked_ids.has("nightmare_hidden_meta_return"):
+        rows.append(CHALLENGE_LAYER_CL1)
+    return rows
+
+
+func _get_challenge_layer_title_from_plan(plan: Dictionary, fallback: String) -> String:
+    var title: String = str(plan.get("title", fallback)).strip_edges()
+    return title if title != "" else fallback
+
+
+func _is_challenge_layer_active() -> bool:
+    return _active_challenge_layer_id != ""
+
+
+func _get_challenge_layer_id_for_room(index: int) -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if room_plan.is_empty():
+        return ""
+    return str(room_plan.get("challenge_layer_id", "")).strip_edges().to_upper()
+
+
+func _is_challenge_layer_room(index: int) -> bool:
+    return _get_challenge_layer_id_for_room(index) != ""
+
+
+func _is_challenge_layer_settlement_room(index: int) -> bool:
+    if not _is_challenge_layer_room(index):
+        return false
+    return str(_get_room_plan(index).get("challenge_phase", "")).strip_edges().to_lower() == "settlement"
+
+
+func _get_active_challenge_layer_record() -> Dictionary:
+    if not _is_challenge_layer_active() or SaveManager == null or not SaveManager.has_method("get_challenge_layer_record"):
+        return {}
+    var row_var: Variant = SaveManager.get_challenge_layer_record(_active_challenge_layer_id)
+    if row_var is Dictionary:
+        return (row_var as Dictionary).duplicate(true)
+    return {}
+
+
+func _can_enter_hidden_layer(layer_id: String) -> bool:
+    if _run_finished or _room_active or _current_room_type != ROOM_TYPE_SAFE_CAMP:
+        return false
+    if _is_hidden_layer_active():
+        return false
+    return _get_unlocked_hidden_layer_ids().has(layer_id.strip_edges().to_upper())
+
+
+func _get_unlocked_hidden_layer_ids() -> Array[String]:
+    var rows: Array[String] = []
+    if SaveManager == null or not SaveManager.has_method("get_hidden_layer_statuses"):
+        return rows
+    var statuses_var: Variant = SaveManager.get_hidden_layer_statuses()
+    if not (statuses_var is Dictionary):
+        return rows
+    var statuses: Dictionary = statuses_var
+    for layer_id: String in [HIDDEN_LAYER_FS1, HIDDEN_LAYER_FS2]:
+        var row_var: Variant = statuses.get(layer_id, {})
+        if row_var is Dictionary and bool((row_var as Dictionary).get("unlocked", false)):
+            rows.append(layer_id)
+    return rows
+
+
+func _get_hidden_layer_chapter_id(plan: Dictionary) -> String:
+    var room_plan_map_var: Variant = plan.get("room_plan_map", {})
+    if room_plan_map_var is Dictionary:
+        var start_room: int = int(plan.get("start_room", 1))
+        var start_row_var: Variant = (room_plan_map_var as Dictionary).get(start_room, {})
+        if start_row_var is Dictionary:
+            var chapter_id: String = str((start_row_var as Dictionary).get("chapter_id", "")).strip_edges()
+            if chapter_id != "":
+                return chapter_id
+    return "hidden_layer"
+
+
+func _get_hidden_layer_title_from_plan(plan: Dictionary, fallback: String) -> String:
+    var title: String = str(plan.get("title", fallback)).strip_edges()
+    if title != "":
+        return title
+    return fallback
+
+
+func _is_hidden_layer_active() -> bool:
+    return _active_hidden_layer_id != ""
+
+
+func _get_hidden_layer_id_for_room(index: int) -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if room_plan.is_empty():
+        return ""
+    return str(room_plan.get("hidden_layer_id", "")).strip_edges().to_upper()
+
+
+func _is_hidden_layer_room(index: int) -> bool:
+    return _get_hidden_layer_id_for_room(index) != ""
+
+
+func _is_hidden_layer_settlement_room(index: int) -> bool:
+    if not _is_hidden_layer_room(index):
+        return false
+    var room_plan: Dictionary = _get_room_plan(index)
+    return str(room_plan.get("room_role", "")).strip_edges().to_lower() == "settlement"
+
+
+func _get_active_hidden_layer_status() -> Dictionary:
+    if not _is_hidden_layer_active() or SaveManager == null or not SaveManager.has_method("get_hidden_layer_status"):
+        return {}
+    var row_var: Variant = SaveManager.get_hidden_layer_status(_active_hidden_layer_id)
+    if row_var is Dictionary:
+        return (row_var as Dictionary).duplicate(true)
+    return {}
 
 
 func _get_room_plan(index: int) -> Dictionary:
@@ -1525,9 +2140,177 @@ func _get_next_route_hint_text() -> String:
 
 
 func _format_room_route_brief(room_id: int) -> String:
-    var room_plan: Dictionary = _get_room_plan(room_id)
-    var room_type: String = str(room_plan.get("room_type", ROOM_TYPE_COMBAT))
-    return "R%d-%s" % [room_id, room_type.to_upper()]
+    return "R%d-%s" % [room_id, _get_room_profile_route_tag(room_id, _resolve_room_type(room_id).to_upper())]
+
+
+func _get_room_pacing_profile(index: int) -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("map_generation", {})
+    var chapter_profiles_var: Variant = config.get("chapter_room_profiles", {})
+    if not (chapter_profiles_var is Dictionary):
+        return {}
+
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var chapter_row_var: Variant = (chapter_profiles_var as Dictionary).get(chapter_id, {})
+    if not (chapter_row_var is Dictionary):
+        return {}
+
+    var room_type: String = _resolve_room_type(index)
+    var profile_var: Variant = (chapter_row_var as Dictionary).get(room_type, {})
+    if profile_var is Dictionary:
+        return profile_var
+    return {}
+
+
+func _get_room_profile_text(index: int, key: String, fallback: String = "") -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty():
+        var room_value: String = str(room_plan.get(key, "")).strip_edges()
+        if room_value != "":
+            return room_value
+    var profile: Dictionary = _get_room_pacing_profile(index)
+    var value: String = str(profile.get(key, fallback)).strip_edges()
+    if value == "":
+        return fallback
+    return value
+
+
+func _get_room_profile_title(index: int, fallback: String) -> String:
+    return _get_room_profile_text(index, "title", fallback)
+
+
+func _get_room_profile_objective(index: int, fallback: String) -> String:
+    return _get_room_profile_text(index, "objective", fallback)
+
+
+func _get_room_profile_status_hint(index: int, fallback: String = "") -> String:
+    return _get_room_profile_text(index, "status_hint", fallback)
+
+
+func _get_room_profile_route_tag(index: int, fallback: String) -> String:
+    return _get_room_profile_text(index, "route_tag", fallback)
+
+
+func _get_room_required_kills(index: int, base_value: int) -> int:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty() and room_plan.has("required_kills"):
+        return maxi(1, int(room_plan.get("required_kills", base_value)))
+    var profile: Dictionary = _get_room_pacing_profile(index)
+    var mult: float = clampf(float(profile.get("required_kills_mult", 1.0)), 0.5, 2.5)
+    var add: int = int(profile.get("required_kills_add", 0))
+    return maxi(1, int(round(base_value * mult)) + add)
+
+
+func _get_room_reward_mult(index: int) -> float:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty() and room_plan.has("reward_mult"):
+        return clampf(float(room_plan.get("reward_mult", 1.0)), 0.5, 2.5)
+    var profile: Dictionary = _get_room_pacing_profile(index)
+    return clampf(float(profile.get("reward_mult", 1.0)), 0.5, 2.5)
+
+
+func _get_chapter_progression_profile(index: int) -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("map_generation", {})
+    var chapter_profiles_var: Variant = config.get("chapter_progression_profiles", {})
+    if not (chapter_profiles_var is Dictionary):
+        return {}
+
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var row_var: Variant = (chapter_profiles_var as Dictionary).get(chapter_id, {})
+    if row_var is Dictionary:
+        return row_var
+    return {}
+
+
+func _get_chapter_progression_text(index: int, key: String, fallback: String = "") -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty():
+        var room_value: String = str(room_plan.get(key, "")).strip_edges()
+        if room_value != "":
+            return room_value
+    var profile: Dictionary = _get_chapter_progression_profile(index)
+    var value: String = str(profile.get(key, fallback)).strip_edges()
+    if value == "":
+        return fallback
+    return value
+
+
+func _get_chapter_history_pace_tag(index: int, room_type: String) -> String:
+    var profile: Dictionary = _get_chapter_progression_profile(index)
+    var tags_var: Variant = profile.get("history_pace_tags", {})
+    if tags_var is Dictionary:
+        var tag: String = str((tags_var as Dictionary).get(room_type, "")).strip_edges()
+        if tag != "":
+            return tag
+    return "%s_%s" % [_get_chapter_id_for_room(index), room_type]
+
+
+func _get_room_checkpoint_label(index: int) -> String:
+    return _get_chapter_progression_text(index, "checkpoint_label", "")
+
+
+func _get_chapter_history_recap_prefix(index: int) -> String:
+    return _get_chapter_progression_text(index, "history_recap_prefix", "")
+
+
+func _get_chapter_history_recap_limit(index: int) -> int:
+    var profile: Dictionary = _get_chapter_progression_profile(index)
+    return clampi(int(profile.get("history_recap_limit", 4)), 1, 8)
+
+
+func _get_chapter_mainline_node(index: int, room_type: String) -> String:
+    var room_plan: Dictionary = _get_room_plan(index)
+    if not room_plan.is_empty():
+        var room_mainline: String = str(room_plan.get("mainline_node", "")).strip_edges()
+        if room_mainline != "":
+            return room_mainline
+    var profile: Dictionary = _get_chapter_progression_profile(index)
+    var nodes_var: Variant = profile.get("mainline_nodes", {})
+    if nodes_var is Dictionary:
+        var key: String = room_type.strip_edges().to_lower()
+        var mainline_node: String = str((nodes_var as Dictionary).get(key, "")).strip_edges()
+        if mainline_node != "":
+            return mainline_node
+    return _get_room_profile_objective(index, "Push through the lane")
+
+
+func _build_chapter_history_recap(index: int) -> String:
+    var prefix: String = _get_chapter_history_recap_prefix(index)
+    if prefix == "":
+        return ""
+
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var recap_limit: int = _get_chapter_history_recap_limit(index)
+    var room_ids: Array = _room_history.keys()
+    room_ids.sort()
+
+    var recap_rows: Array[String] = []
+    for room_id_var: Variant in room_ids:
+        var room_id: int = int(room_id_var)
+        var row_var: Variant = _room_history.get(room_id, {})
+        if not (row_var is Dictionary):
+            continue
+        var row: Dictionary = row_var
+        if str(row.get("chapter_id", "")) != chapter_id:
+            continue
+        if not bool(row.get("completed", false)):
+            continue
+
+        var node_text: String = str(row.get("mainline_node", "")).strip_edges()
+        if node_text == "":
+            var room_type: String = str(row.get("type", _resolve_room_type(room_id)))
+            node_text = _get_chapter_mainline_node(room_id, room_type)
+        if node_text == "":
+            continue
+        recap_rows.append("R%d %s" % [room_id, node_text])
+
+    if recap_rows.is_empty():
+        return ""
+
+    var start_index: int = maxi(0, recap_rows.size() - recap_limit)
+    var trimmed_rows: Array[String] = []
+    for i in range(start_index, recap_rows.size()):
+        trimmed_rows.append(recap_rows[i])
+    return "%s %s" % [prefix, " -> ".join(PackedStringArray(trimmed_rows))]
 
 
 func _load_route_style_profiles() -> void:
@@ -1952,6 +2735,11 @@ func _resolve_room_type(index: int) -> String:
 func _get_boss_id_for_room(index: int) -> String:
     var room_plan: Dictionary = _get_room_plan(index)
     if not room_plan.is_empty():
+        var boss_echo_pool: Array[String] = _as_string_array(room_plan.get("boss_echo_pool", []))
+        if not boss_echo_pool.is_empty():
+            var resolved_echo_id: String = _resolve_hidden_layer_boss_echo_id(room_plan)
+            if resolved_echo_id != "":
+                return resolved_echo_id
         var boss_id: String = str(room_plan.get("boss_id", "")).strip_edges()
         if boss_id != "":
             return boss_id
@@ -2493,10 +3281,13 @@ func _apply_shop_item_effect(item_id: String) -> void:
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "astral_disc"
 
+    _notify_level_up_anchor_from_shop(item_id)
+
 
 func _update_shop_text() -> void:
     var lines: Array[String] = []
-    lines.append("Shop Room %d | Gold: %d" % [_room_index, _gold])
+    lines.append("%s %d | Gold: %d" % [_get_room_profile_title(_room_index, "Shop Room"), _room_index, _gold])
+    lines.append("Objective: %s" % _get_room_profile_objective(_room_index, "Trade before moving on"))
 
     for i in range(_shop_offers.size()):
         var offer: Dictionary = _shop_offers[i]
@@ -2538,10 +3329,17 @@ func _update_shop_text() -> void:
         _shop_route_exchange_gold_add
     ])
     lines.append("Shop bias: %s" % _get_shop_bias_text())
+    lines.append("Mainline node: %s" % _get_chapter_mainline_node(_room_index, _current_room_type))
 
     lines.append("Chapter hazards ahead: %s" % get_active_hazards_text())
     lines.append(_get_next_route_hint_text())
     lines.append("Active chapter effects: %s" % _get_active_chapter_effects_text())
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
+    if status_hint != "":
+        lines.append("Room cadence: %s" % status_hint)
+    var recap_text: String = _build_chapter_history_recap(_room_index)
+    if recap_text != "":
+        lines.append(recap_text)
     if _shop_message != "":
         lines.append(_shop_message)
 
@@ -2638,6 +3436,8 @@ func _load_shop_economy_config() -> void:
         _shop_base_ore_exchange_bonus_chance = clampf(float(exchange.get("bonus_trade_chance", 0.15)), 0.0, 1.0)
         _shop_base_ore_exchange_bonus_gold = maxi(0, int(exchange.get("bonus_gold", 4)))
 
+    _forge_recipes = _sanitize_forge_recipes(shop_config.get("forge_recipes", {}))
+
     var chapter_overrides_var: Variant = shop_config.get("chapter_overrides", {})
     if chapter_overrides_var is Dictionary:
         _shop_chapter_overrides = (chapter_overrides_var as Dictionary).duplicate(true)
@@ -2651,6 +3451,68 @@ func _load_shop_economy_config() -> void:
         _shop_route_overrides = {}
 
     _apply_shop_chapter_profile("chapter_1")
+
+
+func _default_forge_recipes() -> Dictionary:
+    return {
+        "damage": {
+            "ore_cost": 3,
+            "damage_mult": 1.10,
+            "interval_mult": 1.0,
+            "crit_chance_add": 0.0,
+            "crit_multiplier_add": 0.0,
+            "max_hp_add": 0,
+            "heal_flat": 0.0,
+            "anchor": "offense",
+            "anchor_amount": 1.10,
+            "success_text": "Forge complete: +10% weapon damage"
+        },
+        "speed": {
+            "ore_cost": 5,
+            "damage_mult": 1.0,
+            "interval_mult": 0.93,
+            "crit_chance_add": 0.0,
+            "crit_multiplier_add": 0.0,
+            "max_hp_add": 0,
+            "heal_flat": 0.0,
+            "anchor": "tempo",
+            "anchor_amount": 1.10,
+            "success_text": "Forge complete: faster attack interval"
+        }
+    }
+
+
+func _sanitize_forge_recipes(raw_var: Variant) -> Dictionary:
+    var defaults: Dictionary = _default_forge_recipes()
+    if not (raw_var is Dictionary):
+        return defaults
+
+    var raw: Dictionary = raw_var
+    var result: Dictionary = defaults.duplicate(true)
+    for recipe_id_var in result.keys():
+        var recipe_id: String = str(recipe_id_var)
+        var recipe_var: Variant = raw.get(recipe_id, result.get(recipe_id, {}))
+        if not (recipe_var is Dictionary):
+            continue
+
+        var merged: Dictionary = (result.get(recipe_id, {}) as Dictionary).duplicate(true)
+        merged.merge(recipe_var, true)
+        merged["ore_cost"] = maxi(1, int(merged.get("ore_cost", 3)))
+        merged["damage_mult"] = clampf(float(merged.get("damage_mult", 1.0)), 0.90, 2.00)
+        merged["interval_mult"] = clampf(float(merged.get("interval_mult", 1.0)), 0.60, 1.10)
+        merged["crit_chance_add"] = clampf(float(merged.get("crit_chance_add", 0.0)), 0.0, 0.25)
+        merged["crit_multiplier_add"] = clampf(float(merged.get("crit_multiplier_add", 0.0)), 0.0, 0.80)
+        merged["max_hp_add"] = clampi(int(merged.get("max_hp_add", 0)), 0, 120)
+        merged["heal_flat"] = clampf(float(merged.get("heal_flat", 0.0)), 0.0, 120.0)
+        merged["anchor"] = str(merged.get("anchor", "")).strip_edges().to_lower()
+        merged["anchor_amount"] = clampf(float(merged.get("anchor_amount", 0.0)), 0.0, 3.0)
+        var success_text: String = str(merged.get("success_text", "")).strip_edges()
+        if success_text == "":
+            success_text = "Forge complete"
+        merged["success_text"] = success_text
+        result[recipe_id] = merged
+
+    return result
 
 
 func _apply_shop_chapter_profile(chapter_id: String) -> void:
@@ -2795,37 +3657,77 @@ func _recompute_restock_cost() -> void:
 
 
 func _try_forge_damage() -> void:
-    if _ore < 3:
-        _camp_message = "Need 3 ore for damage forge"
-        _update_camp_text()
-        return
-
-    var weapon: Node = _player.get_node_or_null("AutoWeapon")
-    if weapon != null and weapon.get("base_damage") != null:
-        _ore -= 3
-        EventBus.ore_changed.emit(_ore)
-        weapon.base_damage *= 1.10
-        _camp_message = "Forge complete: +10% weapon damage"
-    else:
-        _camp_message = "Forge failed: no weapon"
-
-    _update_camp_text()
+    _try_forge_recipe("damage")
 
 
 func _try_forge_speed() -> void:
-    if _ore < 5:
-        _camp_message = "Need 5 ore for speed forge"
+    _try_forge_recipe("speed")
+
+
+func _try_forge_recipe(recipe_id: String) -> void:
+    var recipe_var: Variant = _forge_recipes.get(recipe_id, {})
+    if not (recipe_var is Dictionary):
+        _camp_message = "Forge recipe missing: %s" % recipe_id
+        _update_camp_text()
+        return
+    var recipe: Dictionary = recipe_var
+
+    var ore_cost: int = maxi(1, int(recipe.get("ore_cost", 1)))
+    if _ore < ore_cost:
+        _camp_message = "Need %d ore for %s forge" % [ore_cost, recipe_id]
         _update_camp_text()
         return
 
     var weapon: Node = _player.get_node_or_null("AutoWeapon")
-    if weapon != null and weapon.get("attack_interval") != null:
-        _ore -= 5
-        EventBus.ore_changed.emit(_ore)
-        weapon.attack_interval = maxf(0.12, weapon.attack_interval * 0.93)
-        _camp_message = "Forge complete: faster attack interval"
+    var stats: Node = _player.get_node_or_null("StatsComponent")
+    var health: Node = _player.get_node_or_null("HealthComponent")
+    var applied: bool = false
+
+    var damage_mult: float = float(recipe.get("damage_mult", 1.0))
+    if absf(damage_mult - 1.0) > 0.001 and weapon != null and weapon.get("base_damage") != null:
+        weapon.base_damage *= damage_mult
+        applied = true
+
+    var interval_mult: float = float(recipe.get("interval_mult", 1.0))
+    if absf(interval_mult - 1.0) > 0.001 and weapon != null and weapon.get("attack_interval") != null:
+        weapon.attack_interval = maxf(0.08, float(weapon.attack_interval) * interval_mult)
+        applied = true
+
+    var crit_chance_add: float = float(recipe.get("crit_chance_add", 0.0))
+    if crit_chance_add > 0.0 and stats != null and stats.get("crit_chance") != null:
+        stats.crit_chance = minf(0.95, float(stats.crit_chance) + crit_chance_add)
+        applied = true
+
+    var crit_multiplier_add: float = float(recipe.get("crit_multiplier_add", 0.0))
+    if crit_multiplier_add > 0.0 and stats != null and stats.get("crit_multiplier") != null:
+        stats.crit_multiplier = float(stats.crit_multiplier) + crit_multiplier_add
+        applied = true
+
+    var max_hp_add: int = int(recipe.get("max_hp_add", 0))
+    if max_hp_add > 0 and health != null and health.get("max_hp") != null:
+        health.max_hp = float(health.max_hp) + float(max_hp_add)
+        applied = true
+
+    var heal_flat: float = float(recipe.get("heal_flat", 0.0))
+    if heal_flat > 0.0 and health != null and health.has_method("heal"):
+        health.heal(heal_flat)
+        applied = true
+
+    if not applied:
+        _camp_message = "Forge failed: no valid target stats"
+        _update_camp_text()
+        return
+
+    _ore -= ore_cost
+    EventBus.ore_changed.emit(_ore)
+    _camp_message = str(recipe.get("success_text", "Forge complete"))
+
+    var anchor_id: String = str(recipe.get("anchor", "")).strip_edges().to_lower()
+    var anchor_amount: float = maxf(0.0, float(recipe.get("anchor_amount", 0.0)))
+    if anchor_id != "" and anchor_amount > 0.0:
+        _notify_level_up_anchor(anchor_id, anchor_amount, "forge:%s" % recipe_id)
     else:
-        _camp_message = "Forge failed: no weapon"
+        _notify_level_up_anchor_from_forge(recipe_id)
 
     _update_camp_text()
 
@@ -2853,6 +3755,33 @@ func _try_route_choice(choice_id: String) -> void:
     _update_camp_text()
 
 
+func _notify_level_up_anchor_from_shop(item_id: String) -> void:
+    if _level_up_system == null:
+        _level_up_system = get_node_or_null("LevelUpSystem")
+    if _level_up_system == null:
+        return
+    if _level_up_system.has_method("register_build_anchor_from_shop"):
+        _level_up_system.register_build_anchor_from_shop(item_id)
+
+
+func _notify_level_up_anchor_from_forge(forge_type: String) -> void:
+    if _level_up_system == null:
+        _level_up_system = get_node_or_null("LevelUpSystem")
+    if _level_up_system == null:
+        return
+    if _level_up_system.has_method("register_build_anchor_from_forge"):
+        _level_up_system.register_build_anchor_from_forge(forge_type)
+
+
+func _notify_level_up_anchor(anchor_id: String, amount: float, source: String) -> void:
+    if _level_up_system == null:
+        _level_up_system = get_node_or_null("LevelUpSystem")
+    if _level_up_system == null:
+        return
+    if _level_up_system.has_method("register_build_anchor"):
+        _level_up_system.register_build_anchor(anchor_id, amount, source)
+
+
 func _open_memory_altar() -> void:
     if _current_room_type != ROOM_TYPE_SAFE_CAMP or _room_active:
         return
@@ -2860,9 +3789,29 @@ func _open_memory_altar() -> void:
         return
 
     var unlocked_fragments: Array[String] = SaveManager.get_unlocked_fragments()
+    var route_arc_line: String = _get_route_arc_line()
+    var archive_payload: Dictionary = _build_memory_archive_payload(unlocked_fragments)
+    var fragment_recap_lines: Array[String] = _get_fragment_recap_lines()
+    var hidden_hook_lines: Array[String] = _get_hidden_layer_hook_lines()
+    var hidden_progress_lines: Array[String] = _get_hidden_layer_progress_lines()
+    var recent_choice_line: String = _get_recent_choice_line(_get_chapter_id_for_room(_room_index))
+
     _memory_altar_pending = true
-    _memory_altar_panel.show_archive(unlocked_fragments, 0)
-    _room_status_label.text = "Memory Altar opened (%d fragments). Review with 1/2, close with E/Esc" % unlocked_fragments.size()
+    _memory_altar_panel.show_archive(unlocked_fragments, 0, archive_payload)
+    _room_status_label.text = "Memory Altar opened (%d fragments). %s | %s" % [
+        unlocked_fragments.size(),
+        route_arc_line,
+        recent_choice_line
+    ]
+    for line in fragment_recap_lines:
+        _room_status_label.text += " | %s" % line
+    for line in hidden_hook_lines:
+        _room_status_label.text += " | %s" % line
+    for line in hidden_progress_lines:
+        _room_status_label.text += " | %s" % line
+    var latest_fragment_line: String = _get_latest_fragment_trigger_line()
+    if latest_fragment_line != "":
+        _room_status_label.text += " | %s" % latest_fragment_line
 
 
 func _on_memory_altar_closed() -> void:
@@ -2872,25 +3821,1303 @@ func _on_memory_altar_closed() -> void:
 
 
 func _update_camp_text() -> void:
+    if _is_challenge_layer_settlement_room(_room_index):
+        _update_challenge_layer_settlement_text()
+        return
+    if _is_challenge_layer_room(_room_index):
+        _update_challenge_layer_entry_text()
+        return
+    if _is_hidden_layer_settlement_room(_room_index):
+        _update_hidden_layer_settlement_text()
+        return
+
     var lines: Array[String] = []
-    lines.append("Safe Camp %d | Ore: %d | Alignment: %.0f (%s)" % [
+    lines.append("%s %d | Ore: %d | Alignment: %.0f (%s)" % [
+        _get_room_profile_title(_room_index, "Safe Camp"),
         _room_index,
         _ore,
         _alignment,
         _get_route_tier()
     ])
+    lines.append("Objective: %s" % _get_room_profile_objective(_room_index, "Recover before the next chapter push"))
     lines.append("Branch style: %s" % _get_route_style_label())
+    lines.append(_get_difficulty_risk_reward_line())
     lines.append("Purification: Frostbite %.0f%% | Void %.0f%%" % [_frostbite, _void_corruption])
-    lines.append("F: Forge Damage (3 ore) | G: Forge Speed (5 ore)")
+    lines.append("F: Forge Damage (%d ore) | G: Forge Speed (%d ore)" % [
+        _get_forge_recipe_ore_cost("damage", 3),
+        _get_forge_recipe_ore_cost("speed", 5)
+    ])
     lines.append("T: Memory Altar (review unlocked fragments)")
+    lines.append("Camp loop: Altar recap -> Route summary -> Forward note -> Hidden route lead")
     lines.append("Q: Choose Holy Route | V: Choose Void Route")
+    var hidden_entry_lines: Array[String] = _get_hidden_layer_entry_lines()
+    for line in hidden_entry_lines:
+        lines.append(line)
+    var challenge_entry_lines: Array[String] = _get_challenge_layer_entry_lines()
+    for line in challenge_entry_lines:
+        lines.append(line)
+    var route_arc_line: String = _get_route_arc_line()
+    if route_arc_line != "":
+        lines.append(route_arc_line)
+    var fragment_progress_line: String = _get_fragment_progress_line()
+    if fragment_progress_line != "":
+        lines.append(fragment_progress_line)
+    var camp_reflection_lines: Array[String] = _get_camp_reflection_lines()
+    for line in camp_reflection_lines:
+        lines.append(line)
+    var fragment_recap_lines: Array[String] = _get_fragment_recap_lines()
+    for line in fragment_recap_lines:
+        lines.append(line)
+    var hidden_hook_lines: Array[String] = _get_hidden_layer_hook_lines()
+    for line in hidden_hook_lines:
+        lines.append(line)
+    var hidden_progress_lines: Array[String] = _get_hidden_layer_progress_lines()
+    for line in hidden_progress_lines:
+        lines.append(line)
+    lines.append("Mainline node: %s" % _get_chapter_mainline_node(_room_index, _current_room_type))
     lines.append("Chapter hazards ahead: %s" % get_active_hazards_text())
     lines.append("Active chapter effects: %s" % _get_active_chapter_effects_text())
+    var status_hint: String = _get_room_profile_status_hint(_room_index)
+    if status_hint != "":
+        lines.append("Forward note: %s" % status_hint)
+    var recap_text: String = _build_chapter_history_recap(_room_index)
+    if recap_text != "":
+        lines.append(recap_text)
     lines.append(_get_next_route_hint_text())
     if _camp_message != "":
         lines.append(_camp_message)
 
     _room_status_label.text = "\n".join(PackedStringArray(lines))
+
+
+func _get_route_arc_line() -> String:
+    if _narrative_system == null or not _narrative_system.has_method("get_route_arc_summary"):
+        return ""
+    var arc_row: Dictionary = _narrative_system.get_route_arc_summary(_alignment, _current_route_style)
+    if arc_row.is_empty():
+        return ""
+    return "Route arc: %s - %s" % [
+        str(arc_row.get("title", "Unknown Path")),
+        str(arc_row.get("summary", ""))
+    ]
+
+
+func _get_fragment_progress_line() -> String:
+    if _narrative_system == null or not _narrative_system.has_method("get_camp_reflection"):
+        return ""
+    var fragments: Array[String] = SaveManager.get_unlocked_fragments()
+    var chapter_id: String = _get_chapter_id_for_room(_room_index)
+    var row: Dictionary = _narrative_system.get_camp_reflection(chapter_id, _alignment, _current_route_style, fragments)
+    return str(row.get("fragment_progress", ""))
+
+
+func _get_recent_choice_line(chapter_id: String) -> String:
+    if _narrative_system == null or not _narrative_system.has_method("get_recent_choice_summary"):
+        return ""
+    return str(_narrative_system.get_recent_choice_summary(chapter_id, 3))
+
+
+func _get_transition_camp_reflection_text() -> String:
+    var lines: Array[String] = _get_camp_reflection_lines()
+    if lines.is_empty():
+        return ""
+
+    var filtered: Array[String] = []
+    for line: String in lines:
+        if line.begins_with("Recent vows:"):
+            continue
+        filtered.append(line)
+    return "\n".join(PackedStringArray(filtered))
+
+
+func _get_camp_loop_line() -> String:
+    return "Camp loop: Altar recap -> Route summary -> Forward note -> Hidden route lead"
+
+
+func _get_transition_progression_summary_text() -> String:
+    var rows: Array[String] = []
+    var checkpoint_label: String = _get_room_checkpoint_label(_room_index)
+    if checkpoint_label != "":
+        rows.append("Checkpoint: %s" % checkpoint_label)
+    var mainline_node: String = _get_chapter_mainline_node(_room_index, _current_room_type)
+    if mainline_node != "":
+        rows.append("Mainline: %s" % mainline_node)
+    var recap_text: String = _build_chapter_history_recap(_room_index)
+    if recap_text != "":
+        rows.append(recap_text)
+    return "\n".join(PackedStringArray(rows))
+
+
+func _get_transition_hazard_forecast_text() -> String:
+    var hazards: Array[String] = _get_hazards_for_room(_room_index)
+    if hazards.is_empty():
+        return ""
+    return "Chapter hazards ahead: %s" % ", ".join(PackedStringArray(hazards))
+
+
+func _get_transition_effect_forecast_text() -> String:
+    var effects_text: String = _get_pending_chapter_effects_text().strip_edges()
+    if effects_text == "" or effects_text == "none":
+        return ""
+    return "Active chapter effects: %s" % effects_text
+
+
+func _get_transition_route_hint_text() -> String:
+    var route_hint: String = _get_next_route_hint_text().strip_edges()
+    if route_hint == "":
+        return ""
+    return "Next route: %s" % route_hint
+
+
+func _get_transition_forward_note_text() -> String:
+    var forward_note: String = _get_room_profile_status_hint(_room_index).strip_edges()
+    if forward_note == "":
+        return ""
+    return "Forward note: %s" % forward_note
+
+
+func _get_transition_hidden_hook_text() -> String:
+    var lines: Array[String] = _get_hidden_layer_hook_lines()
+    if lines.is_empty():
+        return ""
+
+    var filtered: Array[String] = []
+    for line: String in lines:
+        if line.begins_with("Route Echo:"):
+            continue
+        if line.begins_with("Review Entry:"):
+            continue
+        filtered.append(line)
+    return "\n".join(PackedStringArray(filtered))
+
+
+func _get_transition_hidden_progress_text() -> String:
+    var lines: Array[String] = _get_hidden_layer_progress_lines()
+    if lines.is_empty():
+        return ""
+
+    var filtered: Array[String] = []
+    for line: String in lines:
+        if line.begins_with("Review Entry:"):
+            continue
+        filtered.append(line)
+    return "
+".join(PackedStringArray(filtered))
+
+
+func _get_transition_fragment_recap_text() -> String:
+    var lines: Array[String] = _get_fragment_recap_lines()
+    if lines.is_empty():
+        return ""
+
+    var filtered: Array[String] = []
+    for line: String in lines:
+        if line.begins_with("Route Echo:"):
+            continue
+        if line.begins_with("Review Entry:"):
+            continue
+        filtered.append(line)
+    return "
+".join(PackedStringArray(filtered))
+
+
+func _get_camp_reflection_lines() -> Array[String]:
+    var lines: Array[String] = []
+    if _narrative_system == null or not _narrative_system.has_method("get_camp_reflection"):
+        return lines
+
+    var fragments: Array[String] = SaveManager.get_unlocked_fragments()
+    var chapter_id: String = _get_chapter_id_for_room(_room_index)
+    var row: Dictionary = _narrative_system.get_camp_reflection(chapter_id, _alignment, _current_route_style, fragments)
+    if row.is_empty():
+        return lines
+
+    lines.append("Camp reflection: %s - %s" % [
+        str(row.get("title", "Camp Reflection")),
+        str(row.get("body", ""))
+    ])
+    var fragment_hint: String = str(row.get("fragment_hint", "")).strip_edges()
+    if fragment_hint != "":
+        lines.append("Fragment hint: %s" % fragment_hint)
+    var style_echo: String = str(row.get("style_echo", "")).strip_edges()
+    if style_echo != "":
+        lines.append("Route echo: %s" % style_echo)
+    var recent_choice: String = str(row.get("recent_choice_summary", "")).strip_edges()
+    if recent_choice != "":
+        lines.append(recent_choice)
+    return lines
+
+
+func _get_fragment_recap_lines() -> Array[String]:
+    var lines: Array[String] = []
+    if _narrative_system == null or not _narrative_system.has_method("get_fragment_recap_summary"):
+        return lines
+
+    var runtime_triggers: Array[Dictionary] = []
+    for item: Variant in _run_fragment_triggers:
+        if item is Dictionary and not (item as Dictionary).is_empty():
+            runtime_triggers.append((item as Dictionary).duplicate(true))
+
+    var recap: Dictionary = _narrative_system.get_fragment_recap_summary(runtime_triggers, _alignment, _resolve_run_route_style_for_payoff())
+    if not runtime_triggers.is_empty():
+        var trigger_types: Array[String] = []
+        var new_unlock_count: int = 0
+        for item: Dictionary in runtime_triggers:
+            if bool(item.get("newly_unlocked", false)):
+                new_unlock_count += 1
+            var trigger_type: String = str(item.get("trigger_type", "")).strip_edges()
+            if trigger_type != "" and not trigger_types.has(trigger_type):
+                trigger_types.append(trigger_type)
+        recap["trigger_count"] = runtime_triggers.size()
+        recap["new_unlock_count"] = new_unlock_count
+        recap["trigger_types"] = trigger_types
+    if recap.is_empty() or int(recap.get("trigger_count", 0)) <= 0:
+        var last_run: Dictionary = SaveManager.get_last_run()
+        var last_recap_var: Variant = last_run.get("fragment_recap", {})
+        if last_recap_var is Dictionary and not (last_recap_var as Dictionary).is_empty():
+            recap = (last_recap_var as Dictionary).duplicate(true)
+    if recap.is_empty():
+        return lines
+
+    lines.append("Fragment recap: %s - %s" % [
+        str(recap.get("title", "Fragment Recap")),
+        str(recap.get("summary", ""))
+    ])
+    var route_parts: PackedStringArray = PackedStringArray()
+    var arc_id: String = str(recap.get("arc_id", "")).strip_edges().to_upper()
+    var style_echo: String = str(recap.get("style_echo", "")).strip_edges()
+    if arc_id != "":
+        route_parts.append(arc_id)
+    if style_echo != "":
+        route_parts.append(style_echo)
+    if not route_parts.is_empty():
+        lines.append("Route Echo: %s" % " | ".join(route_parts))
+    var pace_hint: String = str(recap.get("pace_hint", "")).strip_edges()
+    if pace_hint != "":
+        lines.append("Pace Hint: %s" % pace_hint)
+    lines.append("Recap Stats: triggers=%d | new=%d" % [
+        int(recap.get("trigger_count", 0)),
+        int(recap.get("new_unlock_count", 0))
+    ])
+    var trigger_types_var: Variant = recap.get("trigger_types", [])
+    if trigger_types_var is Array and not (trigger_types_var as Array).is_empty():
+        var trigger_types: PackedStringArray = PackedStringArray()
+        for item: Variant in trigger_types_var:
+            var text: String = str(item).strip_edges()
+            if text != "":
+                trigger_types.append(text.to_upper())
+        if not trigger_types.is_empty():
+            lines.append("Trigger Focus: %s" % ", ".join(trigger_types))
+    lines.append("Review Entry: Page 1 anchors the archive recap before fragment pages.")
+    return lines
+
+
+func _get_hidden_layer_hook_lines() -> Array[String]:
+    var lines: Array[String] = []
+    if _narrative_system == null or not _narrative_system.has_method("get_hidden_layer_hook"):
+        return lines
+
+    var unlocked_endings: Array[String] = SaveManager.get_unlocked_endings()
+    var hook: Dictionary = _narrative_system.get_hidden_layer_hook(_alignment, _resolve_run_route_style_for_payoff(), unlocked_endings)
+    if hook.is_empty():
+        return lines
+
+    lines.append("Hidden hook: %s -> %s" % [
+        str(hook.get("target_layer", "FS?")),
+        str(hook.get("title", "Unknown Hook"))
+    ])
+    var teaser: String = str(hook.get("teaser", "")).strip_edges()
+    if teaser != "":
+        lines.append("Hook teaser: %s" % teaser)
+    var unlock_hint: String = str(hook.get("unlock_hint", "")).strip_edges()
+    if unlock_hint != "":
+        lines.append("Hook unlock: %s" % unlock_hint)
+    var hook_arc_id: String = str(hook.get("arc_id", "")).strip_edges().to_upper()
+    var hook_style_echo: String = str(hook.get("style_echo", "")).strip_edges()
+    if hook_arc_id != "" or hook_style_echo != "":
+        var route_parts: PackedStringArray = PackedStringArray()
+        if hook_arc_id != "":
+            route_parts.append(hook_arc_id)
+        if hook_style_echo != "":
+            route_parts.append(hook_style_echo)
+        lines.append("Route Echo: %s" % " | ".join(route_parts))
+    lines.append("Hook status: %s" % ("Archive route ready" if bool(hook.get("ready", false)) else "Track this route to unlock"))
+    lines.append("Review Entry: Page 1 tracks the hidden route lead for later camp checks.")
+    return lines
+
+
+func _get_hidden_layer_progress_lines() -> Array[String]:
+    var lines: Array[String] = []
+    if SaveManager == null or not SaveManager.has_method("get_hidden_layer_statuses"):
+        return lines
+
+    var statuses_var: Variant = SaveManager.get_hidden_layer_statuses()
+    if not (statuses_var is Dictionary):
+        return lines
+
+    var statuses: Dictionary = statuses_var
+    for layer_id: String in ["FS1", "FS2"]:
+        var row_var: Variant = statuses.get(layer_id, {})
+        if not (row_var is Dictionary):
+            continue
+        var row: Dictionary = row_var
+        lines.append("Hidden track: %s - %s [%s]" % [
+            layer_id,
+            str(row.get("progress_label", "No progress")),
+            "UNLOCKED" if bool(row.get("unlocked", false)) else "LOCKED"
+        ])
+        lines.append("Hidden spec: %s - %s / %s / %s" % [
+            layer_id,
+            str(row.get("map_mode", "unknown")),
+            str(row.get("room_count_label", "unknown")),
+            str(row.get("reward_track", "reward_track"))
+        ])
+        var entry_hint: String = str(row.get("entry_hint", "")).strip_edges()
+        if entry_hint != "":
+            lines.append("Hidden entry: %s - %s" % [layer_id, entry_hint])
+        var reward_summary: String = str(row.get("reward_summary", "")).strip_edges()
+        if reward_summary != "":
+            lines.append("Hidden reward: %s - %s" % [layer_id, reward_summary])
+        var settlement_summary: String = str(row.get("settlement_summary", "")).strip_edges()
+        if settlement_summary != "":
+            lines.append("Hidden settlement: %s - %s" % [layer_id, settlement_summary])
+        var story_label: String = str(row.get("story_label", "")).strip_edges()
+        if story_label != "":
+            lines.append("Hidden archive: %s - %s" % [layer_id, story_label])
+        var record_label: String = str(row.get("record_label", "")).strip_edges()
+        if record_label != "":
+            lines.append("Hidden record: %s - %s" % [layer_id, record_label])
+        var gameplay_label: String = str(row.get("gameplay_label", "")).strip_edges()
+        if gameplay_label != "":
+            lines.append("Hidden combat: %s - %s" % [layer_id, gameplay_label])
+        var collection_label: String = str(row.get("collection_label", "")).strip_edges()
+        if collection_label != "":
+            lines.append("Hidden collection: %s - %s" % [layer_id, collection_label])
+        var mastery_label: String = str(row.get("mastery_label", "")).strip_edges()
+        if mastery_label != "":
+            lines.append("Hidden mastery: %s - %s" % [layer_id, mastery_label])
+    if not lines.is_empty():
+        lines.append("Review Entry: Page 1 tracks hidden-layer progress, rewards, and archive carryover.")
+    return lines
+
+
+func _get_hidden_layer_entry_lines() -> Array[String]:
+    var lines: Array[String] = []
+    if _current_room_type != ROOM_TYPE_SAFE_CAMP or _room_active or _is_hidden_layer_active():
+        return lines
+
+    var unlocked_layers: Array[String] = _get_unlocked_hidden_layer_ids()
+    if unlocked_layers.has(HIDDEN_LAYER_FS1):
+        lines.append("R: Enter Time Rift")
+    if unlocked_layers.has(HIDDEN_LAYER_FS2):
+        lines.append("Y: Enter Genesis Forge")
+    return lines
+
+
+func _get_challenge_layer_entry_lines() -> Array[String]:
+    var lines: Array[String] = []
+    if _current_room_type != ROOM_TYPE_SAFE_CAMP or _room_active or _is_hidden_layer_active() or _is_challenge_layer_active():
+        return lines
+    var unlocked_layers: Array[String] = _get_unlocked_challenge_layer_ids()
+    if unlocked_layers.is_empty():
+        return lines
+    var config: Dictionary = ConfigManager.get_config("map_generation", {})
+    for layer_id: String in unlocked_layers:
+        var plan: Dictionary = {}
+        if _map_generator != null and _map_generator.has_method("generate_challenge_layer_run_plan"):
+            plan = _map_generator.generate_challenge_layer_run_plan(layer_id, config)
+        var title: String = _get_challenge_layer_title_from_plan(plan, layer_id)
+        lines.append("%s:" % title)
+        var room_count_label: String = str(plan.get("room_count_label", "")).strip_edges()
+        if room_count_label != "":
+            lines.append("Route frame: %s" % room_count_label)
+        var entry_hint: String = str(plan.get("entry_hint", "")).strip_edges()
+        if entry_hint != "":
+            lines.append("Entry hint: %s" % entry_hint)
+        var start_room: int = int(plan.get("start_room", 1))
+        var room_plan_map: Dictionary = plan.get("room_plan_map", {}) if plan.get("room_plan_map", {}) is Dictionary else {}
+        var entry_plan: Dictionary = room_plan_map.get(start_room, {}) if room_plan_map.has(start_room) else {}
+        var checkpoint_label: String = str(entry_plan.get("checkpoint_label", "")).strip_edges()
+        if checkpoint_label != "":
+            lines.append("Checkpoint preview: %s" % checkpoint_label)
+        var entry_title: String = str(entry_plan.get("title", "Challenge Layer Entry")).strip_edges()
+        if entry_title != "":
+            lines.append("Entry preview: %s" % entry_title)
+        var entry_objective: String = str(entry_plan.get("objective", str(plan.get("entry_hint", "")))).strip_edges()
+        if entry_objective != "":
+            lines.append("Objective: %s" % entry_objective)
+        var status_hint: String = str(entry_plan.get("status_hint", "")).strip_edges()
+        if status_hint != "":
+            lines.append("Entry staging: %s" % status_hint)
+        var combat_plan: Dictionary = room_plan_map.get(start_room + 1, {}) if room_plan_map.has(start_room + 1) else {}
+        var combat_title: String = str(combat_plan.get("title", "")).strip_edges()
+        if combat_title != "":
+            lines.append("Combat preview: %s" % combat_title)
+        var combat_objective: String = str(combat_plan.get("objective", "")).strip_edges()
+        if combat_objective != "":
+            lines.append("Combat objective: %s" % combat_objective)
+        var combat_checkpoint: String = str(combat_plan.get("checkpoint_label", "")).strip_edges()
+        if combat_checkpoint != "":
+            lines.append("Combat checkpoint: %s" % combat_checkpoint)
+        var combat_clear_banner: String = str(combat_plan.get("clear_banner", "")).strip_edges()
+        if combat_clear_banner != "":
+            lines.append("Combat clear banner: %s" % combat_clear_banner)
+        var reward_profile: Dictionary = plan.get("reward_profile", {}) if plan.get("reward_profile", {}) is Dictionary else {}
+        var reward_summary: String = str(entry_plan.get("reward_summary", str(reward_profile.get("summary", "")))).strip_edges()
+        if reward_summary != "":
+            lines.append("Reward preview: %s" % reward_summary)
+        var settlement_room: int = int(plan.get("room_count", start_room))
+        var settlement_plan: Dictionary = room_plan_map.get(settlement_room, {}) if room_plan_map.has(settlement_room) else {}
+        var settlement_title: String = str(settlement_plan.get("title", "")).strip_edges()
+        if settlement_title != "":
+            lines.append("Settlement stage: %s" % settlement_title)
+        var settlement_objective: String = str(settlement_plan.get("objective", "")).strip_edges()
+        if settlement_objective != "":
+            lines.append("Settlement objective: %s" % settlement_objective)
+        var settlement_checkpoint: String = str(settlement_plan.get("checkpoint_label", "")).strip_edges()
+        if settlement_checkpoint != "":
+            lines.append("Settlement checkpoint: %s" % settlement_checkpoint)
+        var settlement_status_hint: String = str(settlement_plan.get("status_hint", "")).strip_edges()
+        if settlement_status_hint != "":
+            lines.append("Settlement staging: %s" % settlement_status_hint)
+        var settlement_profile: Dictionary = plan.get("settlement_profile", {}) if plan.get("settlement_profile", {}) is Dictionary else {}
+        var settlement_summary: String = str(settlement_profile.get("summary", str(entry_plan.get("settlement_summary", "")))).strip_edges()
+        if settlement_summary != "":
+            lines.append("Settlement preview: %s" % settlement_summary)
+        var reward_choices: Array[Dictionary] = _build_challenge_reward_offers(layer_id)
+        if not reward_choices.is_empty():
+            var reward_titles: Array[String] = []
+            var reward_detail_lines: Array[String] = []
+            var reward_index: int = 1
+            for offer: Dictionary in reward_choices:
+                var offer_title: String = str(offer.get("title", "")).strip_edges()
+                var offer_description: String = str(offer.get("description", "")).strip_edges()
+                if offer_title != "":
+                    reward_titles.append(offer_title)
+                    if offer_description != "":
+                        reward_detail_lines.append("%d) %s - %s" % [reward_index, offer_title, offer_description])
+                    else:
+                        reward_detail_lines.append("%d) %s" % [reward_index, offer_title])
+                    reward_index += 1
+            if not reward_titles.is_empty():
+                lines.append("Reward choices: %s" % " | ".join(PackedStringArray(reward_titles)))
+            lines.append_array(reward_detail_lines)
+        if SaveManager != null and SaveManager.has_method("get_challenge_layer_record"):
+            var record_var: Variant = SaveManager.get_challenge_layer_record(layer_id)
+            if record_var is Dictionary:
+                var record: Dictionary = record_var as Dictionary
+                if int(record.get("attempts", 0)) > 0:
+                    lines.append("Archive record: Clears %d | Best Rooms %d | Best Kills %d" % [
+                        int(record.get("clears", 0)),
+                        int(record.get("best_rooms", 0)),
+                        int(record.get("best_kills", 0))
+                    ])
+                    lines.append("Reward ledger: Meta +%d | Sigil +%d | Insight +%d" % [
+                        int(record.get("total_meta_bonus", 0)),
+                        int(record.get("total_sigils", 0)),
+                        int(record.get("total_insight", 0))
+                    ])
+                    var last_reward_title: String = str(record.get("last_reward_title", "")).strip_edges()
+                    if last_reward_title != "":
+                        lines.append("Last archived reward: %s" % last_reward_title)
+        lines.append("Archive exit: T: Memory Altar | E: Archive clear and finish run")
+        lines.append("U: Enter %s" % title)
+    return lines
+
+
+func _update_challenge_layer_entry_text() -> void:
+    var room_plan: Dictionary = _get_room_plan(_room_index)
+    var lines: Array[String] = []
+    lines.append("%s | Challenge staging" % str(room_plan.get("title", "Challenge Layer Entry")))
+    lines.append("Objective: %s" % str(room_plan.get("objective", "Prepare the challenge archive route.")))
+    var status_hint: String = str(room_plan.get("status_hint", "")).strip_edges()
+    if status_hint != "":
+        lines.append(status_hint)
+    var reward_summary: String = str(room_plan.get("reward_summary", "")).strip_edges()
+    if reward_summary != "":
+        lines.append("Reward preview: %s" % reward_summary)
+    lines.append(_get_difficulty_risk_reward_line())
+    lines.append("Press E -> Challenge Combat Ring")
+    if _camp_message != "":
+        lines.append(_camp_message)
+    _room_status_label.text = "\n".join(PackedStringArray(lines))
+
+
+func _update_challenge_layer_settlement_text() -> void:
+    var room_plan: Dictionary = _get_room_plan(_room_index)
+    var record: Dictionary = _get_active_challenge_layer_record()
+    _ensure_challenge_reward_offers()
+    var lines: Array[String] = []
+    lines.append(str(room_plan.get("title", "Challenge Settlement")))
+    lines.append("Objective: %s" % str(room_plan.get("objective", "Archive the challenge clear and collect the reward.")))
+    var reward_summary: String = _build_challenge_reward_summary(str(room_plan.get("reward_summary", "Challenge archive sealed | Meta +40 | Sigil +1")).strip_edges())
+    lines.append("Reward preview: %s" % reward_summary)
+    var settlement_summary: String = str(room_plan.get("settlement_summary", "")).strip_edges()
+    if settlement_summary != "":
+        lines.append("Settlement: %s" % settlement_summary)
+    lines.append(_get_difficulty_risk_reward_line())
+    if _challenge_reward_selected.is_empty():
+        for index: int in range(_challenge_reward_offers.size()):
+            var offer: Dictionary = _challenge_reward_offers[index]
+            lines.append("%d) %s - %s" % [index + 1, str(offer.get("title", "Reward")), str(offer.get("description", ""))])
+    else:
+        lines.append("Selected Reward: %s" % str(_challenge_reward_selected.get("title", "Reward")))
+        lines.append("Selected Reward Detail: Meta +%d | Sigil +%d | Insight +%d" % [
+            int(_challenge_reward_selected.get("meta_bonus", 0)),
+            int(_challenge_reward_selected.get("sigils", 0)),
+            int(_challenge_reward_selected.get("insight", 0))
+        ])
+    if not record.is_empty():
+        lines.append("Record: Clears %d | Best Rooms %d | Best Kills %d" % [
+            int(record.get("clears", 0)),
+            int(record.get("best_rooms", 0)),
+            int(record.get("best_kills", 0))
+        ])
+    lines.append("T: Memory Altar | E: Archive clear and finish run")
+    if _camp_message != "":
+        lines.append(_camp_message)
+    _room_status_label.text = "\n".join(PackedStringArray(lines))
+
+
+func _build_challenge_layer_result_payload(outcome: String) -> Dictionary:
+    if not _is_challenge_layer_active():
+        return {}
+    var room_plan: Dictionary = _get_room_plan(_room_index)
+    var challenge_rooms_cleared: int = maxi(0, _room_history.size() - 1)
+    var challenge_kills: int = maxi(0, _run_kills - _challenge_layer_entry_kills)
+    var reward_payload: Dictionary = _get_challenge_reward_payload()
+    return {
+        "challenge_layer_id": _active_challenge_layer_id,
+        "challenge_layer_title": str(room_plan.get("challenge_layer_title", "Challenge Layer")).strip_edges(),
+        "challenge_layer_phase": str(room_plan.get("challenge_phase", "entry")).strip_edges().to_lower(),
+        "challenge_layer_reward_id": str(_challenge_reward_selected.get("id", "")).strip_edges(),
+        "challenge_layer_reward_title": str(_challenge_reward_selected.get("title", "")).strip_edges(),
+        "challenge_layer_reward_payload": reward_payload,
+        "challenge_layer_reward_summary": _build_challenge_reward_summary(str(room_plan.get("reward_summary", "Challenge archive sealed | Meta +40 | Sigil +1")).strip_edges()),
+        "challenge_layer_settlement_summary": str(room_plan.get("settlement_summary", "")).strip_edges(),
+        "challenge_layer_rooms_cleared": challenge_rooms_cleared,
+        "challenge_layer_kills": challenge_kills,
+        "difficulty_summary": _get_difficulty_summary_text()
+    }
+
+
+func _ensure_challenge_reward_offers() -> void:
+    if not _challenge_reward_offers.is_empty() or _active_challenge_layer_id == "":
+        return
+    _challenge_reward_offers = _build_challenge_reward_offers(_active_challenge_layer_id)
+
+
+func _build_challenge_reward_offers(layer_id: String) -> Array[Dictionary]:
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    if layer_key == "":
+        return []
+    return [
+        {
+            "id": "meta_cache",
+            "title": "Meta Cache",
+            "description": "Meta +40",
+            "meta_bonus": 40,
+            "sigils": 0,
+            "insight": 0,
+            "summary": "Meta Cache | Meta +40"
+        },
+        {
+            "id": "sigil_bundle",
+            "title": "Sigil Bundle",
+            "description": "Sigil +1",
+            "meta_bonus": 0,
+            "sigils": 1,
+            "insight": 0,
+            "summary": "Sigil Bundle | Sigil +1"
+        },
+        {
+            "id": "archive_insight",
+            "title": "Archive Insight",
+            "description": "Insight +1",
+            "meta_bonus": 0,
+            "sigils": 0,
+            "insight": 1,
+            "summary": "Archive Insight | Insight +1"
+        }
+    ]
+
+
+func _try_buy_challenge_reward_slot(slot_index: int) -> void:
+    if not _is_challenge_layer_settlement_room(_room_index):
+        return
+    _ensure_challenge_reward_offers()
+    if not _challenge_reward_selected.is_empty():
+        _camp_message = "Challenge reward already claimed"
+        _update_camp_text()
+        return
+    if slot_index < 0 or slot_index >= _challenge_reward_offers.size():
+        return
+    _challenge_reward_selected = _challenge_reward_offers[slot_index].duplicate(true)
+    _camp_message = "Bought %s" % str(_challenge_reward_selected.get("title", "Reward"))
+    _update_camp_text()
+
+
+func _get_challenge_reward_payload() -> Dictionary:
+    if _challenge_reward_selected.is_empty():
+        return {}
+    return {
+        "meta_bonus": int(_challenge_reward_selected.get("meta_bonus", 0)),
+        "sigils": int(_challenge_reward_selected.get("sigils", 0)),
+        "insight": int(_challenge_reward_selected.get("insight", 0))
+    }
+
+
+func _build_challenge_reward_summary(base_summary: String) -> String:
+    var summary: String = base_summary.strip_edges()
+    if _challenge_reward_selected.is_empty():
+        return summary
+    var reward_summary: String = str(_challenge_reward_selected.get("summary", _challenge_reward_selected.get("title", ""))).strip_edges()
+    if reward_summary == "":
+        return summary
+    if summary == "":
+        return reward_summary
+    if summary.contains(reward_summary):
+        return summary
+    return "%s | %s" % [summary, reward_summary]
+
+
+func _update_hidden_layer_settlement_text() -> void:
+    var lines: Array[String] = []
+    var status: Dictionary = _get_active_hidden_layer_status()
+    var reward_preview: Dictionary = _build_hidden_layer_reward_preview(_active_hidden_layer_id, true)
+    var story_preview: Dictionary = _get_hidden_layer_story_preview(_active_hidden_layer_id)
+    lines.append("%s | Hidden settlement" % _get_room_profile_title(_room_index, "Hidden Settlement"))
+    lines.append("Objective: %s" % _get_room_profile_objective(_room_index, "Archive the hidden-layer clear"))
+    lines.append("Progress: %s" % str(status.get("progress_label", "No progress")))
+    var entry_hint: String = str(status.get("entry_hint", "")).strip_edges()
+    if entry_hint != "":
+        lines.append("Entry: %s" % entry_hint)
+    var reward_summary: String = str(reward_preview.get("summary", status.get("reward_summary", ""))).strip_edges()
+    if reward_summary != "":
+        lines.append("Reward preview: %s" % reward_summary)
+    var settlement_summary: String = str(status.get("settlement_summary", "")).strip_edges()
+    if settlement_summary != "":
+        lines.append("Settlement: %s" % settlement_summary)
+    lines.append(_get_difficulty_risk_reward_line())
+    var gameplay_lines: Array[String] = _get_hidden_layer_gameplay_lines()
+    for gameplay_line: String in gameplay_lines:
+        lines.append(gameplay_line)
+    if not story_preview.is_empty():
+        lines.append("Archive story: %s [%s]" % [
+            str(story_preview.get("title", "Hidden Archive")),
+            str(story_preview.get("arc_id", "balance")).to_upper()
+        ])
+        var story_body: String = str(story_preview.get("body", "")).strip_edges()
+        if story_body != "":
+            lines.append(story_body)
+        var story_arc_id: String = str(story_preview.get("arc_id", "")).strip_edges().to_upper()
+        var story_style_echo: String = str(story_preview.get("style_echo", "")).strip_edges()
+        if story_arc_id != "" or story_style_echo != "":
+            var story_route_parts: PackedStringArray = PackedStringArray()
+            if story_arc_id != "":
+                story_route_parts.append(story_arc_id)
+            if story_style_echo != "":
+                story_route_parts.append(story_style_echo)
+            lines.append("Route Echo: %s" % " | ".join(story_route_parts))
+        var story_ending_id: String = str(story_preview.get("ending_id", story_preview.get("ending_link", ""))).strip_edges()
+        if story_ending_id != "":
+            lines.append("Ending link: %s [%s]" % [
+                story_ending_id.trim_prefix("nar_ending_").to_upper(),
+                "READY" if bool(story_preview.get("ending_ready", false)) else "TRACKING"
+            ])
+        var archive_echo: String = str(story_preview.get("archive_echo", "")).strip_edges()
+        if archive_echo != "":
+            lines.append("Archive echo: %s" % archive_echo)
+        var fragment_title: String = str(story_preview.get("fragment_title", story_preview.get("fragment_id", ""))).strip_edges()
+        if fragment_title != "":
+            lines.append("Fragment preview: %s" % fragment_title)
+        var fragment_text: String = str(story_preview.get("fragment_text", "")).strip_edges()
+        if fragment_text != "":
+            lines.append("Fragment Text: %s" % fragment_text)
+        lines.append("Review Entry: Memory Altar -> Hidden Layer Track")
+    var record_label: String = str(status.get("record_label", "")).strip_edges()
+    if record_label != "":
+        lines.append("Record: %s" % record_label)
+    lines.append("T: Memory Altar | E: Archive clear and finish run")
+    if _camp_message != "":
+        lines.append(_camp_message)
+    _room_status_label.text = "\n".join(PackedStringArray(lines))
+
+
+func _build_hidden_layer_result_payload(outcome: String) -> Dictionary:
+    if not _is_hidden_layer_active():
+        return {}
+
+    var hidden_rooms_cleared: int = maxi(0, _run_rooms_cleared - _hidden_layer_entry_rooms_cleared)
+    var hidden_kills: int = maxi(0, _run_kills - _hidden_layer_entry_kills)
+    var reward_payload: Dictionary = _build_hidden_layer_reward_preview(_active_hidden_layer_id, outcome == "victory")
+    var gameplay_payload: Dictionary = _build_hidden_layer_gameplay_payload()
+    var result: Dictionary = {
+        "hidden_layer_id": _active_hidden_layer_id,
+        "hidden_layer_rooms_cleared": hidden_rooms_cleared,
+        "hidden_layer_kills": hidden_kills,
+        "hidden_layer_reward_payload": reward_payload,
+        "hidden_layer_reward_summary": str(reward_payload.get("summary", "")).strip_edges(),
+        "hidden_layer_gameplay": gameplay_payload,
+        "difficulty_summary": _get_difficulty_summary_text()
+    }
+    if outcome == "victory":
+        var story_payload: Dictionary = _get_hidden_layer_story_preview(_active_hidden_layer_id)
+        if not story_payload.is_empty():
+            var fragment_payload: Dictionary = _register_hidden_layer_story_fragment(story_payload)
+            if not fragment_payload.is_empty():
+                story_payload["fragment_newly_unlocked"] = bool(fragment_payload.get("newly_unlocked", false))
+            result["hidden_layer_story"] = story_payload
+    return result
+
+
+func _build_hidden_layer_reward_preview(layer_id: String, victory: bool) -> Dictionary:
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    var hidden_rooms_cleared: int = maxi(0, _run_rooms_cleared - _hidden_layer_entry_rooms_cleared)
+    var mastery_preview: Dictionary = _build_hidden_layer_mastery_preview(layer_key)
+    match layer_key:
+        HIDDEN_LAYER_FS1:
+            var time_fragments: int = maxi(3, hidden_rooms_cleared + _hidden_layer_best_pressure_stage + int(floor(_hidden_layer_best_survival_seconds / 30.0)))
+            if not victory:
+                time_fragments = 0
+            var echo_title: String = _get_boss_title(_hidden_layer_selected_boss_echo_id)
+            var echo_collection: Array[String] = _get_hidden_layer_boss_echo_collection()
+            var rewind_charges: int = 1 if victory else 0
+            var mastery_bonus_awarded: bool = victory and bool(mastery_preview.get("collection_bonus_ready", false))
+            var mastery_bonus_label: String = str(mastery_preview.get("collection_bonus_label", "")).strip_edges()
+            if mastery_bonus_awarded:
+                time_fragments += FS1_MASTERY_BONUS_FRAGMENTS
+                rewind_charges += FS1_MASTERY_BONUS_REWINDS
+            var summary: String = ("Time Fragments +%d | Rewind +%d | Rift archive sealed" % [time_fragments, rewind_charges]) if victory else "Time Rift attempt archived without payout"
+            if victory and echo_title != "" and echo_title != "Unknown Echo":
+                summary += " | Echo %s" % echo_title
+            if victory and not echo_collection.is_empty():
+                summary += " | Archive %d/%d" % [echo_collection.size(), FS1_ARCHIVE_BOSS_ECHOES.size()]
+            if victory and mastery_bonus_awarded and mastery_bonus_label != "":
+                summary += " | Mastery %s" % mastery_bonus_label
+            return {
+                "track": "time_fragments",
+                "time_fragments": time_fragments,
+                "rewind_charges": rewind_charges,
+                "collection_bonus_awarded": mastery_bonus_awarded,
+                "collection_bonus_label": mastery_bonus_label,
+                "summary": summary
+            }
+        HIDDEN_LAYER_FS2:
+            var draft_count: int = 0
+            var trial_labels: Array[String] = _get_hidden_layer_trial_label_collection()
+            var relic_merges: int = 1 if victory else 0
+            var mastery_bonus_awarded_fs2: bool = victory and bool(mastery_preview.get("collection_bonus_ready", false))
+            var mastery_bonus_label_fs2: String = str(mastery_preview.get("collection_bonus_label", "")).strip_edges()
+            if victory:
+                draft_count = 1
+                if _hidden_layer_max_trial_depth_reached >= 5:
+                    draft_count += 1
+                if mastery_bonus_awarded_fs2:
+                    draft_count += FS2_MASTERY_BONUS_DRAFTS
+                    relic_merges += FS2_MASTERY_BONUS_MERGES
+            var fs2_summary: String = (("Legendary recipe draft +%d | Relic merge archive +%d | Depth %d/5" % [draft_count, relic_merges, maxi(0, _hidden_layer_max_trial_depth_reached)]) + (" | Archive %d/%d" % [trial_labels.size(), FS2_TRIAL_ARCHIVE_TOTAL] if not trial_labels.is_empty() else "")) if victory else "Genesis Forge attempt archived without fusion output"
+            if victory and mastery_bonus_awarded_fs2 and mastery_bonus_label_fs2 != "":
+                fs2_summary += " | Mastery %s" % mastery_bonus_label_fs2
+            return {
+                "track": "legendary_forge",
+                "recipe_drafts": draft_count,
+                "relic_merges": relic_merges,
+                "collection_bonus_awarded": mastery_bonus_awarded_fs2,
+                "collection_bonus_label": mastery_bonus_label_fs2,
+                "summary": fs2_summary
+            }
+        _:
+            return {"summary": ""}
+
+
+func _reset_hidden_layer_room_runtime() -> void:
+    _hidden_layer_base_spawn_rate_mult = 1.0
+    _hidden_layer_base_enemy_hp_mult = 1.0
+    _hidden_layer_base_enemy_damage_mult = 1.0
+    _hidden_layer_spawn_rate_mult = 1.0
+    _hidden_layer_enemy_hp_mult = 1.0
+    _hidden_layer_enemy_damage_mult = 1.0
+    _hidden_layer_stage_spawn_step = 0.0
+    _hidden_layer_stage_hp_step = 0.0
+    _hidden_layer_stage_damage_step = 0.0
+    _hidden_layer_pressure_stage = 0
+    _hidden_layer_required_pressure_stage = 0
+    _hidden_layer_max_pressure_stage = 0
+    _hidden_layer_pressure_interval_seconds = 0.0
+    _hidden_layer_minimum_clear_seconds = 0.0
+    _hidden_layer_trial_depth = 0
+    _hidden_layer_deepest_trial_label = ""
+    _hidden_layer_pressure_label = ""
+
+
+func _reset_hidden_layer_run_runtime() -> void:
+    _reset_hidden_layer_room_runtime()
+    _hidden_layer_best_pressure_stage = 0
+    _hidden_layer_target_pressure_stage = 0
+    _hidden_layer_best_survival_seconds = 0.0
+    _hidden_layer_target_survival_seconds = 0.0
+    _hidden_layer_selected_boss_echo_id = ""
+    _hidden_layer_boss_echo_collection.clear()
+    _hidden_layer_max_trial_depth_reached = 0
+    _hidden_layer_trial_labels.clear()
+
+
+func _configure_hidden_layer_room_runtime(index: int) -> void:
+    _reset_hidden_layer_room_runtime()
+    if not _is_hidden_layer_room(index):
+        return
+
+    var room_plan: Dictionary = _get_room_plan(index)
+    _hidden_layer_base_spawn_rate_mult = clampf(float(room_plan.get("runtime_spawn_rate_mult", 1.0)), 0.55, 1.8)
+    _hidden_layer_base_enemy_hp_mult = clampf(float(room_plan.get("runtime_enemy_hp_mult", 1.0)), 0.55, 1.8)
+    _hidden_layer_base_enemy_damage_mult = clampf(float(room_plan.get("runtime_enemy_damage_mult", 1.0)), 0.55, 1.8)
+    _hidden_layer_spawn_rate_mult = _hidden_layer_base_spawn_rate_mult
+    _hidden_layer_enemy_hp_mult = _hidden_layer_base_enemy_hp_mult
+    _hidden_layer_enemy_damage_mult = _hidden_layer_base_enemy_damage_mult
+    _hidden_layer_stage_spawn_step = maxf(0.0, float(room_plan.get("pressure_stage_spawn_step", 0.0)))
+    _hidden_layer_stage_hp_step = maxf(0.0, float(room_plan.get("pressure_stage_hp_step", 0.0)))
+    _hidden_layer_stage_damage_step = maxf(0.0, float(room_plan.get("pressure_stage_damage_step", 0.0)))
+    _hidden_layer_required_pressure_stage = maxi(0, int(room_plan.get("required_pressure_stage", 0)))
+    _hidden_layer_max_pressure_stage = maxi(_hidden_layer_required_pressure_stage, int(room_plan.get("max_pressure_stage", 0)))
+    _hidden_layer_pressure_interval_seconds = maxf(0.0, float(room_plan.get("pressure_interval_seconds", 0.0)))
+    _hidden_layer_minimum_clear_seconds = maxf(0.0, float(room_plan.get("minimum_clear_seconds", 0.0)))
+    _hidden_layer_pressure_label = str(room_plan.get("pressure_label", "")).strip_edges()
+    _hidden_layer_trial_depth = maxi(0, int(room_plan.get("trial_depth", 0)))
+    _hidden_layer_max_trial_depth_reached = maxi(_hidden_layer_max_trial_depth_reached, _hidden_layer_trial_depth)
+    var trial_label: String = str(room_plan.get("trial_label", "")).strip_edges()
+    if trial_label == "" and _hidden_layer_trial_depth > 0:
+        trial_label = "Forge Trial %d/%d" % [_hidden_layer_trial_depth, maxi(_hidden_layer_trial_depth, int(room_plan.get("trial_depth_max", FS2_TRIAL_ARCHIVE_TOTAL)))]
+    if trial_label != "":
+        _hidden_layer_deepest_trial_label = trial_label
+        _append_unique_string(_hidden_layer_trial_labels, trial_label)
+    _hidden_layer_target_pressure_stage = maxi(_hidden_layer_target_pressure_stage, _hidden_layer_required_pressure_stage)
+    _hidden_layer_target_survival_seconds = maxf(_hidden_layer_target_survival_seconds, _hidden_layer_minimum_clear_seconds)
+    if _current_room_type == ROOM_TYPE_BOSS:
+        _hidden_layer_selected_boss_echo_id = _resolve_hidden_layer_boss_echo_id(room_plan)
+        _append_unique_string(_hidden_layer_boss_echo_collection, _hidden_layer_selected_boss_echo_id)
+
+
+func _update_hidden_layer_runtime_pressure() -> void:
+    if not _room_active or not _is_hidden_layer_room(_room_index):
+        return
+    if _spawner == null or not _spawner.has_method("get_room_time"):
+        return
+
+    var room_time: float = float(_spawner.get_room_time())
+    if _hidden_layer_minimum_clear_seconds > 0.0 or _hidden_layer_max_pressure_stage > 0:
+        _hidden_layer_best_survival_seconds = maxf(_hidden_layer_best_survival_seconds, room_time)
+    if _hidden_layer_pressure_interval_seconds <= 0.0 or _hidden_layer_max_pressure_stage <= 0:
+        return
+
+    var target_stage: int = mini(_hidden_layer_max_pressure_stage, int(floor(room_time / _hidden_layer_pressure_interval_seconds)))
+    if target_stage <= _hidden_layer_pressure_stage:
+        return
+
+    _hidden_layer_pressure_stage = target_stage
+    _hidden_layer_best_pressure_stage = maxi(_hidden_layer_best_pressure_stage, _hidden_layer_pressure_stage)
+    _hidden_layer_spawn_rate_mult = clampf(_hidden_layer_base_spawn_rate_mult + _hidden_layer_stage_spawn_step * float(_hidden_layer_pressure_stage), 0.55, 1.8)
+    _hidden_layer_enemy_hp_mult = clampf(_hidden_layer_base_enemy_hp_mult + _hidden_layer_stage_hp_step * float(_hidden_layer_pressure_stage), 0.55, 1.8)
+    _hidden_layer_enemy_damage_mult = clampf(_hidden_layer_base_enemy_damage_mult + _hidden_layer_stage_damage_step * float(_hidden_layer_pressure_stage), 0.55, 1.8)
+    _apply_chapter_effect_runtime()
+
+
+func _get_active_room_elapsed_seconds() -> float:
+    if _spawner != null and _spawner.has_method("get_room_time"):
+        return float(_spawner.get_room_time())
+    return 0.0
+
+
+func _resolve_hidden_layer_boss_echo_id(room_plan: Dictionary) -> String:
+    var pool: Array[String] = _as_string_array(room_plan.get("boss_echo_pool", []))
+    if pool.is_empty():
+        return str(room_plan.get("boss_id", "")).strip_edges()
+    var selector: int = _hidden_layer_best_pressure_stage + int(absf(_alignment) / 20.0)
+    match _resolve_run_route_style_for_payoff():
+        "vanguard":
+            selector += 1
+        "raider":
+            selector += 2
+        _:
+            selector += 0
+    return pool[posmod(selector, pool.size())]
+
+
+func _get_hidden_layer_runtime_hint() -> String:
+    if not _is_hidden_layer_room(_room_index):
+        return ""
+    if _hidden_layer_minimum_clear_seconds > 0.0:
+        var label: String = _hidden_layer_pressure_label if _hidden_layer_pressure_label != "" else "Pressure"
+        return "%s %d/%d | Hold %.0fs" % [
+            label,
+            _hidden_layer_pressure_stage,
+            maxi(_hidden_layer_required_pressure_stage, _hidden_layer_max_pressure_stage),
+            _hidden_layer_minimum_clear_seconds
+        ]
+    if _hidden_layer_trial_depth > 0:
+        return "Trial %d/%d" % [_hidden_layer_trial_depth, maxi(_hidden_layer_trial_depth, int(_get_room_plan(_room_index).get("trial_depth_max", 5)))]
+    if _current_room_type == ROOM_TYPE_BOSS and _hidden_layer_selected_boss_echo_id != "":
+        return "Echo: %s" % _get_boss_title(_hidden_layer_selected_boss_echo_id)
+    return ""
+
+
+func _build_hidden_layer_gameplay_payload() -> Dictionary:
+    if not _is_hidden_layer_active():
+        return {}
+    var mastery_preview: Dictionary = _build_hidden_layer_mastery_preview(_active_hidden_layer_id)
+    match _active_hidden_layer_id:
+        HIDDEN_LAYER_FS1:
+            var echo_collection: Array[String] = _get_hidden_layer_boss_echo_collection()
+            return {
+                "pressure_label": _hidden_layer_pressure_label if _hidden_layer_pressure_label != "" else "Rift Surge",
+                "pressure_stage": _hidden_layer_best_pressure_stage,
+                "required_pressure_stage": _hidden_layer_target_pressure_stage,
+                "survival_seconds": roundf(_hidden_layer_best_survival_seconds * 10.0) / 10.0,
+                "minimum_clear_seconds": _hidden_layer_target_survival_seconds,
+                "boss_echo_id": _hidden_layer_selected_boss_echo_id,
+                "boss_echo_title": _get_boss_title(_hidden_layer_selected_boss_echo_id),
+                "boss_echo_collection": echo_collection.duplicate(),
+                "collection_count": int(mastery_preview.get("collection_count", echo_collection.size())),
+                "collection_required": int(mastery_preview.get("collection_required", FS1_ARCHIVE_BOSS_ECHOES.size())),
+                "collection_complete": bool(mastery_preview.get("collection_complete", false)),
+                "collection_bonus_label": str(mastery_preview.get("collection_bonus_label", "")).strip_edges(),
+                "mastery_label": str(mastery_preview.get("mastery_label", "")).strip_edges()
+            }
+        HIDDEN_LAYER_FS2:
+            var trial_labels: Array[String] = _get_hidden_layer_trial_label_collection()
+            var deepest_label: String = _hidden_layer_deepest_trial_label if _hidden_layer_deepest_trial_label != "" else (trial_labels[trial_labels.size() - 1] if not trial_labels.is_empty() else "")
+            return {
+                "trial_depth": _hidden_layer_max_trial_depth_reached,
+                "trial_depth_max": FS2_TRIAL_ARCHIVE_TOTAL,
+                "trial_label": deepest_label if deepest_label != "" else "Forge Trial %d/%d" % [maxi(0, _hidden_layer_max_trial_depth_reached), FS2_TRIAL_ARCHIVE_TOTAL],
+                "deepest_trial_label": deepest_label,
+                "trial_labels": trial_labels.duplicate(),
+                "collection_count": int(mastery_preview.get("collection_count", trial_labels.size())),
+                "collection_required": int(mastery_preview.get("collection_required", FS2_TRIAL_ARCHIVE_TOTAL)),
+                "collection_complete": bool(mastery_preview.get("collection_complete", false)),
+                "collection_bonus_label": str(mastery_preview.get("collection_bonus_label", "")).strip_edges(),
+                "mastery_label": str(mastery_preview.get("mastery_label", "")).strip_edges()
+            }
+        _:
+            return {}
+
+
+func _get_hidden_layer_gameplay_lines() -> Array[String]:
+    var lines: Array[String] = []
+    var gameplay: Dictionary = _build_hidden_layer_gameplay_payload()
+    if gameplay.is_empty():
+        return lines
+    match _active_hidden_layer_id:
+        HIDDEN_LAYER_FS1:
+            var parts: Array[String] = []
+            var label: String = str(gameplay.get("pressure_label", "Rift Surge")).strip_edges()
+            var pressure_stage: int = int(gameplay.get("pressure_stage", 0))
+            var required_stage: int = int(gameplay.get("required_pressure_stage", 0))
+            if pressure_stage > 0 or required_stage > 0:
+                parts.append("%s %d/%d" % [label, pressure_stage, maxi(required_stage, pressure_stage)])
+            var survival_seconds: float = float(gameplay.get("survival_seconds", 0.0))
+            if survival_seconds > 0.0:
+                parts.append("Hold %.1fs" % survival_seconds)
+            var echo_title: String = str(gameplay.get("boss_echo_title", "")).strip_edges()
+            if echo_title != "" and echo_title != "Unknown Echo":
+                parts.append("Echo %s" % echo_title)
+            if not parts.is_empty():
+                lines.append("Pressure: %s" % " | ".join(PackedStringArray(parts)))
+            var echo_collection: Array[String] = _as_string_array(gameplay.get("boss_echo_collection", []))
+            if not echo_collection.is_empty():
+                var echo_titles: Array[String] = []
+                for boss_id: String in echo_collection:
+                    var boss_title: String = _get_boss_title(boss_id)
+                    if boss_title != "" and boss_title != "Unknown Echo":
+                        echo_titles.append(boss_title)
+                var collection_text: String = "Echoes %d/%d" % [echo_collection.size(), FS1_ARCHIVE_BOSS_ECHOES.size()]
+                if not echo_titles.is_empty():
+                    collection_text += " - %s" % ", ".join(PackedStringArray(echo_titles))
+                lines.append("Collection: %s" % collection_text)
+            var mastery_label_fs1: String = str(gameplay.get("mastery_label", "")).strip_edges()
+            if mastery_label_fs1 != "":
+                lines.append("Mastery: %s" % mastery_label_fs1)
+        HIDDEN_LAYER_FS2:
+            var trial_label: String = str(gameplay.get("trial_label", "")).strip_edges()
+            if trial_label != "":
+                lines.append("Trial: %s" % trial_label)
+            var trial_labels: Array[String] = _as_string_array(gameplay.get("trial_labels", []))
+            if not trial_labels.is_empty():
+                var deepest_label: String = str(gameplay.get("deepest_trial_label", trial_labels[trial_labels.size() - 1])).strip_edges()
+                var collection_text: String = "Trials %d/%d" % [trial_labels.size(), FS2_TRIAL_ARCHIVE_TOTAL]
+                if deepest_label != "":
+                    collection_text += " - %s" % deepest_label
+                lines.append("Collection: %s" % collection_text)
+            var mastery_label_fs2: String = str(gameplay.get("mastery_label", "")).strip_edges()
+            if mastery_label_fs2 != "":
+                lines.append("Mastery: %s" % mastery_label_fs2)
+    return lines
+
+
+func _build_hidden_layer_mastery_preview(layer_id: String) -> Dictionary:
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    var status: Dictionary = {}
+    if SaveManager != null and SaveManager.has_method("get_hidden_layer_status"):
+        var status_var: Variant = SaveManager.get_hidden_layer_status(layer_key)
+        if status_var is Dictionary:
+            status = status_var
+
+    var persistent_items: Array[String] = _as_string_array(status.get("collection_items", []))
+    var current_items: Array[String] = []
+    var required_total: int = 0
+    var bonus_label: String = ""
+    var mastery_prefix: String = ""
+    match layer_key:
+        HIDDEN_LAYER_FS1:
+            current_items = _get_hidden_layer_boss_echo_collection()
+            required_total = FS1_ARCHIVE_BOSS_ECHOES.size()
+            bonus_label = "Rewind +%d | Time Fragments +%d" % [FS1_MASTERY_BONUS_REWINDS, FS1_MASTERY_BONUS_FRAGMENTS]
+            mastery_prefix = "Echo Archive Mastered"
+        HIDDEN_LAYER_FS2:
+            current_items = _get_hidden_layer_trial_label_collection()
+            required_total = FS2_TRIAL_ARCHIVE_TOTAL
+            bonus_label = "Draft +%d | Merge +%d" % [FS2_MASTERY_BONUS_DRAFTS, FS2_MASTERY_BONUS_MERGES]
+            mastery_prefix = "Forge Archive Mastered"
+        _:
+            return {}
+
+    var merged_items: Array[String] = persistent_items.duplicate()
+    for item: String in current_items:
+        _append_unique_string(merged_items, item)
+
+    var collection_complete: bool = required_total > 0 and merged_items.size() >= required_total
+    var bonus_claimed: bool = bool(status.get("collection_bonus_claimed", false))
+    var mastery_label: String = ""
+    if collection_complete:
+        mastery_label = "%s | %s %s" % [mastery_prefix, bonus_label, "claimed" if bonus_claimed else "ready"]
+
+    return {
+        "collection_items": merged_items,
+        "collection_count": merged_items.size(),
+        "collection_required": required_total,
+        "collection_complete": collection_complete,
+        "collection_bonus_ready": collection_complete and not bonus_claimed,
+        "collection_bonus_claimed": bonus_claimed,
+        "collection_bonus_label": bonus_label,
+        "mastery_label": mastery_label
+    }
+
+
+func _get_hidden_layer_boss_echo_collection() -> Array[String]:
+    var rows: Array[String] = _as_string_array(_hidden_layer_boss_echo_collection)
+    if _hidden_layer_selected_boss_echo_id != "":
+        _append_unique_string(rows, _hidden_layer_selected_boss_echo_id)
+    return rows
+
+
+func _get_hidden_layer_trial_label_collection() -> Array[String]:
+    var rows: Array[String] = _as_string_array(_hidden_layer_trial_labels)
+    if _hidden_layer_deepest_trial_label != "":
+        _append_unique_string(rows, _hidden_layer_deepest_trial_label)
+    return rows
+
+
+func _build_memory_archive_payload(_unlocked_fragments: Array[String]) -> Dictionary:
+    var intro_lines: Array[String] = []
+    var header_lines: Array[String] = []
+    var sections: Array[Dictionary] = []
+
+    var route_arc_line: String = _get_route_arc_line()
+    if route_arc_line != "":
+        intro_lines.append(route_arc_line)
+        header_lines.append(route_arc_line)
+
+    var fragment_progress_line: String = _get_fragment_progress_line()
+    if fragment_progress_line != "":
+        intro_lines.append(fragment_progress_line)
+        header_lines.append(fragment_progress_line)
+
+    var fragment_recap_lines: Array[String] = _get_fragment_recap_lines()
+    if not fragment_recap_lines.is_empty():
+        sections.append({
+            "title": "Fragment Recap",
+            "lines": fragment_recap_lines
+        })
+
+    var camp_reflection_lines: Array[String] = _get_camp_reflection_lines()
+    if not camp_reflection_lines.is_empty():
+        sections.append({
+            "title": "Camp Reflection",
+            "lines": camp_reflection_lines
+        })
+
+    var recent_choice_line: String = _get_recent_choice_line(_get_chapter_id_for_room(_room_index))
+    if recent_choice_line != "":
+        sections.append({
+            "title": "Recent Vows",
+            "lines": [recent_choice_line]
+        })
+
+    var hidden_hook_lines: Array[String] = _get_hidden_layer_hook_lines()
+    if not hidden_hook_lines.is_empty():
+        sections.append({
+            "title": "Hidden Route Lead",
+            "lines": hidden_hook_lines
+        })
+
+    var hidden_progress_lines: Array[String] = _get_hidden_layer_progress_lines()
+    if not hidden_progress_lines.is_empty():
+        sections.append({
+            "title": "Hidden Layer Track",
+            "lines": hidden_progress_lines
+        })
+
+    return {
+        "intro_lines": intro_lines,
+        "header_lines": header_lines,
+        "sections": sections
+    }
+
+
+func _begin_boss_flawless_watch() -> void:
+    _boss_flawless_watch_active = true
+    _boss_flawless_current_chapter = _get_chapter_id_for_room(_room_index)
+    _boss_flawless_damaged = false
+    _boss_flawless_previous_hp = _get_player_current_hp()
+
+
+func _end_boss_flawless_watch(record_success: bool) -> void:
+    if not _boss_flawless_watch_active:
+        return
+
+    if record_success and not _boss_flawless_damaged and _boss_flawless_current_chapter != "" and not _run_boss_flawless_chapters.has(_boss_flawless_current_chapter):
+        _run_boss_flawless_chapters.append(_boss_flawless_current_chapter)
+
+    _boss_flawless_watch_active = false
+    _boss_flawless_current_chapter = ""
+    _boss_flawless_previous_hp = 0.0
+    _boss_flawless_damaged = false
+
+
+func _on_player_health_changed(current_hp: float, _max_hp: float) -> void:
+    if not _boss_flawless_watch_active:
+        return
+    if current_hp < _boss_flawless_previous_hp - 0.01:
+        _boss_flawless_damaged = true
+    _boss_flawless_previous_hp = current_hp
+
+
+func _get_player_current_hp() -> float:
+    var health: Node = _player.get_node_or_null("HealthComponent")
+    if health != null and health.get("current_hp") != null:
+        return float(health.current_hp)
+    return 0.0
+
+
+func _resolve_run_route_style_for_payoff() -> String:
+    if _current_route_style != "":
+        return _current_route_style
+    if not _route_style_timeline.is_empty():
+        var last_row: Dictionary = _route_style_timeline[_route_style_timeline.size() - 1]
+        return str(last_row.get("style_id", "neutral")).strip_edges().to_lower()
+    return "neutral"
+
+
+func _get_hidden_layer_story_preview(layer_id: String) -> Dictionary:
+    var layer_key: String = layer_id.strip_edges().to_upper()
+    if layer_key == "" or _narrative_system == null or not _narrative_system.has_method("get_hidden_layer_story_payload"):
+        return {}
+    var unlocked_endings: Array[String] = []
+    if SaveManager != null and SaveManager.has_method("get_unlocked_endings"):
+        unlocked_endings = SaveManager.get_unlocked_endings()
+    return _narrative_system.get_hidden_layer_story_payload(
+        layer_key,
+        _alignment,
+        _resolve_run_route_style_for_payoff(),
+        unlocked_endings
+    )
+
+
+func _trigger_fragment_from_pacing(trigger_type: String) -> Dictionary:
+    if _narrative_system == null or not _narrative_system.has_method("get_fragment_trigger_payload"):
+        return {}
+
+    var chapter_id: String = _get_chapter_id_for_room(_room_index)
+    var payload: Dictionary = _narrative_system.get_fragment_trigger_payload(chapter_id, trigger_type, _alignment, _resolve_run_route_style_for_payoff())
+    return _register_fragment_payload(payload, trigger_type, chapter_id)
+
+
+func _register_hidden_layer_story_fragment(story_payload: Dictionary) -> Dictionary:
+    if story_payload.is_empty():
+        return {}
+    var layer_key: String = str(story_payload.get("layer_id", _active_hidden_layer_id)).strip_edges().to_upper()
+    var trigger_type: String = "hidden_%s_clear" % layer_key.to_lower()
+    return _register_fragment_payload(story_payload, trigger_type, layer_key)
+
+
+func _register_fragment_payload(payload: Dictionary, trigger_type: String, chapter_id: String = "") -> Dictionary:
+    if payload.is_empty():
+        return {}
+
+    var fragment_id: String = str(payload.get("fragment_id", "")).strip_edges()
+    if fragment_id == "":
+        return {}
+    if _has_fragment_trigger_record(fragment_id, trigger_type):
+        return {}
+
+    var entry: Dictionary = payload.duplicate(true)
+    entry["trigger_type"] = trigger_type
+    if chapter_id != "":
+        entry["chapter_id"] = chapter_id
+    var newly_unlocked: bool = SaveManager.unlock_memory_fragment(fragment_id)
+    if EventBus != null and EventBus.has_signal("memory_fragment_found"):
+        EventBus.memory_fragment_found.emit(fragment_id)
+
+    entry["newly_unlocked"] = newly_unlocked
+    entry["room_index"] = _room_index
+    _run_fragment_triggers.append(entry.duplicate(true))
+    return entry
+
+
+func _has_fragment_trigger_record(fragment_id: String, trigger_type: String) -> bool:
+    for item: Variant in _run_fragment_triggers:
+        if not (item is Dictionary):
+            continue
+        var row: Dictionary = item
+        if str(row.get("fragment_id", "")) == fragment_id and str(row.get("trigger_type", "")) == trigger_type:
+            return true
+    return false
+
+
+func _get_fragment_trigger_line(payload: Dictionary) -> String:
+    if payload.is_empty():
+        return ""
+    var title: String = str(payload.get("fragment_title", payload.get("fragment_id", "memory"))).strip_edges()
+    if title == "":
+        return ""
+    if bool(payload.get("newly_unlocked", false)):
+        return "Memory triggered: %s" % title
+    return "Memory echoed: %s" % title
+
+
+func _as_string_array(value: Variant) -> Array[String]:
+    var rows: Array[String] = []
+    if not (value is Array):
+        return rows
+    for item: Variant in value:
+        rows.append(str(item).strip_edges())
+    return rows
+
+
+func _append_unique_string(rows: Array, value: String) -> void:
+    var text: String = value.strip_edges()
+    if text == "" or rows.has(text):
+        return
+    rows.append(text)
+
+
+func _get_latest_fragment_trigger_line() -> String:
+    if _run_fragment_triggers.is_empty():
+        return ""
+    var last_item: Variant = _run_fragment_triggers[_run_fragment_triggers.size() - 1]
+    if last_item is Dictionary:
+        return _get_fragment_trigger_line(last_item)
+    return ""
 
 
 func _get_route_tier() -> String:
@@ -2899,6 +5126,13 @@ func _get_route_tier() -> String:
     if _alignment <= -60.0:
         return "FALL"
     return "BALANCE"
+
+
+func _get_forge_recipe_ore_cost(recipe_id: String, fallback: int) -> int:
+    var recipe_var: Variant = _forge_recipes.get(recipe_id, {})
+    if recipe_var is Dictionary:
+        return maxi(1, int((recipe_var as Dictionary).get("ore_cost", fallback)))
+    return maxi(1, fallback)
 
 
 func _get_hazard_intensity() -> float:
@@ -2911,7 +5145,7 @@ func _get_hazard_intensity() -> float:
         base_intensity = 1.0
     elif _current_room_type == ROOM_TYPE_TREASURE and _treasure_challenge_enabled:
         base_intensity = 1.05
-    return base_intensity * _chapter_effect_hazard_mult * _route_hazard_mult
+    return base_intensity * _chapter_effect_hazard_mult * _route_hazard_mult * _difficulty_hazard_mult * _get_room_hazard_pressure(_room_index)
 
 
 func _get_resistance(stats: Node, property_name: String) -> float:
@@ -3333,8 +5567,14 @@ func _update_environment_visuals(delta: float) -> void:
 
 func _resolve_hazard_tint_color() -> Color:
     var hazard_color: Color
-    if _active_hazards.has("void_corruption") or _active_hazards.has("void_rift"):
+    if _active_hazards.has("spatial_distortion"):
+        hazard_color = Color(0.72, 0.36, 0.96, 1.0)
+    elif _active_hazards.has("void_corruption") or _active_hazards.has("void_rift"):
         hazard_color = Color(0.40, 0.20, 0.62, 1.0)
+    elif _active_hazards.has("crystal_reflection"):
+        hazard_color = Color(0.72, 0.90, 1.0, 1.0)
+    elif _active_hazards.has("blizzard"):
+        hazard_color = Color(0.82, 0.94, 1.0, 1.0)
     elif _active_hazards.has("frostbite") or _active_hazards.has("ice_slide"):
         hazard_color = Color(0.48, 0.66, 0.84, 1.0)
     elif _active_hazards.has("lava_pool"):
@@ -3362,6 +5602,30 @@ func _get_chapter_environment_row(index: int) -> Dictionary:
     return chapters.get(chapter_id, {})
 
 
+func _get_room_environment_profile(index: int) -> Dictionary:
+    var chapter_row: Dictionary = _get_chapter_environment_row(index)
+    var room_profiles_var: Variant = chapter_row.get("room_profiles", {})
+    if not (room_profiles_var is Dictionary):
+        return {}
+
+    var room_type: String = _resolve_room_type(index)
+    var profile_var: Variant = (room_profiles_var as Dictionary).get(room_type, {})
+    if profile_var is Dictionary:
+        return profile_var
+    return {}
+
+
+func _merge_visual_profiles(base_profile: Dictionary, overrides: Dictionary) -> Dictionary:
+    if overrides.is_empty():
+        return base_profile.duplicate(true)
+
+    var merged: Dictionary = base_profile.duplicate(true)
+    for key_var: Variant in overrides.keys():
+        var key: String = str(key_var)
+        merged[key] = overrides.get(key_var)
+    return merged
+
+
 func _get_hazard_anim_interval(index: int) -> float:
     var chapter_row: Dictionary = _get_chapter_environment_row(index)
     return clampf(float(chapter_row.get("hazard_anim_interval", 0.16)), 0.08, 0.40)
@@ -3374,10 +5638,21 @@ func _get_ambient_fx_interval(index: int) -> float:
 
 func _get_chapter_visual_profile(index: int) -> Dictionary:
     var chapter_row: Dictionary = _get_chapter_environment_row(index)
+    var base_profile: Dictionary = {}
     var profile_var: Variant = chapter_row.get("visual_profile", {})
     if profile_var is Dictionary:
-        return profile_var
-    return {}
+        base_profile = profile_var
+
+    var room_profile: Dictionary = _get_room_environment_profile(index)
+    var overrides_var: Variant = room_profile.get("visual_profile_overrides", {})
+    if overrides_var is Dictionary:
+        return _merge_visual_profiles(base_profile, overrides_var)
+    return base_profile
+
+
+func _get_room_hazard_pressure(index: int) -> float:
+    var room_profile: Dictionary = _get_room_environment_profile(index)
+    return clampf(float(room_profile.get("hazard_pressure", 1.0)), 0.0, 2.5)
 
 
 func _get_visual_profile_value(profile: Dictionary, key: String, default_value: float, min_value: float, max_value: float) -> float:
@@ -3442,11 +5717,27 @@ func _process_environment_hazards(delta: float) -> void:
         stats.current_stamina = maxf(0.0, stats.current_stamina - 7.0 * delta * intensity)
         EventBus.stamina_changed.emit(float(stats.current_stamina), float(stats.stamina_max))
 
+    if _active_hazards.has("blizzard"):
+        _set_frostbite(_frostbite + 8.8 * delta * intensity * (1.0 - frost_resist))
+        if stats != null and stats.get("current_stamina") != null:
+            stats.current_stamina = maxf(0.0, stats.current_stamina - 5.2 * delta * intensity)
+            EventBus.stamina_changed.emit(float(stats.current_stamina), float(stats.stamina_max))
+
+    if _active_hazards.has("crystal_reflection"):
+        _set_frostbite(_frostbite + 3.6 * delta * intensity * (1.0 - frost_resist))
+        if stats != null and stats.get("current_stamina") != null:
+            stats.current_stamina = maxf(0.0, stats.current_stamina - 2.8 * delta * intensity)
+            EventBus.stamina_changed.emit(float(stats.current_stamina), float(stats.stamina_max))
+
     if _active_hazards.has("frostbite"):
         _set_frostbite(_frostbite + 6.2 * delta * intensity * (1.0 - frost_resist))
 
     if _active_hazards.has("void_corruption"):
         _set_void_corruption(_void_corruption + 5.4 * delta * intensity * (1.0 - void_resist))
+
+    if _active_hazards.has("spatial_distortion"):
+        _set_void_corruption(_void_corruption + 7.2 * delta * intensity * (1.0 - void_resist))
+        _player.apply_knockback(Vector2(0.0, sin(_hazard_wave * 2.2) * 24.0 * delta * intensity))
 
     _hazard_tick_timer += delta
     if _hazard_tick_timer >= 1.0:
@@ -3457,8 +5748,14 @@ func _process_environment_hazards(delta: float) -> void:
             tick_damage += 4.0 * intensity
         if _active_hazards.has("spore_cloud"):
             tick_damage += 1.6 * intensity
+        if _active_hazards.has("blizzard"):
+            tick_damage += 1.4 * intensity * (1.0 - frost_resist)
+        if _active_hazards.has("crystal_reflection"):
+            tick_damage += (1.8 + _frostbite * 0.01) * intensity * (1.0 - frost_resist)
         if _active_hazards.has("void_rift"):
             tick_damage += (2.5 + _void_corruption * 0.015) * intensity * (1.0 - void_resist)
+        if _active_hazards.has("spatial_distortion"):
+            tick_damage += (1.9 + _void_corruption * 0.012) * intensity * (1.0 - void_resist)
 
         if _frostbite >= 100.0:
             tick_damage += 4.8 * intensity * (1.0 - frost_resist)
@@ -3485,6 +5782,12 @@ func _apply_environment_speed_modifier(include_room_hazards: bool) -> void:
     var multiplier: float = 1.0
     if include_room_hazards and _active_hazards.has("ice_slide"):
         multiplier *= 0.90
+    if include_room_hazards and _active_hazards.has("blizzard"):
+        multiplier *= 0.82
+    if include_room_hazards and _active_hazards.has("crystal_reflection"):
+        multiplier *= 0.93
+    if include_room_hazards and _active_hazards.has("spatial_distortion"):
+        multiplier *= 0.88
     if _frostbite >= 80.0:
         multiplier *= 0.60
     elif _frostbite >= 50.0:
@@ -3512,6 +5815,20 @@ func _set_void_corruption(value: float) -> void:
 
 
 func _get_hazards_for_room(index: int) -> Array[String]:
+    var room_profile: Dictionary = _get_room_environment_profile(index)
+    var room_hazards_var: Variant = room_profile.get("hazards", [])
+    if room_hazards_var is Array:
+        var room_hazards: Array[String] = []
+        var seen: Dictionary = {}
+        for item: Variant in room_hazards_var:
+            var hazard_id: String = str(item)
+            if hazard_id.is_empty() or seen.has(hazard_id):
+                continue
+            seen[hazard_id] = true
+            room_hazards.append(hazard_id)
+        if not room_hazards.is_empty() or _resolve_room_type(index) == ROOM_TYPE_SAFE_CAMP or _resolve_room_type(index) == ROOM_TYPE_SHOP:
+            return room_hazards
+
     var chapter_row: Dictionary = _get_chapter_environment_row(index)
     var hazards_var: Variant = chapter_row.get("hazards", [])
 
@@ -3644,28 +5961,30 @@ func _spawn_direct_pickup(pickup_type: String, amount: int, pickup_id: String, p
 func _map_item_to_pickup(item_id: String) -> Dictionary:
     match item_id:
         "xp_gem_small":
-            return {"type": "xp", "amount": 5}
+            return {"type": "xp", "amount": _scale_reward_amount(5, 1.0, "xp")}
         "xp_gem_medium":
-            return {"type": "xp", "amount": 12}
+            return {"type": "xp", "amount": _scale_reward_amount(12, 1.0, "xp")}
         "xp_gem_large":
-            return {"type": "xp", "amount": 28}
+            return {"type": "xp", "amount": _scale_reward_amount(28, 1.0, "xp")}
         "gold_small":
-            return {"type": "gold", "amount": _scale_drop_amount(8, _route_gold_drop_mult)}
+            return {"type": "gold", "amount": _scale_reward_amount(8, _route_gold_drop_mult, "gold")}
         "gold_medium":
-            return {"type": "gold", "amount": _scale_drop_amount(20, _route_gold_drop_mult)}
+            return {"type": "gold", "amount": _scale_reward_amount(20, _route_gold_drop_mult, "gold")}
         "ore_small":
-            return {"type": "ore", "amount": _scale_drop_amount(1, _route_ore_drop_mult)}
+            return {"type": "ore", "amount": _scale_reward_amount(1, _route_ore_drop_mult, "ore")}
         "ore_medium":
-            return {"type": "ore", "amount": _scale_drop_amount(2, _route_ore_drop_mult)}
+            return {"type": "ore", "amount": _scale_reward_amount(2, _route_ore_drop_mult, "ore")}
         "ore_large":
-            return {"type": "ore", "amount": _scale_drop_amount(4, _route_ore_drop_mult)}
+            return {"type": "ore", "amount": _scale_reward_amount(4, _route_ore_drop_mult, "ore")}
         "hp_orb":
             return {"type": "hp", "amount": 10}
         "chest_common":
-            return {"type": "gold", "amount": _scale_drop_amount(24, _route_gold_drop_mult)}
+            return {"type": "gold", "amount": _scale_reward_amount(24, _route_gold_drop_mult, "gold", true)}
         "chest_rare":
-            return {"type": "gold", "amount": _scale_drop_amount(40, _route_gold_drop_mult)}
+            return {"type": "gold", "amount": _scale_reward_amount(40, _route_gold_drop_mult, "gold", true)}
         "accessory_drop":
+            return {"type": "accessory", "amount": 1}
+        "acc_heart_of_mine", "acc_flame_core", "acc_zero_mark", "acc_void_eye":
             return {"type": "accessory", "amount": 1}
         _:
             return {}
@@ -3673,6 +5992,60 @@ func _map_item_to_pickup(item_id: String) -> Dictionary:
 
 func _scale_drop_amount(base_amount: int, multiplier: float) -> int:
     return maxi(1, int(round(float(base_amount) * maxf(0.0, multiplier))))
+
+
+func _get_reward_curve_profile(index: int) -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("drop_tables", {})
+    var profiles_var: Variant = config.get("chapter_reward_profiles", {})
+    if not (profiles_var is Dictionary):
+        return {}
+    var chapter_id: String = _get_chapter_id_for_room(index)
+    var row_var: Variant = (profiles_var as Dictionary).get(chapter_id, {})
+    if row_var is Dictionary:
+        return row_var
+    return {}
+
+
+func _get_long_run_room_curve() -> Dictionary:
+    var config: Dictionary = ConfigManager.get_config("drop_tables", {})
+    var curve_var: Variant = config.get("long_run_room_curve", {})
+    if curve_var is Dictionary:
+        return curve_var
+    return {}
+
+
+func _get_reward_curve_multiplier(index: int, reward_type: String, is_treasure: bool = false) -> float:
+    var profile: Dictionary = _get_reward_curve_profile(index)
+    var reward_key: String = "%s_mult" % reward_type
+    var multiplier: float = clampf(float(profile.get(reward_key, 1.0)), 0.6, 2.5)
+    if is_treasure:
+        multiplier *= clampf(float(profile.get("treasure_mult", 1.0)), 0.6, 2.5)
+    return multiplier
+
+
+func _get_long_run_reward_bonus(index: int, reward_type: String, is_treasure: bool = false) -> float:
+    var curve: Dictionary = _get_long_run_room_curve()
+    if curve.is_empty():
+        return 1.0
+
+    var room_bonus_start: int = clampi(int(curve.get("room_bonus_start", 5)), 1, 20)
+    var room_bonus_per_room: float = clampf(float(curve.get("room_bonus_per_room", 0.04)), 0.0, 0.25)
+    var room_bonus_cap: float = clampf(float(curve.get("room_bonus_cap", 0.32)), 0.0, 1.0)
+    var weight_key: String = "%s_weight" % reward_type
+    var weight: float = clampf(float(curve.get(weight_key, 1.0)), 0.0, 2.0)
+    if is_treasure:
+        weight *= clampf(float(curve.get("treasure_weight", 1.0)), 0.0, 2.0)
+
+    var bonus_rooms: int = maxi(0, index - room_bonus_start)
+    var bonus: float = minf(room_bonus_cap, float(bonus_rooms) * room_bonus_per_room)
+    return 1.0 + bonus * weight
+
+
+func _scale_reward_amount(base_amount: int, route_multiplier: float, reward_type: String, is_treasure: bool = false) -> int:
+    var chapter_multiplier: float = _get_reward_curve_multiplier(_room_index, reward_type, is_treasure)
+    var long_run_bonus: float = _get_long_run_reward_bonus(_room_index, reward_type, is_treasure)
+    var difficulty_multiplier: float = _get_difficulty_reward_multiplier(reward_type, is_treasure)
+    return _scale_drop_amount(base_amount, maxf(0.0, route_multiplier) * chapter_multiplier * long_run_bonus * difficulty_multiplier)
 
 
 func _on_pickup_collected(pickup_type: String, amount: int, pickup_id: String) -> void:
@@ -3697,6 +6070,8 @@ func _on_pickup_collected(pickup_type: String, amount: int, pickup_id: String) -
 
     if pickup_id == "accessory_drop":
         _grant_random_accessory()
+    elif pickup_id.begins_with("acc_"):
+        _grant_specific_accessory(pickup_id, "pickup")
 
 
 func _grant_random_accessory() -> void:
@@ -3704,6 +6079,24 @@ func _grant_random_accessory() -> void:
     if accessory_id == "":
         return
 
+    _grant_specific_accessory(accessory_id, "random_drop")
+
+
+func _grant_boss_stage_accessory(chapter_id: String) -> void:
+    if chapter_id == "":
+        return
+    if bool(_boss_accessory_claimed.get(chapter_id, false)):
+        return
+
+    var accessory_id: String = str(CHAPTER_BOSS_ACCESSORY.get(chapter_id, "")).strip_edges()
+    if accessory_id == "":
+        return
+
+    _boss_accessory_claimed[chapter_id] = true
+    _grant_specific_accessory(accessory_id, "boss_clear")
+
+
+func _grant_specific_accessory(accessory_id: String, source_label: String) -> void:
     if _equipped_accessories.has(accessory_id):
         _gold += 22
         EventBus.gold_changed.emit(_gold)
@@ -3718,8 +6111,22 @@ func _grant_random_accessory() -> void:
 
     _equipped_accessories.append(accessory_id)
     _apply_accessory_effect(accessory_id)
+    _apply_accessory_anchor_bonus(accessory_id, source_label)
     EventBus.accessory_acquired.emit(accessory_id)
     _room_status_label.text = "Accessory equipped: %s" % accessory_id
+
+
+func _apply_accessory_anchor_bonus(accessory_id: String, source_label: String) -> void:
+    var bonus_var: Variant = ACCESSORY_ANCHOR_BONUS.get(accessory_id, {})
+    if not (bonus_var is Dictionary):
+        return
+    var bonus: Dictionary = bonus_var
+    for anchor_key_var in bonus.keys():
+        var anchor_id: String = str(anchor_key_var).strip_edges().to_lower()
+        var amount: float = maxf(0.0, float(bonus.get(anchor_key_var, 0.0)))
+        if anchor_id == "" or amount <= 0.0:
+            continue
+        _notify_level_up_anchor(anchor_id, amount, "accessory:%s:%s" % [source_label, accessory_id])
 
 
 func _roll_accessory_id() -> String:
