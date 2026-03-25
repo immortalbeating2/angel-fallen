@@ -19,6 +19,12 @@ func _instantiate_main_menu() -> Control:
 	return menu
 
 
+func _find_menu_label(menu: Control, node_name: String) -> Label:
+	if menu == null:
+		return null
+	return menu.find_child(node_name, true, false) as Label
+
+
 func test_difficulty_meta_return_progression_unlocks_and_surfaces_across_ui() -> void:
 	if SaveManager == null:
 		pending("SaveManager singleton not available")
@@ -237,8 +243,8 @@ func test_difficulty_meta_return_progression_unlocks_and_surfaces_across_ui() ->
 	if menu == null:
 		return
 
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
-	var shop_message_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/ShopMessageValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
+	var shop_message_label: Label = _find_menu_label(menu, "ShopMessageValue")
 	assert_not_null(last_run_label, "last run label should exist")
 	assert_not_null(shop_message_label, "shop message label should exist")
 	if last_run_label == null or shop_message_label == null:

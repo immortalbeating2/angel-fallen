@@ -1,14 +1,21 @@
 extends Control
 
+@onready var _title_label: Label = $CenterContainer/VBoxContainer/Title
+@onready var _subtitle_label: Label = $CenterContainer/VBoxContainer/Subtitle
+@onready var _main_vbox: VBoxContainer = $CenterContainer/VBoxContainer
+@onready var _meta_label: Label = $CenterContainer/VBoxContainer/MetaLabel
 @onready var _meta_value: Label = $CenterContainer/VBoxContainer/MetaValue
 @onready var _run_value: Label = $CenterContainer/VBoxContainer/RunValue
 @onready var _best_value: Label = $CenterContainer/VBoxContainer/BestValue
+@onready var _progress_label: Label = $CenterContainer/VBoxContainer/ProgressLabel
 @onready var _progress_value: Label = $CenterContainer/VBoxContainer/ProgressValue
+@onready var _character_label: Label = $CenterContainer/VBoxContainer/CharacterLabel
 @onready var _character_name_value: Label = $CenterContainer/VBoxContainer/CharacterNameValue
 @onready var _character_desc_value: Label = $CenterContainer/VBoxContainer/CharacterDescValue
 @onready var _character_stats_value: Label = $CenterContainer/VBoxContainer/CharacterStatsValue
 @onready var _character_trait_value: Label = $CenterContainer/VBoxContainer/CharacterTraitValue
 @onready var _character_unlock_value: Label = $CenterContainer/VBoxContainer/CharacterUnlockValue
+@onready var _character_switch_row: HBoxContainer = $CenterContainer/VBoxContainer/CharacterSwitchRow
 @onready var _character_prev_button: Button = $CenterContainer/VBoxContainer/CharacterSwitchRow/CharacterPrevButton
 @onready var _character_next_button: Button = $CenterContainer/VBoxContainer/CharacterSwitchRow/CharacterNextButton
 @onready var _upgrade_1_button: Button = $CenterContainer/VBoxContainer/Upgrade1Button
@@ -26,6 +33,11 @@ extends Control
 @onready var _ending_theme_band_top: ColorRect = $CenterContainer/VBoxContainer/EndingThemeBandTop
 @onready var _ending_theme_band_bottom: ColorRect = $CenterContainer/VBoxContainer/EndingThemeBandBottom
 @onready var _last_run_value: Label = $CenterContainer/VBoxContainer/LastRunValue
+@onready var _settings_button: Button = $CenterContainer/VBoxContainer/SettingsButton
+@onready var _codex_button: Button = $CenterContainer/VBoxContainer/CodexButton
+@onready var _start_button: Button = $CenterContainer/VBoxContainer/StartButton
+@onready var _quit_button: Button = $CenterContainer/VBoxContainer/QuitButton
+@onready var _reset_meta_button: Button = $CenterContainer/VBoxContainer/ResetMetaButton
 @onready var _settings_overlay: Control = $SettingsOverlay
 @onready var _runtime_settings_panel: VBoxContainer = $SettingsOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/RuntimeSettingsPanel
 @onready var _codex_overlay: Control = $CodexOverlay
@@ -48,6 +60,16 @@ var _codex_category_index: int = 0
 var _codex_entry_index: int = 0
 var _codex_stats_source_filter_index: int = 0
 var _codex_stats_chapter_filter_index: int = 0
+var _menu_layout_ready: bool = false
+var _meta_shop_overlay: Control = null
+var _archive_overlay: Control = null
+var _archive_section: String = "achievements"
+var _meta_shop_button: Button = null
+var _archive_button: Button = null
+var _archive_achievement_button: Button = null
+var _archive_fragment_button: Button = null
+var _archive_ending_button: Button = null
+var _archive_last_run_button: Button = null
 
 const CODEX_CATEGORIES: Array[String] = ["characters", "weapons", "passives", "enemies", "accessories", "archives"]
 const CODEX_CATEGORY_NAMES: Dictionary = {
@@ -263,12 +285,523 @@ func _ready() -> void:
         _settings_overlay.visible = false
     if _codex_overlay != null:
         _codex_overlay.visible = false
+    _setup_formal_menu_layout()
     _sync_character_cursor_from_save()
     _sync_codex_stats_filters_from_save()
     _refresh_meta_text()
 
 
+func _setup_formal_menu_layout() -> void:
+    if _menu_layout_ready or _main_vbox == null:
+        return
+
+    _main_vbox.add_theme_constant_override("separation", 10)
+    _title_label.add_theme_font_size_override("font_size", 54)
+    _subtitle_label.text = "Choose a character, start a run, or review your postgame archive."
+    _subtitle_label.add_theme_font_size_override("font_size", 18)
+    _subtitle_label.custom_minimum_size = Vector2(760, 0)
+    _subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _ensure_home_summary_panel()
+    _ensure_character_panel()
+    _ensure_primary_action_grid()
+    _ensure_meta_shop_overlay()
+    _ensure_archive_overlay()
+    _refresh_archive_section_visibility()
+    _menu_layout_ready = true
+
+
+func _ensure_home_summary_panel() -> void:
+    if _main_vbox.get_node_or_null("HomeSummaryPanel") != null:
+        return
+
+    var panel: PanelContainer = PanelContainer.new()
+    panel.name = "HomeSummaryPanel"
+    panel.custom_minimum_size = Vector2(760, 0)
+    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.name = "MarginContainer"
+    margin.add_theme_constant_override("margin_left", 16)
+    margin.add_theme_constant_override("margin_top", 12)
+    margin.add_theme_constant_override("margin_right", 16)
+    margin.add_theme_constant_override("margin_bottom", 12)
+    panel.add_child(margin)
+
+    var box: VBoxContainer = VBoxContainer.new()
+    box.name = "VBoxContainer"
+    box.add_theme_constant_override("separation", 8)
+    margin.add_child(box)
+
+    var title: Label = Label.new()
+    title.name = "Title"
+    title.text = "Run Overview"
+    title.add_theme_font_size_override("font_size", 22)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    box.add_child(title)
+
+    var hint: Label = Label.new()
+    hint.name = "Hint"
+    hint.text = "Current meta, best run stats, and account-wide completion progress."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
+    box.add_child(hint)
+
+    var grid: GridContainer = GridContainer.new()
+    grid.name = "SummaryGrid"
+    grid.columns = 2
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    grid.add_theme_constant_override("h_separation", 20)
+    grid.add_theme_constant_override("v_separation", 8)
+    box.add_child(grid)
+
+    _main_vbox.add_child(panel)
+    _main_vbox.move_child(panel, 2)
+
+    if _meta_label != null:
+        _meta_label.visible = false
+    if _progress_label != null:
+        _progress_label.visible = false
+
+    _meta_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    _meta_value.add_theme_font_size_override("font_size", 22)
+    _run_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    _run_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _best_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    _best_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _progress_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    _progress_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+    _reparent_control(_meta_value, grid)
+    _reparent_control(_run_value, grid)
+    _reparent_control(_best_value, grid)
+    _reparent_control(_progress_value, grid)
+
+
+func _ensure_character_panel() -> void:
+    if _main_vbox.get_node_or_null("CharacterPanel") != null:
+        return
+
+    var panel: PanelContainer = PanelContainer.new()
+    panel.name = "CharacterPanel"
+    panel.custom_minimum_size = Vector2(760, 0)
+    panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.name = "MarginContainer"
+    margin.add_theme_constant_override("margin_left", 18)
+    margin.add_theme_constant_override("margin_top", 14)
+    margin.add_theme_constant_override("margin_right", 18)
+    margin.add_theme_constant_override("margin_bottom", 14)
+    panel.add_child(margin)
+
+    var box: VBoxContainer = VBoxContainer.new()
+    box.name = "VBoxContainer"
+    box.add_theme_constant_override("separation", 8)
+    margin.add_child(box)
+
+    var title: Label = Label.new()
+    title.name = "Title"
+    title.text = "Selected Character"
+    title.add_theme_font_size_override("font_size", 22)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    box.add_child(title)
+
+    var hint: Label = Label.new()
+    hint.name = "Hint"
+    hint.text = "Review signature weapon, trait, and unlock state before starting a run."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
+    box.add_child(hint)
+
+    _main_vbox.add_child(panel)
+    var action_wrap: Node = _main_vbox.get_node_or_null("PrimaryActionWrap")
+    if action_wrap != null:
+        _main_vbox.move_child(panel, action_wrap.get_index())
+
+    if _character_label != null:
+        _character_label.visible = false
+
+    _character_name_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _character_name_value.add_theme_font_size_override("font_size", 24)
+    _character_desc_value.custom_minimum_size = Vector2(0, 28)
+    _character_stats_value.custom_minimum_size = Vector2(0, 0)
+    _character_trait_value.custom_minimum_size = Vector2(0, 24)
+    _character_unlock_value.custom_minimum_size = Vector2(0, 22)
+    _character_desc_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _character_stats_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _character_trait_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _character_unlock_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+    _reparent_control(_character_name_value, box)
+    _reparent_control(_character_desc_value, box)
+    _reparent_control(_character_stats_value, box)
+    _reparent_control(_character_trait_value, box)
+    _reparent_control(_character_unlock_value, box)
+    _reparent_control(_character_switch_row, box)
+
+
+func _reparent_control(node: Control, new_parent: Node) -> void:
+    if node == null or new_parent == null:
+        return
+    var current_parent: Node = node.get_parent()
+    if current_parent == new_parent:
+        return
+    if current_parent != null:
+        current_parent.remove_child(node)
+    new_parent.add_child(node)
+
+
+func _ensure_primary_action_grid() -> void:
+    var action_wrap: PanelContainer = PanelContainer.new()
+    action_wrap.name = "PrimaryActionWrap"
+    action_wrap.custom_minimum_size = Vector2(760, 0)
+    action_wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.name = "MarginContainer"
+    margin.add_theme_constant_override("margin_left", 18)
+    margin.add_theme_constant_override("margin_top", 16)
+    margin.add_theme_constant_override("margin_right", 18)
+    margin.add_theme_constant_override("margin_bottom", 16)
+    action_wrap.add_child(margin)
+
+    var box: VBoxContainer = VBoxContainer.new()
+    box.name = "VBoxContainer"
+    box.add_theme_constant_override("separation", 10)
+    margin.add_child(box)
+
+    var title: Label = Label.new()
+    title.name = "Title"
+    title.text = "Play"
+    title.add_theme_font_size_override("font_size", 22)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    box.add_child(title)
+
+    var hint: Label = Label.new()
+    hint.name = "Hint"
+    hint.text = "Start immediately, or open the secondary progression screens from here."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
+    box.add_child(hint)
+
+    var action_grid: GridContainer = GridContainer.new()
+    action_grid.name = "PrimaryActionGrid"
+    action_grid.columns = 2
+    action_grid.add_theme_constant_override("h_separation", 12)
+    action_grid.add_theme_constant_override("v_separation", 10)
+    box.add_child(action_grid)
+
+    _meta_shop_button = Button.new()
+    _meta_shop_button.name = "MetaShopHomeButton"
+    _meta_shop_button.text = "Meta Shop"
+    _meta_shop_button.custom_minimum_size = Vector2(220, 44)
+    _meta_shop_button.pressed.connect(_on_meta_shop_button_pressed)
+
+    _archive_button = Button.new()
+    _archive_button.name = "ArchiveHomeButton"
+    _archive_button.text = "Archive"
+    _archive_button.custom_minimum_size = Vector2(220, 44)
+    _archive_button.pressed.connect(_on_archive_button_pressed)
+
+    _main_vbox.add_child(action_wrap)
+    var character_panel: Node = _main_vbox.get_node_or_null("CharacterPanel")
+    if character_panel != null:
+        _main_vbox.move_child(action_wrap, character_panel.get_index() + 1)
+
+    _start_button.custom_minimum_size = Vector2(0, 56)
+    _start_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _start_button.add_theme_font_size_override("font_size", 20)
+    _meta_shop_button.custom_minimum_size = Vector2(210, 44)
+    _archive_button.custom_minimum_size = Vector2(210, 44)
+    _settings_button.custom_minimum_size = Vector2(210, 44)
+    _codex_button.custom_minimum_size = Vector2(210, 44)
+    _quit_button.custom_minimum_size = Vector2(0, 42)
+    _quit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+    _reparent_control(_start_button, box)
+    action_grid.add_child(_meta_shop_button)
+    action_grid.add_child(_archive_button)
+    _reparent_control(_codex_button, action_grid)
+    _reparent_control(_settings_button, action_grid)
+    _reparent_control(_quit_button, box)
+
+
+func _ensure_meta_shop_overlay() -> void:
+    if _meta_shop_overlay != null:
+        return
+
+    var meta_shop_label: Control = $CenterContainer/VBoxContainer/MetaShopLabel
+    meta_shop_label.visible = false
+
+    _meta_shop_overlay = Control.new()
+    _meta_shop_overlay.name = "MetaShopOverlay"
+    _meta_shop_overlay.visible = false
+    _meta_shop_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _meta_shop_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+    add_child(_meta_shop_overlay)
+
+    var dim: ColorRect = ColorRect.new()
+    dim.name = "Dim"
+    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+    dim.color = Color(0, 0, 0, 0.62)
+    dim.mouse_filter = Control.MOUSE_FILTER_STOP
+    _meta_shop_overlay.add_child(dim)
+
+    var center: CenterContainer = CenterContainer.new()
+    center.name = "CenterContainer"
+    center.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _meta_shop_overlay.add_child(center)
+
+    var panel: PanelContainer = PanelContainer.new()
+    panel.name = "PanelContainer"
+    panel.custom_minimum_size = Vector2(560, 0)
+    center.add_child(panel)
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.name = "MarginContainer"
+    margin.add_theme_constant_override("margin_left", 18)
+    margin.add_theme_constant_override("margin_top", 16)
+    margin.add_theme_constant_override("margin_right", 18)
+    margin.add_theme_constant_override("margin_bottom", 16)
+    panel.add_child(margin)
+
+    var box: VBoxContainer = VBoxContainer.new()
+    box.name = "VBoxContainer"
+    box.add_theme_constant_override("separation", 10)
+    margin.add_child(box)
+
+    var title: Label = Label.new()
+    title.name = "Title"
+    title.text = "Meta Shop"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 28)
+    box.add_child(title)
+
+    var hint: Label = Label.new()
+    hint.name = "Hint"
+    hint.text = "Permanent upgrades unlock new caps as you progress through Meta Return milestones."
+    hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
+    box.add_child(hint)
+
+    _shop_message_value.custom_minimum_size = Vector2(520, 60)
+    _shop_message_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _shop_message_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _reparent_control(_shop_message_value, box)
+    _reparent_control(_upgrade_1_button, box)
+    _reparent_control(_upgrade_2_button, box)
+    _reparent_control(_upgrade_3_button, box)
+    _reparent_control(_upgrade_4_button, box)
+    _reparent_control(_upgrade_5_button, box)
+    _reparent_control(_reset_meta_button, box)
+
+    var close_button: Button = Button.new()
+    close_button.name = "CloseButton"
+    close_button.text = "Close"
+    close_button.custom_minimum_size = Vector2(220, 42)
+    close_button.pressed.connect(_close_meta_shop_overlay)
+    box.add_child(close_button)
+
+
+func _ensure_archive_overlay() -> void:
+    if _archive_overlay != null:
+        return
+
+    _archive_overlay = Control.new()
+    _archive_overlay.name = "ArchiveOverlay"
+    _archive_overlay.visible = false
+    _archive_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _archive_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+    add_child(_archive_overlay)
+
+    var dim: ColorRect = ColorRect.new()
+    dim.name = "Dim"
+    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+    dim.color = Color(0, 0, 0, 0.66)
+    dim.mouse_filter = Control.MOUSE_FILTER_STOP
+    _archive_overlay.add_child(dim)
+
+    var center: CenterContainer = CenterContainer.new()
+    center.name = "CenterContainer"
+    center.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _archive_overlay.add_child(center)
+
+    var panel: PanelContainer = PanelContainer.new()
+    panel.name = "PanelContainer"
+    panel.custom_minimum_size = Vector2(780, 0)
+    center.add_child(panel)
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.name = "MarginContainer"
+    margin.add_theme_constant_override("margin_left", 18)
+    margin.add_theme_constant_override("margin_top", 16)
+    margin.add_theme_constant_override("margin_right", 18)
+    margin.add_theme_constant_override("margin_bottom", 16)
+    panel.add_child(margin)
+
+    var box: VBoxContainer = VBoxContainer.new()
+    box.name = "VBoxContainer"
+    box.add_theme_constant_override("separation", 10)
+    margin.add_child(box)
+
+    var title: Label = Label.new()
+    title.name = "Title"
+    title.text = "Archive"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 28)
+    box.add_child(title)
+
+    var hint: Label = Label.new()
+    hint.name = "Hint"
+    hint.text = "Browse achievements, memory fragments, endings, and the most recent run summary."
+    hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
+    box.add_child(hint)
+
+    var nav_row: HBoxContainer = HBoxContainer.new()
+    nav_row.name = "SectionRow"
+    nav_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    nav_row.add_theme_constant_override("separation", 8)
+    box.add_child(nav_row)
+
+    _archive_achievement_button = _make_archive_section_button("Achievements", "achievements")
+    _archive_fragment_button = _make_archive_section_button("Fragments", "fragments")
+    _archive_ending_button = _make_archive_section_button("Endings", "endings")
+    _archive_last_run_button = _make_archive_section_button("Last Run", "last_run")
+    nav_row.add_child(_archive_achievement_button)
+    nav_row.add_child(_archive_fragment_button)
+    nav_row.add_child(_archive_ending_button)
+    nav_row.add_child(_archive_last_run_button)
+
+    var scroll: ScrollContainer = ScrollContainer.new()
+    scroll.name = "ScrollContainer"
+    scroll.custom_minimum_size = Vector2(760, 430)
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    box.add_child(scroll)
+
+    var content_box: VBoxContainer = VBoxContainer.new()
+    content_box.name = "ContentVBox"
+    content_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content_box.add_theme_constant_override("separation", 10)
+    scroll.add_child(content_box)
+
+    _achievement_list_value.custom_minimum_size = Vector2(720, 0)
+    _achievement_list_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _fragment_review_value.custom_minimum_size = Vector2(720, 0)
+    _ending_review_value.custom_minimum_size = Vector2(720, 0)
+    _last_run_value.custom_minimum_size = Vector2(720, 0)
+    _last_run_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _review_fragment_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    _review_ending_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+    _reparent_control(_achievement_list_value, content_box)
+    _reparent_control(_review_fragment_button, content_box)
+    _reparent_control(_fragment_review_value, content_box)
+    _reparent_control(_review_ending_button, content_box)
+    _reparent_control(_ending_theme_header, content_box)
+    _reparent_control(_ending_theme_band_top, content_box)
+    _reparent_control(_ending_theme_band_bottom, content_box)
+    _reparent_control(_ending_review_value, content_box)
+    _reparent_control(_last_run_value, content_box)
+
+    var close_button: Button = Button.new()
+    close_button.name = "CloseButton"
+    close_button.text = "Close"
+    close_button.custom_minimum_size = Vector2(220, 42)
+    close_button.pressed.connect(_close_archive_overlay)
+    box.add_child(close_button)
+
+
+func _make_archive_section_button(label: String, section: String) -> Button:
+    var button: Button = Button.new()
+    button.text = label
+    button.custom_minimum_size = Vector2(140, 36)
+    button.pressed.connect(func() -> void:
+        _set_archive_section(section)
+    )
+    return button
+
+
+func _set_archive_section(section: String) -> void:
+    _archive_section = section
+    _refresh_archive_section_visibility()
+
+
+func _refresh_archive_section_visibility() -> void:
+    if _archive_overlay == null:
+        return
+
+    var section: String = _archive_section
+    _achievement_list_value.visible = section == "achievements"
+    _review_fragment_button.visible = section == "fragments"
+    _fragment_review_value.visible = section == "fragments"
+    _review_ending_button.visible = section == "endings"
+    _ending_theme_header.visible = section == "endings"
+    _ending_theme_band_top.visible = section == "endings"
+    _ending_theme_band_bottom.visible = section == "endings"
+    _ending_review_value.visible = section == "endings"
+    _last_run_value.visible = section == "last_run"
+    _refresh_archive_section_buttons()
+
+
+func _refresh_archive_section_buttons() -> void:
+    if _archive_achievement_button != null:
+        _archive_achievement_button.disabled = _archive_section == "achievements"
+    if _archive_fragment_button != null:
+        _archive_fragment_button.disabled = _archive_section == "fragments"
+    if _archive_ending_button != null:
+        _archive_ending_button.disabled = _archive_section == "endings"
+    if _archive_last_run_button != null:
+        _archive_last_run_button.disabled = _archive_section == "last_run"
+
+
+func _open_meta_shop_overlay() -> void:
+    _close_secondary_overlays(_meta_shop_overlay)
+    if _meta_shop_overlay != null:
+        _meta_shop_overlay.visible = true
+
+
+func _close_meta_shop_overlay() -> void:
+    if _meta_shop_overlay != null:
+        _meta_shop_overlay.visible = false
+
+
+func _open_archive_overlay() -> void:
+    _close_secondary_overlays(_archive_overlay)
+    _set_archive_section(_archive_section)
+    if _archive_overlay != null:
+        _archive_overlay.visible = true
+
+
+func _close_archive_overlay() -> void:
+    if _archive_overlay != null:
+        _archive_overlay.visible = false
+
+
+func _close_secondary_overlays(except_overlay: Control = null) -> void:
+    if _meta_shop_overlay != null and _meta_shop_overlay != except_overlay:
+        _meta_shop_overlay.visible = false
+    if _archive_overlay != null and _archive_overlay != except_overlay:
+        _archive_overlay.visible = false
+    if _codex_overlay != null and _codex_overlay != except_overlay:
+        _codex_overlay.visible = false
+    if _settings_overlay != null and _settings_overlay != except_overlay:
+        _settings_overlay.visible = false
+
+
 func _unhandled_input(event: InputEvent) -> void:
+    if _archive_overlay != null and _archive_overlay.visible:
+        if event.is_action_pressed("pause") or event.is_action_pressed("interact"):
+            _close_archive_overlay()
+            return
+
+    if _meta_shop_overlay != null and _meta_shop_overlay.visible:
+        if event.is_action_pressed("pause") or event.is_action_pressed("interact"):
+            _close_meta_shop_overlay()
+            return
+
     if _codex_overlay != null and _codex_overlay.visible:
         if event.is_action_pressed("pause") or event.is_action_pressed("interact"):
             _close_codex_overlay()
@@ -303,6 +836,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_start_pressed() -> void:
+    if _archive_overlay != null and _archive_overlay.visible:
+        _close_archive_overlay()
+        return
+    if _meta_shop_overlay != null and _meta_shop_overlay.visible:
+        _close_meta_shop_overlay()
+        return
     if _codex_overlay != null and _codex_overlay.visible:
         _close_codex_overlay()
         return
@@ -317,6 +856,12 @@ func _on_start_pressed() -> void:
 
 
 func _on_quit_pressed() -> void:
+    if _archive_overlay != null and _archive_overlay.visible:
+        _close_archive_overlay()
+        return
+    if _meta_shop_overlay != null and _meta_shop_overlay.visible:
+        _close_meta_shop_overlay()
+        return
     if _codex_overlay != null and _codex_overlay.visible:
         _close_codex_overlay()
         return
@@ -362,7 +907,16 @@ func _on_review_ending_button_pressed() -> void:
     _refresh_ending_review()
 
 
+func _on_meta_shop_button_pressed() -> void:
+    _open_meta_shop_overlay()
+
+
+func _on_archive_button_pressed() -> void:
+    _open_archive_overlay()
+
+
 func _on_settings_button_pressed() -> void:
+    _close_secondary_overlays(_settings_overlay)
     _open_settings_overlay()
 
 
@@ -371,6 +925,7 @@ func _on_settings_close_button_pressed() -> void:
 
 
 func _on_codex_button_pressed() -> void:
+    _close_secondary_overlays(_codex_overlay)
     _open_codex_overlay()
 
 
@@ -429,18 +984,18 @@ func _refresh_meta_text() -> void:
     if rows is Array:
         total_achievements = (rows as Array).size()
 
-    _meta_value.text = str(meta.get("meta_currency", 0))
+    _meta_value.text = "Meta Currency\n%d" % int(meta.get("meta_currency", 0))
     _refresh_character_preview()
-    _run_value.text = "%d runs / %d kills" % [
+    _run_value.text = "Run Stats\n%d runs / %d kills" % [
         int(meta.get("total_runs", 0)),
         int(meta.get("total_kills", 0))
     ]
-    _best_value.text = "Highest Room %d | Best Lv %d | Victories %d" % [
+    _best_value.text = "Best Records\nHighest Room %d | Best Lv %d | Victories %d" % [
         int(meta.get("highest_room", 1)),
         int(meta.get("best_level", 1)),
         int(meta.get("total_victories", 0))
     ]
-    _progress_value.text = "Achievements %d/%d | Endings %d/3" % [
+    _progress_value.text = "Progress\nAchievements %d/%d | Endings %d/3" % [
         unlocked_achievements.size(),
         total_achievements,
         unlocked_endings.size()

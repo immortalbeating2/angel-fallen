@@ -19,6 +19,18 @@ func _instantiate_main_menu() -> Control:
 	return menu
 
 
+func _find_menu_label(menu: Control, node_name: String) -> Label:
+	if menu == null:
+		return null
+	return menu.find_child(node_name, true, false) as Label
+
+
+func _find_menu_button(menu: Control, node_name: String) -> Button:
+	if menu == null:
+		return null
+	return menu.find_child(node_name, true, false) as Button
+
+
 func _grant_meta_currency(amount: int) -> void:
 	SaveManager._meta["meta_currency"] = amount
 	SaveManager.save_meta()
@@ -47,8 +59,8 @@ func test_meta_shop_progression_caps_purchase_levels_by_meta_return_milestones()
 	var menu: Control = await _instantiate_main_menu()
 	if menu == null:
 		return
-	var upgrade_button: Button = menu.get_node_or_null("CenterContainer/VBoxContainer/Upgrade1Button")
-	var shop_message_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/ShopMessageValue")
+	var upgrade_button: Button = _find_menu_button(menu, "Upgrade1Button")
+	var shop_message_label: Label = _find_menu_label(menu, "ShopMessageValue")
 	assert_not_null(upgrade_button, "upgrade button should exist")
 	assert_not_null(shop_message_label, "shop message label should exist")
 	if upgrade_button == null or shop_message_label == null:

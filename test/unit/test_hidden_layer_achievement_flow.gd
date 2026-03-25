@@ -19,6 +19,12 @@ func _instantiate_main_menu() -> Control:
 	return menu
 
 
+func _find_menu_label(menu: Control, node_name: String) -> Label:
+	if menu == null:
+		return null
+	return menu.find_child(node_name, true, false) as Label
+
+
 func test_hidden_layer_clear_and_mastery_unlock_achievements_and_main_menu_lists_them() -> void:
 	if SaveManager == null:
 		pending("SaveManager singleton not available")
@@ -104,8 +110,8 @@ func test_hidden_layer_clear_and_mastery_unlock_achievements_and_main_menu_lists
 		return
 
 	menu.call("_refresh_achievement_list")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	assert_not_null(last_run_label, "last run label should exist")
 	if achievement_label == null or last_run_label == null:
@@ -246,8 +252,8 @@ func test_difficulty_clear_progression_unlocks_achievements_and_main_menu_lists_
 		return
 
 	menu.call("_refresh_achievement_list")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	assert_not_null(last_run_label, "last run label should exist")
 	if achievement_label == null or last_run_label == null:
@@ -489,8 +495,8 @@ func test_archive_return_and_challenge_layer_clears_expand_achievement_groups() 
 		return
 
 	menu.call("_refresh_achievement_list")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	assert_not_null(last_run_label, "last run label should exist")
 	if achievement_label == null or last_run_label == null:
@@ -553,8 +559,8 @@ func test_recent_endings_follow_actual_unlock_order_in_achievement_list_and_revi
 
 	menu.call("_refresh_achievement_list")
 	menu.call("_refresh_ending_review")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
-	var ending_review_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/EndingReviewValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
+	var ending_review_label: Label = _find_menu_label(menu, "EndingReviewValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	assert_not_null(ending_review_label, "ending review label should exist")
 	if achievement_label == null or ending_review_label == null:
@@ -603,8 +609,8 @@ func test_recent_fragments_follow_explicit_unlock_metadata_in_achievement_list_a
 
 	menu.call("_refresh_achievement_list")
 	menu.call("_refresh_fragment_review")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
-	var fragment_review_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/FragmentReviewValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
+	var fragment_review_label: Label = _find_menu_label(menu, "FragmentReviewValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	assert_not_null(fragment_review_label, "fragment review label should exist")
 	if achievement_label == null or fragment_review_label == null:
@@ -653,7 +659,7 @@ func test_recent_fragments_show_run_index_and_timestamp_metadata() -> void:
 		return
 
 	menu.call("_refresh_achievement_list")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	if achievement_label == null:
 		return
@@ -697,8 +703,8 @@ func test_recent_endings_follow_explicit_unlock_metadata_in_achievement_list_and
 
 	menu.call("_refresh_achievement_list")
 	menu.call("_refresh_ending_review")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
-	var ending_review_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/EndingReviewValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
+	var ending_review_label: Label = _find_menu_label(menu, "EndingReviewValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	assert_not_null(ending_review_label, "ending review label should exist")
 	if achievement_label == null or ending_review_label == null:
@@ -750,7 +756,7 @@ func test_recent_achievement_unlocks_show_run_index_and_timestamp_metadata() -> 
 		return
 
 	menu.call("_refresh_achievement_list")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	if achievement_label == null:
 		return
@@ -793,7 +799,7 @@ func test_recent_endings_show_run_index_and_timestamp_metadata() -> void:
 		return
 
 	menu.call("_refresh_achievement_list")
-	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
+	var achievement_label: Label = _find_menu_label(menu, "AchievementListValue")
 	assert_not_null(achievement_label, "achievement list label should exist")
 	if achievement_label == null:
 		return
@@ -1026,8 +1032,8 @@ func test_last_run_summary_surfaces_fragment_recap_title_and_counts() -> void:
 	if menu == null:
 		return
 
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
-	var ending_review_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/EndingReviewValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
+	var ending_review_label: Label = _find_menu_label(menu, "EndingReviewValue")
 	assert_not_null(last_run_label, "last run label should exist")
 	assert_not_null(ending_review_label, "ending review label should exist")
 	if last_run_label == null or ending_review_label == null:

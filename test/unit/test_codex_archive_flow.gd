@@ -19,6 +19,12 @@ func _instantiate_main_menu() -> Control:
 	return menu
 
 
+func _find_menu_label(menu: Control, node_name: String) -> Label:
+	if menu == null:
+		return null
+	return menu.find_child(node_name, true, false) as Label
+
+
 func test_hidden_layer_archives_unlock_codex_entries_and_main_menu_shows_archive_category() -> void:
 	if SaveManager == null:
 		pending("SaveManager singleton not available")
@@ -230,7 +236,7 @@ func test_hidden_layer_archives_unlock_codex_entries_and_main_menu_shows_archive
 	assert_string_contains(detail_label.text, "Hidden Clears: 1", "difficulty hidden archive detail should surface hidden clear count")
 	assert_string_contains(detail_label.text, "Risk Profile: Haz x1.22", "difficulty archive detail should surface the risk profile")
 
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
 	assert_not_null(last_run_label, "last run label should exist")
 	if last_run_label == null:
 		return

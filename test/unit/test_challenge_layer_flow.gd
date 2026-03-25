@@ -53,6 +53,12 @@ func _instantiate_main_menu() -> Control:
 	return menu
 
 
+func _find_menu_label(menu: Control, node_name: String) -> Label:
+	if menu == null:
+		return null
+	return menu.find_child(node_name, true, false) as Label
+
+
 func _set_room_plan(world: Node, room_index: int, chapter_id: String, room_type: String, next_rooms: Array = []) -> void:
 	var room_plan_map_var: Variant = world.get("_room_plan_map")
 	var room_plan_map: Dictionary = {}
@@ -838,7 +844,7 @@ func test_challenge_layer_failure_path_records_attempt_without_reward() -> void:
 	var menu: Control = await _instantiate_main_menu()
 	if menu == null:
 		return
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
 	assert_not_null(last_run_label, "last run label should exist")
 	if last_run_label == null:
 		return
@@ -959,7 +965,7 @@ func test_challenge_layer_archive_insight_branch_updates_result_ui_and_preview()
 	var menu: Control = await _instantiate_main_menu()
 	if menu == null:
 		return
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
 	assert_not_null(last_run_label, "last run label should exist")
 	if last_run_label == null:
 		return
@@ -1045,7 +1051,7 @@ func test_save_manager_and_result_ui_persist_challenge_layer_summary() -> void:
 	var menu: Control = await _instantiate_main_menu()
 	if menu == null:
 		return
-	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	var last_run_label: Label = _find_menu_label(menu, "LastRunValue")
 	assert_not_null(last_run_label, "last run label should exist")
 	if last_run_label == null:
 		return
