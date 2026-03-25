@@ -1,5 +1,6 @@
 extends Control
 
+@onready var _center_container: Control = $CenterContainer
 @onready var _title_label: Label = $CenterContainer/VBoxContainer/Title
 @onready var _subtitle_label: Label = $CenterContainer/VBoxContainer/Subtitle
 @onready var _main_vbox: VBoxContainer = $CenterContainer/VBoxContainer
@@ -23,6 +24,7 @@ extends Control
 @onready var _upgrade_3_button: Button = $CenterContainer/VBoxContainer/Upgrade3Button
 @onready var _upgrade_4_button: Button = $CenterContainer/VBoxContainer/Upgrade4Button
 @onready var _upgrade_5_button: Button = $CenterContainer/VBoxContainer/Upgrade5Button
+@onready var _meta_shop_label: Label = $CenterContainer/VBoxContainer/MetaShopLabel
 @onready var _shop_message_value: Label = $CenterContainer/VBoxContainer/ShopMessageValue
 @onready var _achievement_list_value: Label = $CenterContainer/VBoxContainer/AchievementListValue
 @onready var _fragment_review_value: Label = $CenterContainer/VBoxContainer/FragmentReviewValue
@@ -41,6 +43,7 @@ extends Control
 @onready var _settings_overlay: Control = $SettingsOverlay
 @onready var _runtime_settings_panel: VBoxContainer = $SettingsOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/RuntimeSettingsPanel
 @onready var _codex_overlay: Control = $CodexOverlay
+@onready var _codex_center_container: Control = $CodexOverlay/CenterContainer
 @onready var _codex_title: Label = $CodexOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CodexTitle
 @onready var _codex_content: Label = $CodexOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CodexContent
 @onready var _codex_prev_button: Button = $CodexOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CodexNavRow/CodexPrevButton
@@ -51,6 +54,7 @@ extends Control
 @onready var _codex_stats_chapter_button: Button = $CodexOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CodexStatsFilterRow/CodexStatsChapterButton
 @onready var _codex_entry_prev_button: Button = $CodexOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CodexEntryNavRow/CodexEntryPrevButton
 @onready var _codex_entry_next_button: Button = $CodexOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CodexEntryNavRow/CodexEntryNextButton
+@onready var _codex_close_button: Button = $CodexOverlay/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/CodexCloseButton
 
 var _shop_message: String = ""
 var _fragment_cursor: int = 0
@@ -61,6 +65,7 @@ var _codex_entry_index: int = 0
 var _codex_stats_source_filter_index: int = 0
 var _codex_stats_chapter_filter_index: int = 0
 var _menu_layout_ready: bool = false
+var _home_scroll_root: ScrollContainer = null
 var _meta_shop_overlay: Control = null
 var _archive_overlay: Control = null
 var _archive_section: String = "achievements"
@@ -70,6 +75,7 @@ var _archive_achievement_button: Button = null
 var _archive_fragment_button: Button = null
 var _archive_ending_button: Button = null
 var _archive_last_run_button: Button = null
+var _codex_quick_close_button: Button = null
 
 const CODEX_CATEGORIES: Array[String] = ["characters", "weapons", "passives", "enemies", "accessories", "archives"]
 const CODEX_CATEGORY_NAMES: Dictionary = {
@@ -295,6 +301,7 @@ func _setup_formal_menu_layout() -> void:
     if _menu_layout_ready or _main_vbox == null:
         return
 
+    _ensure_home_scroll_layout()
     _main_vbox.add_theme_constant_override("separation", 10)
     _title_label.add_theme_font_size_override("font_size", 54)
     _subtitle_label.text = "Choose a character, start a run, or review your postgame archive."
@@ -303,11 +310,45 @@ func _setup_formal_menu_layout() -> void:
     _subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _ensure_home_summary_panel()
     _ensure_character_panel()
+    _ensure_home_overview_row()
     _ensure_primary_action_grid()
     _ensure_meta_shop_overlay()
     _ensure_archive_overlay()
+    _ensure_codex_overlay_layout()
     _refresh_archive_section_visibility()
     _menu_layout_ready = true
+
+
+func _ensure_home_scroll_layout() -> void:
+    if _home_scroll_root != null or _center_container == null or _main_vbox == null:
+        return
+
+    _home_scroll_root = ScrollContainer.new()
+    _home_scroll_root.name = "HomeScrollRoot"
+    _home_scroll_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _home_scroll_root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _home_scroll_root.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    add_child(_home_scroll_root)
+    move_child(_home_scroll_root, _center_container.get_index())
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.name = "HomeScrollMargin"
+    margin.add_theme_constant_override("margin_left", 24)
+    margin.add_theme_constant_override("margin_top", 24)
+    margin.add_theme_constant_override("margin_right", 24)
+    margin.add_theme_constant_override("margin_bottom", 24)
+    _home_scroll_root.add_child(margin)
+
+    var row: HBoxContainer = HBoxContainer.new()
+    row.name = "HomeScrollRow"
+    row.alignment = BoxContainer.ALIGNMENT_CENTER
+    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    margin.add_child(row)
+
+    _reparent_control(_main_vbox, row)
+    _main_vbox.custom_minimum_size = Vector2(760, 0)
+    _main_vbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    _center_container.visible = false
 
 
 func _ensure_home_summary_panel() -> void:
@@ -316,7 +357,7 @@ func _ensure_home_summary_panel() -> void:
 
     var panel: PanelContainer = PanelContainer.new()
     panel.name = "HomeSummaryPanel"
-    panel.custom_minimum_size = Vector2(760, 0)
+    panel.custom_minimum_size = Vector2(0, 0)
     panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
     var margin: MarginContainer = MarginContainer.new()
@@ -346,14 +387,6 @@ func _ensure_home_summary_panel() -> void:
     hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
     box.add_child(hint)
 
-    var grid: GridContainer = GridContainer.new()
-    grid.name = "SummaryGrid"
-    grid.columns = 2
-    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    grid.add_theme_constant_override("h_separation", 20)
-    grid.add_theme_constant_override("v_separation", 8)
-    box.add_child(grid)
-
     _main_vbox.add_child(panel)
     _main_vbox.move_child(panel, 2)
 
@@ -364,17 +397,25 @@ func _ensure_home_summary_panel() -> void:
 
     _meta_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     _meta_value.add_theme_font_size_override("font_size", 22)
+    _meta_value.custom_minimum_size = Vector2(0, 0)
+    _meta_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _run_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     _run_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _run_value.custom_minimum_size = Vector2(0, 0)
+    _run_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _best_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     _best_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _best_value.custom_minimum_size = Vector2(0, 0)
+    _best_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _progress_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     _progress_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _progress_value.custom_minimum_size = Vector2(0, 0)
+    _progress_value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-    _reparent_control(_meta_value, grid)
-    _reparent_control(_run_value, grid)
-    _reparent_control(_best_value, grid)
-    _reparent_control(_progress_value, grid)
+    _reparent_control(_meta_value, box)
+    _reparent_control(_run_value, box)
+    _reparent_control(_best_value, box)
+    _reparent_control(_progress_value, box)
 
 
 func _ensure_character_panel() -> void:
@@ -383,7 +424,7 @@ func _ensure_character_panel() -> void:
 
     var panel: PanelContainer = PanelContainer.new()
     panel.name = "CharacterPanel"
-    panel.custom_minimum_size = Vector2(760, 0)
+    panel.custom_minimum_size = Vector2(0, 0)
     panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
     var margin: MarginContainer = MarginContainer.new()
@@ -414,9 +455,9 @@ func _ensure_character_panel() -> void:
     box.add_child(hint)
 
     _main_vbox.add_child(panel)
-    var action_wrap: Node = _main_vbox.get_node_or_null("PrimaryActionWrap")
-    if action_wrap != null:
-        _main_vbox.move_child(panel, action_wrap.get_index())
+    var home_summary_panel: Node = _main_vbox.get_node_or_null("HomeSummaryPanel")
+    if home_summary_panel != null:
+        _main_vbox.move_child(panel, home_summary_panel.get_index() + 1)
 
     if _character_label != null:
         _character_label.visible = false
@@ -438,6 +479,30 @@ func _ensure_character_panel() -> void:
     _reparent_control(_character_trait_value, box)
     _reparent_control(_character_unlock_value, box)
     _reparent_control(_character_switch_row, box)
+
+
+func _ensure_home_overview_row() -> void:
+    if _main_vbox.get_node_or_null("HomeOverviewRow") != null:
+        return
+
+    var summary_panel: Control = _main_vbox.get_node_or_null("HomeSummaryPanel")
+    var character_panel: Control = _main_vbox.get_node_or_null("CharacterPanel")
+    if summary_panel == null or character_panel == null:
+        return
+
+    var row: HBoxContainer = HBoxContainer.new()
+    row.name = "HomeOverviewRow"
+    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_theme_constant_override("separation", 16)
+    _main_vbox.add_child(row)
+    var action_wrap: Node = _main_vbox.get_node_or_null("PrimaryActionWrap")
+    if action_wrap != null:
+        _main_vbox.move_child(row, action_wrap.get_index() + 1)
+    else:
+        _main_vbox.move_child(row, 2)
+
+    _reparent_control(summary_panel, row)
+    _reparent_control(character_panel, row)
 
 
 func _reparent_control(node: Control, new_parent: Node) -> void:
@@ -504,9 +569,7 @@ func _ensure_primary_action_grid() -> void:
     _archive_button.pressed.connect(_on_archive_button_pressed)
 
     _main_vbox.add_child(action_wrap)
-    var character_panel: Node = _main_vbox.get_node_or_null("CharacterPanel")
-    if character_panel != null:
-        _main_vbox.move_child(action_wrap, character_panel.get_index() + 1)
+    _main_vbox.move_child(action_wrap, 2)
 
     _start_button.custom_minimum_size = Vector2(0, 56)
     _start_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -530,8 +593,8 @@ func _ensure_meta_shop_overlay() -> void:
     if _meta_shop_overlay != null:
         return
 
-    var meta_shop_label: Control = $CenterContainer/VBoxContainer/MetaShopLabel
-    meta_shop_label.visible = false
+    if _meta_shop_label != null:
+        _meta_shop_label.visible = false
 
     _meta_shop_overlay = Control.new()
     _meta_shop_overlay.name = "MetaShopOverlay"
@@ -712,6 +775,79 @@ func _ensure_archive_overlay() -> void:
     close_button.custom_minimum_size = Vector2(220, 42)
     close_button.pressed.connect(_close_archive_overlay)
     box.add_child(close_button)
+
+
+func _ensure_codex_overlay_layout() -> void:
+    if _codex_overlay == null:
+        return
+
+    if _codex_center_container != null:
+        _codex_center_container.position = Vector2.ZERO
+
+    var codex_panel: PanelContainer = _codex_overlay.get_node_or_null("CenterContainer/PanelContainer")
+    var codex_margin: MarginContainer = _codex_overlay.get_node_or_null("CenterContainer/PanelContainer/MarginContainer")
+    var codex_box: VBoxContainer = _codex_overlay.get_node_or_null("CenterContainer/PanelContainer/MarginContainer/VBoxContainer")
+    if codex_panel != null:
+        codex_panel.custom_minimum_size = Vector2(720, 0)
+    if codex_margin != null:
+        codex_margin.add_theme_constant_override("margin_left", 14)
+        codex_margin.add_theme_constant_override("margin_top", 12)
+        codex_margin.add_theme_constant_override("margin_right", 14)
+        codex_margin.add_theme_constant_override("margin_bottom", 12)
+    if codex_box != null:
+        codex_box.add_theme_constant_override("separation", 6)
+
+    _codex_title.custom_minimum_size = Vector2(620, 0)
+    _codex_title.add_theme_font_size_override("font_size", 24)
+    _codex_content.custom_minimum_size = Vector2(620, 136)
+    _codex_content.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+    _codex_detail.custom_minimum_size = Vector2(620, 110)
+    _codex_detail.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+    _codex_stats_value.custom_minimum_size = Vector2(620, 118)
+    _codex_stats_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+    _codex_stats_source_button.custom_minimum_size = Vector2(200, 32)
+    _codex_stats_chapter_button.custom_minimum_size = Vector2(200, 32)
+    _codex_prev_button.custom_minimum_size = Vector2(120, 32)
+    _codex_next_button.custom_minimum_size = Vector2(120, 32)
+    _codex_entry_prev_button.custom_minimum_size = Vector2(150, 32)
+    _codex_entry_next_button.custom_minimum_size = Vector2(150, 32)
+    if _codex_close_button != null:
+        _codex_close_button.custom_minimum_size = Vector2(220, 38)
+
+    if _codex_quick_close_button == null:
+        _codex_quick_close_button = Button.new()
+        _codex_quick_close_button.name = "CodexQuickCloseButton"
+        _codex_quick_close_button.text = "Close"
+        _codex_quick_close_button.custom_minimum_size = Vector2(140, 38)
+        _codex_quick_close_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+        _codex_quick_close_button.anchor_left = 1.0
+        _codex_quick_close_button.anchor_right = 1.0
+        _codex_quick_close_button.offset_left = -164.0
+        _codex_quick_close_button.offset_top = 24.0
+        _codex_quick_close_button.offset_right = -24.0
+        _codex_quick_close_button.offset_bottom = 62.0
+        _codex_quick_close_button.pressed.connect(_close_codex_overlay)
+        _codex_overlay.add_child(_codex_quick_close_button)
+
+
+func _snap_codex_overlay_into_view() -> void:
+    if _codex_overlay == null or not _codex_overlay.visible:
+        return
+    if _codex_center_container == null or _codex_close_button == null or _codex_title == null:
+        return
+
+    _codex_center_container.position = Vector2.ZERO
+
+    var viewport_size: Vector2 = get_viewport_rect().size
+    var padding: float = 24.0
+    var close_bottom: float = _codex_close_button.global_position.y + _codex_close_button.size.y
+    var overflow: float = close_bottom - (viewport_size.y - padding)
+    if overflow > 0.0:
+        _codex_center_container.position.y -= overflow
+
+    var title_top: float = _codex_title.global_position.y
+    if title_top < padding:
+        _codex_center_container.position.y += padding - title_top
 
 
 func _make_archive_section_button(label: String, section: String) -> Button:
@@ -1798,12 +1934,15 @@ func _open_codex_overlay() -> void:
     _codex_overlay.visible = true
     _codex_entry_index = 0
     _refresh_codex_overlay()
+    call_deferred("_snap_codex_overlay_into_view")
 
 
 func _close_codex_overlay() -> void:
     if _codex_overlay == null:
         return
     _codex_overlay.visible = false
+    if _codex_center_container != null:
+        _codex_center_container.position = Vector2.ZERO
 
 
 func _shift_codex_category(delta: int) -> void:
