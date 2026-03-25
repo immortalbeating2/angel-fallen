@@ -326,8 +326,290 @@ func generate_hidden_layer_run_plan(layer_id: String, config: Dictionary = {}) -
 
 func generate_challenge_layer_run_plan(layer_id: String, _config: Dictionary = {}) -> Dictionary:
     var layer_key: String = layer_id.strip_edges().to_upper()
-    if layer_key != "CL1":
-        return {}
+    match layer_key:
+        "CL1":
+            pass
+        "CL2":
+            var chapter_id_cl2: String = "challenge_cl2"
+            var chapter_index_cl2: int = 8
+            var title_cl2: String = "Challenge Layer II"
+            var rooms_cl2: Array[Dictionary] = [
+                _build_hidden_layer_room(1, ROOM_TYPE_SAFE_CAMP, chapter_id_cl2, chapter_index_cl2, 0, 0, [2], [], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl2,
+                    "challenge_phase": "entry",
+                    "title": "Challenge Layer II Entry",
+                    "objective": "Stabilize the deeper archive route and confirm the crucible checkpoint.",
+                    "status_hint": "Press E to enter the archive crucible.",
+                    "checkpoint_label": "Challenge Gate II",
+                    "reward_summary": "Crucible archive sealed | Meta +60 | Sigil +2 | Insight +2",
+                    "settlement_summary": "The deeper challenge archive opens a broader postgame loop for later layers."
+                }),
+                _build_hidden_layer_room(2, ROOM_TYPE_ELITE, chapter_id_cl2, chapter_index_cl2, 1, 0, [3], [1], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl2,
+                    "challenge_phase": "combat",
+                    "title": "Archive Crucible",
+                    "objective": "Break the elite archive wardens and expose the crown trial.",
+                    "status_hint": "The crucible expects a cleaner clear before the crown seal opens.",
+                    "checkpoint_label": "Crucible Ring",
+                    "clear_banner": "Archive crucible stabilized.",
+                    "required_kills": 14,
+                    "reward_mult": 1.32,
+                    "reward_summary": "Crucible archive sealed | Meta +60 | Sigil +2 | Insight +2",
+                    "settlement_summary": "The deeper challenge archive opens a broader postgame loop for later layers."
+                }),
+                _build_hidden_layer_room(3, ROOM_TYPE_BOSS, chapter_id_cl2, chapter_index_cl2, 2, 0, [4], [2], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl2,
+                    "challenge_phase": "boss",
+                    "title": "Crown Trial",
+                    "objective": "Defeat the crowned archive echo and unlock the deeper settlement ledger.",
+                    "status_hint": "Only a full crown clear records the second challenge layer.",
+                    "checkpoint_label": "Crown Seal",
+                    "clear_banner": "Crown trial archived.",
+                    "boss_id": "boss_void_lord",
+                    "is_boss_room": true,
+                    "reward_mult": 1.4,
+                    "reward_summary": "Crucible archive sealed | Meta +60 | Sigil +2 | Insight +2",
+                    "settlement_summary": "The deeper challenge archive opens a broader postgame loop for later layers."
+                }),
+                _build_hidden_layer_room(4, ROOM_TYPE_SAFE_CAMP, chapter_id_cl2, chapter_index_cl2, 3, 0, [], [3], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl2,
+                    "challenge_phase": "settlement",
+                    "title": "Challenge Layer II Settlement",
+                    "objective": "Archive the deeper challenge clear and claim a reinforced settlement reward.",
+                    "status_hint": "Press E to archive the deeper challenge and finish the run.",
+                    "checkpoint_label": "Challenge Archive II",
+                    "reward_summary": "Crucible archive sealed | Meta +60 | Sigil +2 | Insight +2",
+                    "settlement_summary": "The second settlement records a deeper challenge clear for the next archive horizon."
+                })
+            ]
+
+            var room_plan_map_cl2: Dictionary = {}
+            for row_cl2: Dictionary in rooms_cl2:
+                room_plan_map_cl2[int(row_cl2.get("index", 0))] = row_cl2.duplicate(true)
+
+            return {
+                "layer_id": layer_key,
+                "title": title_cl2,
+                "theme": "Deeper archive crucible loop.",
+                "map_mode": "challenge_crucible",
+                "room_count": rooms_cl2.size(),
+                "layout_cols": 4,
+                "room_count_label": "Entry + elite + boss + settlement",
+                "entry_hint": "Complete Archive Return to unlock the second challenge layer.",
+                "reward_profile": {"summary": "Crucible archive sealed | Meta +60 | Sigil +2 | Insight +2"},
+                "settlement_profile": {"summary": "Archive the deeper challenge clear and prepare broader postgame routes."},
+                "map_bounds": {"min_x": 0, "max_x": 3, "min_y": 0, "max_y": 0, "cols": 4, "rows": 1},
+                "chapter_order": [chapter_id_cl2],
+                "start_room": 1,
+                "rooms": rooms_cl2,
+                "room_plan_map": room_plan_map_cl2
+            }
+        "CL3":
+            var chapter_id_cl3: String = "challenge_cl3"
+            var chapter_index_cl3: int = 9
+            var title_cl3: String = "Challenge Layer III"
+            var rooms_cl3: Array[Dictionary] = [
+                _build_hidden_layer_room(1, ROOM_TYPE_SAFE_CAMP, chapter_id_cl3, chapter_index_cl3, 0, 0, [2], [], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl3,
+                    "challenge_phase": "entry",
+                    "title": "Challenge Layer III Entry",
+                    "objective": "Stabilize the sovereign archive route and confirm the null gauntlet.",
+                    "status_hint": "Press E to enter the null gauntlet.",
+                    "checkpoint_label": "Challenge Gate III",
+                    "reward_summary": "Sovereign archive sealed | Meta +80 | Sigil +3 | Insight +3",
+                    "settlement_summary": "The sovereign archive opens the deepest postgame frontier so far."
+                }),
+                _build_hidden_layer_room(2, ROOM_TYPE_ELITE, chapter_id_cl3, chapter_index_cl3, 1, 0, [3], [1], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl3,
+                    "challenge_phase": "combat",
+                    "title": "Null Gauntlet",
+                    "objective": "Break the null wardens and expose the breach route.",
+                    "status_hint": "The gauntlet collapses only after the elite wardens fall.",
+                    "checkpoint_label": "Null Ring",
+                    "clear_banner": "Null gauntlet stabilized.",
+                    "required_kills": 16,
+                    "reward_mult": 1.42,
+                    "reward_summary": "Sovereign archive sealed | Meta +80 | Sigil +3 | Insight +3",
+                    "settlement_summary": "The sovereign archive opens the deepest postgame frontier so far."
+                }),
+                _build_hidden_layer_room(3, ROOM_TYPE_COMBAT, chapter_id_cl3, chapter_index_cl3, 2, 0, [4], [2], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl3,
+                    "challenge_phase": "combat",
+                    "title": "Archive Breach",
+                    "objective": "Hold the breach against the archive swarm and force the sovereign seal open.",
+                    "status_hint": "A sustained breach is required before the sovereign echo manifests.",
+                    "checkpoint_label": "Breach Seal",
+                    "clear_banner": "Archive breach stabilized.",
+                    "required_kills": 18,
+                    "reward_mult": 1.5,
+                    "reward_summary": "Sovereign archive sealed | Meta +80 | Sigil +3 | Insight +3",
+                    "settlement_summary": "The sovereign archive opens the deepest postgame frontier so far."
+                }),
+                _build_hidden_layer_room(4, ROOM_TYPE_BOSS, chapter_id_cl3, chapter_index_cl3, 3, 0, [5], [3], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl3,
+                    "challenge_phase": "boss",
+                    "title": "Sovereign Echo",
+                    "objective": "Defeat the sovereign archive echo and secure the final settlement ledger.",
+                    "status_hint": "Only a sovereign clear records the third challenge layer.",
+                    "checkpoint_label": "Sovereign Seal",
+                    "clear_banner": "Sovereign echo archived.",
+                    "boss_id": "boss_frost_king",
+                    "is_boss_room": true,
+                    "reward_mult": 1.62,
+                    "reward_summary": "Sovereign archive sealed | Meta +80 | Sigil +3 | Insight +3",
+                    "settlement_summary": "The sovereign archive opens the deepest postgame frontier so far."
+                }),
+                _build_hidden_layer_room(5, ROOM_TYPE_SAFE_CAMP, chapter_id_cl3, chapter_index_cl3, 4, 0, [], [4], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl3,
+                    "challenge_phase": "settlement",
+                    "title": "Challenge Layer III Settlement",
+                    "objective": "Archive the sovereign clear and claim a frontier settlement reward.",
+                    "status_hint": "Press E to archive the sovereign challenge and finish the run.",
+                    "checkpoint_label": "Challenge Archive III",
+                    "reward_summary": "Sovereign archive sealed | Meta +80 | Sigil +3 | Insight +3",
+                    "settlement_summary": "The third settlement records a sovereign challenge clear for the final archive frontier."
+                })
+            ]
+
+            var room_plan_map_cl3: Dictionary = {}
+            for row_cl3: Dictionary in rooms_cl3:
+                room_plan_map_cl3[int(row_cl3.get("index", 0))] = row_cl3.duplicate(true)
+
+            return {
+                "layer_id": layer_key,
+                "title": title_cl3,
+                "theme": "Sovereign archive gauntlet loop.",
+                "map_mode": "challenge_sovereign",
+                "room_count": rooms_cl3.size(),
+                "layout_cols": 5,
+                "room_count_label": "Entry + elite + combat + boss + settlement",
+                "entry_hint": "Clear Challenge Layer II once to unlock the third challenge layer.",
+                "reward_profile": {"summary": "Sovereign archive sealed | Meta +80 | Sigil +3 | Insight +3"},
+                "settlement_profile": {"summary": "Archive the sovereign challenge clear and prepare the final archive frontier."},
+                "map_bounds": {"min_x": 0, "max_x": 4, "min_y": 0, "max_y": 0, "cols": 5, "rows": 1},
+                "chapter_order": [chapter_id_cl3],
+                "start_room": 1,
+                "rooms": rooms_cl3,
+                "room_plan_map": room_plan_map_cl3
+            }
+        "CL4":
+            var chapter_id_cl4: String = "challenge_cl4"
+            var chapter_index_cl4: int = 10
+            var title_cl4: String = "Challenge Layer IV"
+            var rooms_cl4: Array[Dictionary] = [
+                _build_hidden_layer_room(1, ROOM_TYPE_SAFE_CAMP, chapter_id_cl4, chapter_index_cl4, 0, 0, [2], [], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl4,
+                    "challenge_phase": "entry",
+                    "title": "Challenge Layer IV Entry",
+                    "objective": "Stabilize the apex archive ascent and confirm the summit breach.",
+                    "status_hint": "Press E to enter the ascent wardens.",
+                    "checkpoint_label": "Challenge Gate IV",
+                    "reward_summary": "Apex archive sealed | Meta +100 | Sigil +4 | Insight +4",
+                    "settlement_summary": "The apex archive completes the final Stage 6 frontier and locks in the deepest return ladder."
+                }),
+                _build_hidden_layer_room(2, ROOM_TYPE_ELITE, chapter_id_cl4, chapter_index_cl4, 1, 0, [3], [1], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl4,
+                    "challenge_phase": "combat",
+                    "title": "Ascent Wardens",
+                    "objective": "Break the ascent wardens and force the summit breach open.",
+                    "status_hint": "The ascent only advances after the wardens collapse.",
+                    "checkpoint_label": "Ascent Ring",
+                    "clear_banner": "Ascent wardens broken.",
+                    "required_kills": 18,
+                    "reward_mult": 1.56,
+                    "reward_summary": "Apex archive sealed | Meta +100 | Sigil +4 | Insight +4",
+                    "settlement_summary": "The apex archive completes the final Stage 6 frontier and locks in the deepest return ladder."
+                }),
+                _build_hidden_layer_room(3, ROOM_TYPE_COMBAT, chapter_id_cl4, chapter_index_cl4, 2, 0, [4], [2], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl4,
+                    "challenge_phase": "combat",
+                    "title": "Summit Breach",
+                    "objective": "Hold the summit breach against the archive storm and reveal the throne approach.",
+                    "status_hint": "The breach must hold before the throne wardens answer.",
+                    "checkpoint_label": "Summit Seal",
+                    "clear_banner": "Summit breach secured.",
+                    "required_kills": 20,
+                    "reward_mult": 1.64,
+                    "reward_summary": "Apex archive sealed | Meta +100 | Sigil +4 | Insight +4",
+                    "settlement_summary": "The apex archive completes the final Stage 6 frontier and locks in the deepest return ladder."
+                }),
+                _build_hidden_layer_room(4, ROOM_TYPE_ELITE, chapter_id_cl4, chapter_index_cl4, 3, 0, [5], [3], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl4,
+                    "challenge_phase": "combat",
+                    "title": "Throne Approach",
+                    "objective": "Shatter the throne approach and expose the apex sovereign.",
+                    "status_hint": "Only a clean advance opens the apex throne.",
+                    "checkpoint_label": "Throne Gate",
+                    "clear_banner": "Throne approach broken.",
+                    "required_kills": 22,
+                    "reward_mult": 1.72,
+                    "reward_summary": "Apex archive sealed | Meta +100 | Sigil +4 | Insight +4",
+                    "settlement_summary": "The apex archive completes the final Stage 6 frontier and locks in the deepest return ladder."
+                }),
+                _build_hidden_layer_room(5, ROOM_TYPE_BOSS, chapter_id_cl4, chapter_index_cl4, 4, 0, [6], [4], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl4,
+                    "challenge_phase": "boss",
+                    "title": "Apex Throne",
+                    "objective": "Defeat the apex sovereign and secure the final return protocol.",
+                    "status_hint": "Only an apex clear records the fourth challenge layer.",
+                    "checkpoint_label": "Apex Seal",
+                    "clear_banner": "Apex throne archived.",
+                    "boss_id": "boss_void_lord",
+                    "is_boss_room": true,
+                    "reward_mult": 1.82,
+                    "reward_summary": "Apex archive sealed | Meta +100 | Sigil +4 | Insight +4",
+                    "settlement_summary": "The apex archive completes the final Stage 6 frontier and locks in the deepest return ladder."
+                }),
+                _build_hidden_layer_room(6, ROOM_TYPE_SAFE_CAMP, chapter_id_cl4, chapter_index_cl4, 5, 0, [], [5], {
+                    "challenge_layer_id": layer_key,
+                    "challenge_layer_title": title_cl4,
+                    "challenge_phase": "settlement",
+                    "title": "Challenge Layer IV Settlement",
+                    "objective": "Archive the apex clear and claim the final frontier settlement reward.",
+                    "status_hint": "Press E to archive the apex challenge and finish the run.",
+                    "checkpoint_label": "Challenge Archive IV",
+                    "reward_summary": "Apex archive sealed | Meta +100 | Sigil +4 | Insight +4",
+                    "settlement_summary": "The fourth settlement records the apex challenge clear for the final return frontier."
+                })
+            ]
+
+            var room_plan_map_cl4: Dictionary = {}
+            for row_cl4: Dictionary in rooms_cl4:
+                room_plan_map_cl4[int(row_cl4.get("index", 0))] = row_cl4.duplicate(true)
+
+            return {
+                "layer_id": layer_key,
+                "title": title_cl4,
+                "theme": "Apex archive ascent loop.",
+                "map_mode": "challenge_apex",
+                "room_count": rooms_cl4.size(),
+                "layout_cols": 6,
+                "room_count_label": "Entry + elite + combat + elite + boss + settlement",
+                "entry_hint": "Clear Challenge Layer III once to unlock the fourth challenge layer.",
+                "reward_profile": {"summary": "Apex archive sealed | Meta +100 | Sigil +4 | Insight +4"},
+                "settlement_profile": {"summary": "Archive the apex challenge clear and complete the Stage 6 frontier."},
+                "map_bounds": {"min_x": 0, "max_x": 5, "min_y": 0, "max_y": 0, "cols": 6, "rows": 1},
+                "chapter_order": [chapter_id_cl4],
+                "start_room": 1,
+                "rooms": rooms_cl4,
+                "room_plan_map": room_plan_map_cl4
+            }
+        _:
+            return {}
 
     var chapter_id: String = "challenge_cl1"
     var chapter_index: int = 7

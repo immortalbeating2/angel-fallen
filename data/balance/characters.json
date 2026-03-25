@@ -385,6 +385,38 @@
       "crit_multiplier": 1.86,
       "base_damage": 12.9,
       "attack_interval": 0.38
+		},
+		{
+			"id": "char_curator",
+			"name": "Curator",
+			"description": "An archive keeper who bends reliquary orbs into layered orbit breaches.",
+			"unlock_type": "achievement",
+			"unlock_value": "ach_cl4_clear",
+			"unlock_desc": "Unlock by obtaining achievement 'Apex Archivist'",
+			"trait_id": "trait_apex_ledger",
+			"trait_name": "Apex Ledger",
+			"trait_desc": "Gain bonus crit chance and a steadier attack cadence at run start.",
+			"trait_effects": {
+				"crit_chance_bonus": 0.04,
+				"attack_interval_mult": 0.95
+			},
+			"weapon_profile": {
+				"weapon_id": "wpn_reliquary_orb",
+				"mode": "spread",
+				"projectile_count": 2,
+				"spread_angle_deg": 16,
+				"spread_jitter_deg": 3.0,
+				"projectile_hits": 2,
+				"projectile_style": "reliquary_orb"
+			},
+			"max_hp": 108,
+			"move_speed": 188,
+			"stamina_max": 118,
+			"armor": 0.07,
+			"crit_chance": 0.12,
+			"crit_multiplier": 1.84,
+			"base_damage": 13.1,
+			"attack_interval": 0.4
     }
   ]
 }

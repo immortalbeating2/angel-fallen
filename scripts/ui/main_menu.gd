@@ -160,8 +160,50 @@ const ARCHIVE_CODEX_ENTRIES: Array[Dictionary] = [
         "layer_id": "FS2",
         "entry_kind": "mastery"
     },
+	{
+		"id": "archive_return_protocol",
+		"name": "Archive Return Protocol",
+		"hint": "Seal both hidden archives and clear either hidden layer again to activate Archive Return.",
+		"meta_return_id": "archive_meta_return",
+		"entry_kind": "meta_return"
+	},
+	{
+		"id": "apex_return_protocol",
+		"name": "Apex Return Protocol",
+		"hint": "Clear Challenge Layer IV once to activate the final Apex Return milestone.",
+		"meta_return_id": "apex_meta_return",
+		"entry_kind": "meta_return"
+	},
+	{
+		"id": "cl1_challenge_archive",
+		"name": "Challenge Layer Archive",
+        "hint": "Clear Challenge Layer once to preserve the first postgame challenge archive.",
+        "challenge_layer_id": "CL1",
+        "entry_kind": "challenge_clear"
+    },
     {
-        "id": "hard_clear_archive",
+        "id": "cl2_crown_archive",
+        "name": "Crown Trial Archive",
+        "hint": "Clear Challenge Layer II once to preserve the crown-trial archive.",
+        "challenge_layer_id": "CL2",
+        "entry_kind": "challenge_clear"
+    },
+	{
+		"id": "cl3_sovereign_archive",
+		"name": "Sovereign Echo Archive",
+		"hint": "Clear Challenge Layer III once to preserve the sovereign-echo archive.",
+		"challenge_layer_id": "CL3",
+		"entry_kind": "challenge_clear"
+	},
+	{
+		"id": "cl4_apex_archive",
+		"name": "Apex Throne Archive",
+		"hint": "Clear Challenge Layer IV once to preserve the apex-throne archive.",
+		"challenge_layer_id": "CL4",
+		"entry_kind": "challenge_clear"
+	},
+	{
+		"id": "hard_clear_archive",
         "name": "Hard Archive",
         "hint": "Clear any run on Hard difficulty.",
         "difficulty_tier": 1,
@@ -1902,6 +1944,10 @@ func _prettify_source(source: String) -> String:
             return "Hidden Layer Clear"
         "hidden_layer_mastery":
             return "Hidden Layer Mastery"
+        "challenge_layer_clear":
+            return "Challenge Layer Clear"
+        "meta_return_unlock":
+            return "Meta Return Unlock"
         _:
             return _prettify_id(source)
 
@@ -1943,6 +1989,10 @@ func _build_archive_codex_detail_lines(entry_id: String) -> Array[String]:
 
     if row.has("difficulty_tier"):
         return _build_difficulty_archive_detail_lines(row)
+    if row.has("meta_return_id"):
+        return _build_meta_return_archive_detail_lines(row)
+    if row.has("challenge_layer_id"):
+        return _build_challenge_archive_detail_lines(row)
 
     if not SaveManager.has_method("get_hidden_layer_status"):
         return lines
@@ -1981,6 +2031,54 @@ func _build_archive_codex_detail_lines(entry_id: String) -> Array[String]:
     elif bool(status.get("collection_mastered", false)):
         lines.append("Bonus: Ready")
 
+    return lines
+
+
+func _build_meta_return_archive_detail_lines(row: Dictionary) -> Array[String]:
+    var lines: Array[String] = []
+    if SaveManager == null or not SaveManager.has_method("get_meta_return_profile"):
+        return lines
+
+    var meta_return_id: String = str(row.get("meta_return_id", "")).strip_edges()
+    var profile: Dictionary = SaveManager.get_meta_return_profile()
+    var unlocked_ids: Array[String] = []
+    var unlocked_var: Variant = profile.get("unlocked_ids", [])
+    if unlocked_var is Array:
+        for id_var: Variant in unlocked_var:
+            var unlocked_id: String = str(id_var).strip_edges()
+            if unlocked_id != "":
+                unlocked_ids.append(unlocked_id)
+    lines.append("Meta Return: %s" % str(row.get("name", meta_return_id)))
+    lines.append("Status: %s" % ("Unlocked" if unlocked_ids.has(meta_return_id) else "Locked"))
+    var summary: String = str(profile.get("summary", "")).strip_edges()
+    if summary != "":
+        lines.append("Current Return: %s" % summary)
+    var next_hint: String = str(profile.get("next_hint", "")).strip_edges()
+    if next_hint != "":
+        lines.append("Next Hint: %s" % next_hint)
+    return lines
+
+
+func _build_challenge_archive_detail_lines(row: Dictionary) -> Array[String]:
+    var lines: Array[String] = []
+    if SaveManager == null or not SaveManager.has_method("get_challenge_layer_record"):
+        return lines
+
+    var layer_id: String = str(row.get("challenge_layer_id", "")).strip_edges().to_upper()
+    var record: Dictionary = SaveManager.get_challenge_layer_record(layer_id)
+    lines.append("Layer: %s" % str(record.get("title", row.get("name", layer_id))))
+    lines.append("Attempts: %d" % int(record.get("attempts", 0)))
+    lines.append("Clears: %d" % int(record.get("clears", 0)))
+    lines.append("Best Rooms: %d" % int(record.get("best_rooms", 0)))
+    lines.append("Best Kills: %d" % int(record.get("best_kills", 0)))
+    lines.append("Reward Ledger: Meta +%d | Sigil +%d | Insight +%d" % [
+        int(record.get("total_meta_bonus", 0)),
+        int(record.get("total_sigils", 0)),
+        int(record.get("total_insight", 0))
+    ])
+    var last_reward_title: String = str(record.get("last_reward_title", "")).strip_edges()
+    if last_reward_title != "":
+        lines.append("Last Reward: %s" % last_reward_title)
     return lines
 
 
@@ -2041,6 +2139,8 @@ func _get_achievement_title(achievement_id: String) -> String:
 
 func _get_achievement_group_label(condition: String) -> String:
     var normalized: String = condition.strip_edges().to_lower()
+    if normalized.begins_with("challenge_layer_"):
+        return "Challenge Layer"
     if normalized.begins_with("hidden_layer_"):
         return "Hidden Layer"
     if normalized.begins_with("difficulty_"):
@@ -2540,12 +2640,14 @@ func _build_achievement_group_progress(rows: Array, unlocked: Array[String]) -> 
     var totals: Dictionary = {
         "Run": 0,
         "Hidden Layer": 0,
-        "Difficulty": 0
+        "Difficulty": 0,
+        "Challenge Layer": 0
     }
     var progress: Dictionary = {
         "Run": 0,
         "Hidden Layer": 0,
-        "Difficulty": 0
+        "Difficulty": 0,
+        "Challenge Layer": 0
     }
 
     for item: Variant in rows:
@@ -2561,7 +2663,8 @@ func _build_achievement_group_progress(rows: Array, unlocked: Array[String]) -> 
     return [
         {"label": "Run", "unlocked": int(progress.get("Run", 0)), "total": int(totals.get("Run", 0))},
         {"label": "Hidden Layer", "unlocked": int(progress.get("Hidden Layer", 0)), "total": int(totals.get("Hidden Layer", 0))},
-        {"label": "Difficulty", "unlocked": int(progress.get("Difficulty", 0)), "total": int(totals.get("Difficulty", 0))}
+        {"label": "Difficulty", "unlocked": int(progress.get("Difficulty", 0)), "total": int(totals.get("Difficulty", 0))},
+        {"label": "Challenge Layer", "unlocked": int(progress.get("Challenge Layer", 0)), "total": int(totals.get("Challenge Layer", 0))}
     ]
 
 
@@ -2569,7 +2672,8 @@ func _build_achievement_recent_group_rows(recent_unlocks: Array[Dictionary]) -> 
     var counts: Dictionary = {
         "Run": 0,
         "Hidden Layer": 0,
-        "Difficulty": 0
+        "Difficulty": 0,
+        "Challenge Layer": 0
     }
 
     for row: Dictionary in recent_unlocks:
@@ -2579,7 +2683,8 @@ func _build_achievement_recent_group_rows(recent_unlocks: Array[Dictionary]) -> 
     return [
         {"label": "Run", "count": int(counts.get("Run", 0))},
         {"label": "Hidden Layer", "count": int(counts.get("Hidden Layer", 0))},
-        {"label": "Difficulty", "count": int(counts.get("Difficulty", 0))}
+        {"label": "Difficulty", "count": int(counts.get("Difficulty", 0))},
+        {"label": "Challenge Layer", "count": int(counts.get("Challenge Layer", 0))}
     ]
 
 

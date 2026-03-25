@@ -387,6 +387,7 @@
       "char_knight",
       "char_mage",
       "char_occultist",
+      "char_curator",
       "char_oracle",
       "char_rogue",
       "char_sentinel",
@@ -403,6 +404,7 @@
       "wpn_magic_missile",
       "wpn_nether_shard",
       "wpn_radiant_hammer",
+      "wpn_reliquary_orb",
       "wpn_sacred_lance",
       "wpn_shadow_tempest",
       "wpn_solar_supernova",
@@ -467,7 +469,8 @@
       "evo_shadow_tempest",
       "evo_solar_supernova",
       "evo_tempest_onslaught",
-      "evo_vowstorm"
+      "evo_vowstorm",
+      "evo_zenith_reliquary"
     ],
     "meta_upgrades": [
       "meta_crit",
@@ -485,6 +488,7 @@
       "forge_holy_judgment",
       "forge_nether_maelstrom",
       "forge_radiant_cataclysm",
+      "forge_zenith_reliquary",
       "forge_seraph_lance",
       "forge_shadow_tempest",
       "forge_solar_supernova",

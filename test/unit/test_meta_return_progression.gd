@@ -151,11 +151,87 @@ func test_difficulty_meta_return_progression_unlocks_and_surfaces_across_ui() ->
 		}
 	})
 	var hidden_returns: Array = nightmare_hidden.get("new_meta_return_unlocks", [])
-	assert_eq(hidden_returns.size(), 1, "first Nightmare hidden clear should unlock the final meta return milestone")
+	assert_eq(hidden_returns.size(), 1, "first Nightmare hidden clear should unlock the Nightmare Hidden Return milestone")
 	assert_eq(str((hidden_returns[0] as Dictionary).get("label", "")), "Nightmare Hidden Return", "Nightmare hidden clear should unlock Nightmare Hidden Return")
-	assert_eq(float(nightmare_hidden.get("meta_return_multiplier", 1.0)), 1.4, "all meta return milestones should stack to x1.40")
-	assert_string_contains(str(nightmare_hidden.get("meta_return_summary", "")), "Return x1.40", "final run should persist full meta return summary")
-	assert_string_contains(str(nightmare_hidden.get("meta_return_next_hint", "")), "All meta returns unlocked", "final run should report that the meta return ladder is complete")
+	assert_eq(float(nightmare_hidden.get("meta_return_multiplier", 1.0)), 1.4, "Nightmare Hidden Return should raise the permanent multiplier to x1.40")
+	assert_string_contains(str(nightmare_hidden.get("meta_return_summary", "")), "Return x1.40", "Nightmare hidden clear should persist the updated meta return summary")
+	assert_string_contains(str(nightmare_hidden.get("meta_return_next_hint", "")), "clear any hidden layer again after sealing both archives", "first dual-archive clear should point at the hidden-layer repeat meta return milestone")
+
+	var archive_repeat: Dictionary = SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 19,
+		"kills": 372,
+		"level_reached": 13,
+		"gold": 210,
+		"ore": 40,
+		"alignment": 68.0,
+		"route_style": "vanguard",
+		"hidden_layer_id": "FS1",
+		"hidden_layer_rooms_cleared": 3,
+		"hidden_layer_kills": 92,
+		"hidden_layer_reward_payload": {
+			"track": "time_fragments",
+			"time_fragments": 4,
+			"rewind_charges": 1,
+			"collection_bonus_awarded": false,
+			"collection_bonus_label": "Rewind +1 | Time Fragments +2",
+			"summary": "Time Fragments +4 | Rewind +1 | Rift archive sealed"
+		},
+		"hidden_layer_reward_summary": "Time Fragments +4 | Rewind +1 | Rift archive sealed",
+		"hidden_layer_gameplay": {
+			"pressure_label": "Rift Surge",
+			"pressure_stage": 2,
+			"required_pressure_stage": 2,
+			"survival_seconds": 33.0,
+			"minimum_clear_seconds": 30.0,
+			"boss_echo_id": "boss_frost_king",
+			"boss_echo_title": "Frost King",
+			"boss_echo_collection": ["boss_rock_colossus", "boss_flame_lord", "boss_frost_king", "boss_void_lord"],
+			"collection_count": 4,
+			"collection_required": 4,
+			"collection_complete": true,
+			"collection_bonus_label": "Rewind +1 | Time Fragments +2",
+			"mastery_label": "Echo Archive Mastered | Rewind +1 | Time Fragments +2 claimed"
+		}
+	})
+	var archive_returns: Array = archive_repeat.get("new_meta_return_unlocks", [])
+	assert_eq(archive_returns.size(), 1, "re-clearing a hidden archive after sealing both layers should unlock one extra meta return milestone")
+	assert_eq(str((archive_returns[0] as Dictionary).get("label", "")), "Archive Return", "hidden-layer repeat clear should unlock Archive Return")
+	assert_eq(float(archive_repeat.get("meta_return_multiplier", 1.0)), 1.5, "Archive Return should raise the permanent multiplier to x1.50")
+	assert_string_contains(str(archive_repeat.get("meta_return_summary", "")), "Return x1.50", "repeat hidden clear should persist the post-archive meta return summary")
+	assert_string_contains(str(archive_repeat.get("meta_return_next_hint", "")), "Challenge Layer IV", "archive return should now point at the final apex meta return rung")
+
+	var apex_clear: Dictionary = SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 24,
+		"kills": 266,
+		"level_reached": 15,
+		"gold": 180,
+		"ore": 34,
+		"alignment": 0.0,
+		"difficulty_tier": 2,
+		"difficulty_label": "Nightmare",
+		"challenge_layer_id": "CL4",
+		"challenge_layer_title": "Challenge Layer IV",
+		"challenge_layer_phase": "settlement",
+		"challenge_layer_reward_id": "apex_meta_cache",
+		"challenge_layer_reward_title": "Apex Meta Cache",
+		"challenge_layer_reward_payload": {
+			"meta_bonus": 100,
+			"sigils": 0,
+			"insight": 0
+		},
+		"challenge_layer_reward_summary": "Apex archive sealed | Apex Meta Cache | Meta +100",
+		"challenge_layer_settlement_summary": "The fourth settlement records the apex challenge clear for the final return frontier.",
+		"challenge_layer_rooms_cleared": 5,
+		"challenge_layer_kills": 0
+	})
+	var apex_returns: Array = apex_clear.get("new_meta_return_unlocks", [])
+	assert_eq(apex_returns.size(), 1, "CL4 clear should unlock the final apex meta return milestone")
+	assert_eq(str((apex_returns[0] as Dictionary).get("label", "")), "Apex Return", "CL4 clear should unlock Apex Return")
+	assert_eq(float(apex_clear.get("meta_return_multiplier", 1.0)), 1.6, "Apex Return should raise the permanent multiplier to x1.60")
+	assert_string_contains(str(apex_clear.get("meta_return_summary", "")), "Return x1.60", "CL4 clear should persist the final meta return summary")
+	assert_string_contains(str(apex_clear.get("meta_return_next_hint", "")), "All meta returns unlocked", "Apex Return should complete the full meta return ladder")
 
 	var menu: Control = await _instantiate_main_menu()
 	if menu == null:
@@ -169,7 +245,7 @@ func test_difficulty_meta_return_progression_unlocks_and_surfaces_across_ui() ->
 		return
 
 	assert_string_contains(last_run_label.text, "NewReturn 1", "last run summary should surface new meta return unlock count")
-	assert_string_contains(last_run_label.text, "Return x1.40", "last run summary should surface the permanent meta return multiplier")
-	assert_string_contains(shop_message_label.text, "Return x1.40", "meta shop hint should surface the current meta return multiplier")
+	assert_string_contains(last_run_label.text, "Return x1.60", "last run summary should surface the permanent meta return multiplier")
+	assert_string_contains(shop_message_label.text, "Return x1.60", "meta shop hint should surface the current meta return multiplier")
 	assert_string_contains(shop_message_label.text, "Upgrade Cap 6/6", "meta shop hint should surface the fully unlocked upgrade cap")
 	assert_string_contains(shop_message_label.text, "All meta returns unlocked", "meta shop hint should surface the final meta return state")

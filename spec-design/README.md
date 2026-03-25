@@ -31,6 +31,9 @@
 | [full-game-content-plan-2026-03-22.md](./full-game-content-plan-2026-03-22.md) | 完整版内容完工总计划：完整版目标、顺序执行阶段与当前执行项 |
 | [remaining-game-content-checklist-2026-03-22.md](./remaining-game-content-checklist-2026-03-22.md) | 当前阶段剩余游戏开发内容清单，聚焦 Stage 5 收口与下一阶段切换 |
 | [full-development-remaining-checklist-2026-03-22.md](./full-development-remaining-checklist-2026-03-22.md) | 从当前进度到完整游戏收尾的剩余内容总清单与推荐 session 顺序 |
+| [stage5-closure-2026-03-25.md](./stage5-closure-2026-03-25.md) | Stage 5 正式收口说明：明确已完成真值、Stage 5/6/7 边界与本轮自动化验收基线 |
+| [stage5-acceptance-record-2026-03-25.md](./stage5-acceptance-record-2026-03-25.md) | Stage 5 验收记录：回写三路线、三结局、首通/复通差异与主要 UI 出口的通过结论 |
+| [stage5-acceptance-summary-2026-03-25.md](./stage5-acceptance-summary-2026-03-25.md) | Stage 5 统一验收摘要：为后续 Stage 6 session 提供最短承接基线 |
 | [mvp-release-freeze-2026-03-22.md](./mvp-release-freeze-2026-03-22.md) | D43 后的可发布 MVP 冻结范围、发布阻塞项与最短执行路径 |
 | [release-smoke-checklist-2026-03-22.md](./release-smoke-checklist-2026-03-22.md) | MVP 发布前的自动化门禁、三平台导出命令与人工 smoke checklist |
 | [export-template-setup-2026-03-22.md](./export-template-setup-2026-03-22.md) | Godot 4.6.1 导出模板安装要求、本机 CLI 约定与导出前置校验 |
@@ -138,3 +141,13 @@
 | 0.4.73 | 2026-03-24 | 新增 Stage 7 三档提示词总表，为背景、UI、音频、VFX、字体、shader、tiles、角色、敌人、武器与高耦合概念提供完整版/标准版/超短版口径 |
 | 0.4.74 | 2026-03-24 | 新增 Stage 7 资产筛选与落盘工作流，并补 `assets/README.md` 统一说明候选资产的筛选、状态与入库规则 |
 | 0.4.75 | 2026-03-24 | 新增 Stage 7 intake ledger 通用模板与首批批次收稿模板，补齐批次记录、主选/备选追踪与首轮验收表 |
+| 0.4.76 | 2026-03-25 | 完成 Stage 5 正式收口：新增收口文档/验收记录/统一摘要，补三结局首通-复通差异回归测试，并将总计划状态回写为 completed |
+| 0.4.77 | 2026-03-25 | 推进 Stage 6 Session 4：补齐 `CL1` 失败路径、`Sigil Bundle` / `Archive Insight` 分支与营地回显，并回写剩余清单状态 |
+| 0.4.78 | 2026-03-25 | 推进 Stage 6 Session 5/6：补齐 `FS2` Forge Trial 最小可玩闭环回归，明确 `sigils` / `insight` 继续停留在 Archive Ledger/UI 字段，并完成 `CL2+` challenge schema 基线泛化 |
+| 0.4.79 | 2026-03-25 | 推进 Stage 6 中期第一步：为隐藏层重复清档新增 `Archive Return` Meta Return 里程碑，并在隐藏层 settlement 文案中接入长期回流提示 |
+| 0.4.80 | 2026-03-25 | 推进 Stage 6 中期第二步：落地首个真实 `CL2` 挑战层闭环，补齐 `Archive Return` 解锁后的营地预览、Entry/Elite/Boss/Settlement 流程、强化奖励档位与 challenge plan 回归 |
+| 0.4.81 | 2026-03-25 | 推进 Stage 6 中期第三步：扩展隐藏层复清与 `CL1/CL2` 闭环成就，补主菜单 `Challenge Layer` 成就分组，并回写 Stage 6 进度文档 |
+| 0.4.82 | 2026-03-25 | 推进 Stage 6 中期第四步：扩展 archive codex 覆盖 `Archive Return` 与 `CL1/CL2` 挑战层闭环，补齐 Meta Return / Challenge Layer detail 与 Stage 6 文档回写 |
+| 0.4.83 | 2026-03-25 | 推进 Stage 6 中期第五步：落地首个更深层 `CL3` 挑战层闭环，补齐 `CL2` 清档后的 `O` 热键、Entry/Elite/Combat/Boss/Settlement 五段流程、第三档奖励与 Stage 6 文档回写 |
+| 0.4.84 | 2026-03-25 | 推进 Stage 6 中期第六步：补齐 `CL3` 对应的 challenge-specific achievement / archive codex，扩展 `Sovereign Curator` 与 `Sovereign Echo Archive`，并回写 Stage 6 文档与回归结果 |
+| 0.4.85 | 2026-03-25 | 完成 Stage 6 正式收口：落地最终 `CL4` 与 `Apex Return`、补齐 `CL4` 对应成就/codex、追加 `char_curator` / `wpn_reliquary_orb` / `evo_zenith_reliquary` 最小内容包，并将总计划状态回写为 completed |

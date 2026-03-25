@@ -19,6 +19,9 @@ const META_UPGRADE_HARD_CAP: int = 4
 const META_UPGRADE_NIGHTMARE_CAP: int = 5
 const META_UPGRADE_NIGHTMARE_HIDDEN_CAP: int = 6
 const CHALLENGE_LAYER_CL1: String = "CL1"
+const CHALLENGE_LAYER_CL2: String = "CL2"
+const CHALLENGE_LAYER_CL3: String = "CL3"
+const CHALLENGE_LAYER_CL4: String = "CL4"
 
 var _meta: Dictionary = {}
 var _last_run: Dictionary = {}
@@ -822,6 +825,8 @@ func submit_run_result(result: Dictionary) -> Dictionary:
     var new_difficulty_unlocks: Array[Dictionary] = _build_new_difficulty_unlock_rows(previous_max_difficulty_tier)
     var meta_return_profile: Dictionary = get_meta_return_profile()
     var new_meta_return_unlocks: Array[Dictionary] = _build_new_meta_return_unlock_rows(previous_meta_return_ids)
+    new_codex_unlocks.append_array(_unlock_challenge_layer_codex_entries(challenge_layer_id, outcome))
+    new_codex_unlocks.append_array(_unlock_meta_return_codex_entries(previous_meta_return_ids, _sanitize_nonempty_string_array(meta_return_profile.get("unlocked_ids", []))))
 
     _last_run = {
         "outcome": outcome,
@@ -994,8 +999,11 @@ func _default_input_bindings() -> Dictionary:
         "pause": {"keys": [KEY_ESCAPE], "joypad_buttons": [JOY_BUTTON_START]},
         "camp_hidden_fs1": {"keys": [KEY_R], "joypad_buttons": []},
         "camp_hidden_fs2": {"keys": [KEY_Y], "joypad_buttons": []},
-        "camp_challenge_layer": {"keys": [KEY_U], "joypad_buttons": []}
-    }
+		"camp_challenge_layer": {"keys": [KEY_U], "joypad_buttons": []},
+		"camp_challenge_layer_2": {"keys": [KEY_I], "joypad_buttons": []},
+		"camp_challenge_layer_3": {"keys": [KEY_O], "joypad_buttons": []},
+		"camp_challenge_layer_4": {"keys": [KEY_P], "joypad_buttons": []}
+	}
 
 
 func _sanitize_input_bindings(value: Variant) -> Dictionary:
@@ -1129,6 +1137,21 @@ func _check_achievement_condition(condition: String, result: Dictionary) -> bool
         var fs2_gameplay: Variant = result.get("hidden_layer_gameplay", {})
         return fs2_gameplay is Dictionary and bool((fs2_gameplay as Dictionary).get("collection_complete", false))
 
+    if condition == "hidden_layer_repeat_archive_return":
+        var current_hidden_layer_id: String = str(result.get("hidden_layer_id", "")).strip_edges().to_upper()
+        if str(result.get("outcome", "")) != "victory" or current_hidden_layer_id == "":
+            return false
+        var hidden_records: Dictionary = _sanitize_hidden_layer_records(_meta.get("hidden_layer_records", {}))
+        var fs1_record: Dictionary = _as_dictionary(hidden_records.get(HIDDEN_LAYER_FS1, {}))
+        var fs2_record: Dictionary = _as_dictionary(hidden_records.get(HIDDEN_LAYER_FS2, {}))
+        var fs1_clears: int = int(fs1_record.get("clears", 0))
+        var fs2_clears: int = int(fs2_record.get("clears", 0))
+        if current_hidden_layer_id == HIDDEN_LAYER_FS1:
+            fs1_clears += 1
+        elif current_hidden_layer_id == HIDDEN_LAYER_FS2:
+            fs2_clears += 1
+        return fs1_clears > 0 and fs2_clears > 0 and fs1_clears + fs2_clears >= 3
+
     if condition == "difficulty_clear_hard":
         return str(result.get("outcome", "")) == "victory" and int(result.get("difficulty_tier", 0)) >= 1
 
@@ -1137,6 +1160,18 @@ func _check_achievement_condition(condition: String, result: Dictionary) -> bool
 
     if condition == "difficulty_hidden_clear_nightmare":
         return str(result.get("outcome", "")) == "victory" and int(result.get("difficulty_tier", 0)) >= 2 and str(result.get("hidden_layer_id", "")).strip_edges() != ""
+
+    if condition == "challenge_layer_clear_cl1":
+        return str(result.get("outcome", "")) == "victory" and str(result.get("challenge_layer_id", "")).strip_edges().to_upper() == CHALLENGE_LAYER_CL1
+
+    if condition == "challenge_layer_clear_cl2":
+        return str(result.get("outcome", "")) == "victory" and str(result.get("challenge_layer_id", "")).strip_edges().to_upper() == CHALLENGE_LAYER_CL2
+
+    if condition == "challenge_layer_clear_cl3":
+        return str(result.get("outcome", "")) == "victory" and str(result.get("challenge_layer_id", "")).strip_edges().to_upper() == CHALLENGE_LAYER_CL3
+
+    if condition == "challenge_layer_clear_cl4":
+        return str(result.get("outcome", "")) == "victory" and str(result.get("challenge_layer_id", "")).strip_edges().to_upper() == CHALLENGE_LAYER_CL4
 
     return false
 
@@ -1762,9 +1797,19 @@ func _sanitize_challenge_layer_records(value: Variant) -> Dictionary:
     var source: Dictionary = {}
     if value is Dictionary:
         source = value
-    return {
-        CHALLENGE_LAYER_CL1: _sanitize_challenge_layer_record_row(source.get(CHALLENGE_LAYER_CL1, {}), CHALLENGE_LAYER_CL1)
+    var layer_ids: Dictionary = {
+        CHALLENGE_LAYER_CL1: true
     }
+    for key_var: Variant in source.keys():
+        var layer_id: String = str(key_var).strip_edges().to_upper()
+        if layer_id != "":
+            layer_ids[layer_id] = true
+
+    var rows: Dictionary = {}
+    for layer_id_var: Variant in layer_ids.keys():
+        var layer_id: String = str(layer_id_var)
+        rows[layer_id] = _sanitize_challenge_layer_record_row(source.get(layer_id, {}), layer_id)
+    return rows
 
 
 func _sanitize_challenge_layer_record_row(value: Variant, layer_id: String) -> Dictionary:
@@ -1851,6 +1896,20 @@ func _get_meta_return_milestones() -> Array[Dictionary]:
             "bonus_mult": 0.15,
             "bonus_text": "+15% Meta",
             "hint": "Next Return: clear any hidden layer on Nightmare"
+        },
+        {
+            "id": "archive_meta_return",
+            "label": "Archive Return",
+            "bonus_mult": 0.10,
+            "bonus_text": "+10% Meta",
+            "hint": "Next Return: clear any hidden layer again after sealing both archives"
+        },
+        {
+            "id": "apex_meta_return",
+            "label": "Apex Return",
+            "bonus_mult": 0.10,
+            "bonus_text": "+10% Meta",
+            "hint": "Next Return: clear Challenge Layer IV after stabilizing the sovereign frontier"
         }
     ]
 
@@ -1859,6 +1918,11 @@ func _is_meta_return_milestone_unlocked(row: Dictionary, records: Dictionary) ->
     var milestone_id: String = str(row.get("id", "")).strip_edges()
     var hard_record: Dictionary = _as_dictionary(records.get("1", {}))
     var nightmare_record: Dictionary = _as_dictionary(records.get("2", {}))
+    var hidden_records: Dictionary = _sanitize_hidden_layer_records(_meta.get("hidden_layer_records", {}))
+    var fs1_record: Dictionary = _as_dictionary(hidden_records.get(HIDDEN_LAYER_FS1, {}))
+    var fs2_record: Dictionary = _as_dictionary(hidden_records.get(HIDDEN_LAYER_FS2, {}))
+    var challenge_records: Dictionary = _sanitize_challenge_layer_records(_meta.get("challenge_layer_records", {}))
+    var cl4_record: Dictionary = _as_dictionary(challenge_records.get(CHALLENGE_LAYER_CL4, {}))
     match milestone_id:
         "hard_meta_return":
             return int(hard_record.get("clears", 0)) + int(nightmare_record.get("clears", 0)) > 0
@@ -1866,6 +1930,12 @@ func _is_meta_return_milestone_unlocked(row: Dictionary, records: Dictionary) ->
             return int(nightmare_record.get("clears", 0)) > 0
         "nightmare_hidden_meta_return":
             return int(nightmare_record.get("hidden_layer_clears", 0)) > 0
+        "archive_meta_return":
+            var fs1_clears: int = int(fs1_record.get("clears", 0))
+            var fs2_clears: int = int(fs2_record.get("clears", 0))
+            return fs1_clears > 0 and fs2_clears > 0 and fs1_clears + fs2_clears >= 3
+        "apex_meta_return":
+            return int(cl4_record.get("clears", 0)) > 0
         _:
             return false
 
@@ -2220,6 +2290,44 @@ func _unlock_difficulty_codex_entries(difficulty_tier: int, outcome: String, hid
             if unlock_codex_entry("archives", "nightmare_hidden_archive", "difficulty_hidden_clear", "global"):
                 unlocked_rows.append(_build_run_codex_unlock_row("archives", "nightmare_hidden_archive", "difficulty_hidden_clear", "global"))
 
+    return unlocked_rows
+
+
+func _unlock_challenge_layer_codex_entries(layer_id: String, outcome: String) -> Array[Dictionary]:
+    var unlocked_rows: Array[Dictionary] = []
+    if outcome != "victory":
+        return unlocked_rows
+
+    match layer_id.strip_edges().to_upper():
+        CHALLENGE_LAYER_CL1:
+            if unlock_codex_entry("archives", "cl1_challenge_archive", "challenge_layer_clear", "global"):
+                unlocked_rows.append(_build_run_codex_unlock_row("archives", "cl1_challenge_archive", "challenge_layer_clear", "global"))
+        CHALLENGE_LAYER_CL2:
+            if unlock_codex_entry("archives", "cl2_crown_archive", "challenge_layer_clear", "global"):
+                unlocked_rows.append(_build_run_codex_unlock_row("archives", "cl2_crown_archive", "challenge_layer_clear", "global"))
+        CHALLENGE_LAYER_CL3:
+            if unlock_codex_entry("archives", "cl3_sovereign_archive", "challenge_layer_clear", "global"):
+                unlocked_rows.append(_build_run_codex_unlock_row("archives", "cl3_sovereign_archive", "challenge_layer_clear", "global"))
+        CHALLENGE_LAYER_CL4:
+            if unlock_codex_entry("archives", "cl4_apex_archive", "challenge_layer_clear", "global"):
+                unlocked_rows.append(_build_run_codex_unlock_row("archives", "cl4_apex_archive", "challenge_layer_clear", "global"))
+    return unlocked_rows
+
+
+func _unlock_meta_return_codex_entries(previous_ids: Array[String], current_ids: Array[String]) -> Array[Dictionary]:
+    var unlocked_rows: Array[Dictionary] = []
+    var milestone_entries: Dictionary = {
+        "archive_meta_return": "archive_return_protocol",
+        "apex_meta_return": "apex_return_protocol"
+    }
+    for milestone_id: String in milestone_entries.keys():
+        if previous_ids.has(milestone_id) or not current_ids.has(milestone_id):
+            continue
+        var entry_id: String = str(milestone_entries.get(milestone_id, "")).strip_edges()
+        if entry_id == "":
+            continue
+        if unlock_codex_entry("archives", entry_id, "meta_return_unlock", "global"):
+            unlocked_rows.append(_build_run_codex_unlock_row("archives", entry_id, "meta_return_unlock", "global"))
     return unlocked_rows
 
 

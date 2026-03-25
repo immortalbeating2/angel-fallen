@@ -209,6 +209,9 @@ const ROOM_TYPE_ELITE: String = "elite"
 const HIDDEN_LAYER_FS1: String = "FS1"
 const HIDDEN_LAYER_FS2: String = "FS2"
 const CHALLENGE_LAYER_CL1: String = "CL1"
+const CHALLENGE_LAYER_CL2: String = "CL2"
+const CHALLENGE_LAYER_CL3: String = "CL3"
+const CHALLENGE_LAYER_CL4: String = "CL4"
 const FS1_ARCHIVE_BOSS_ECHOES: Array[String] = [
     "boss_rock_colossus",
     "boss_flame_lord",
@@ -491,6 +494,15 @@ func _unhandled_input(event: InputEvent) -> void:
                 return
             if event.is_action_pressed("camp_challenge_layer"):
                 _try_enter_challenge_layer(CHALLENGE_LAYER_CL1)
+                return
+            if event.is_action_pressed("camp_challenge_layer_2"):
+                _try_enter_challenge_layer(CHALLENGE_LAYER_CL2)
+                return
+            if event.is_action_pressed("camp_challenge_layer_3"):
+                _try_enter_challenge_layer(CHALLENGE_LAYER_CL3)
+                return
+            if event.is_action_pressed("camp_challenge_layer_4"):
+                _try_enter_challenge_layer(CHALLENGE_LAYER_CL4)
                 return
         if event.is_action_pressed("camp_forge_damage"):
             _try_forge_damage()
@@ -1940,13 +1952,36 @@ func _can_enter_challenge_layer(layer_id: String) -> bool:
 
 func _get_unlocked_challenge_layer_ids() -> Array[String]:
     var rows: Array[String] = []
-    if SaveManager == null or not SaveManager.has_method("get_meta_return_profile"):
+    if SaveManager == null:
         return rows
-    var profile: Dictionary = SaveManager.get_meta_return_profile()
-    var unlocked_ids: Array[String] = _as_string_array(profile.get("unlocked_ids", []))
+    var unlocked_ids: Array[String] = []
+    if SaveManager.has_method("get_meta_return_profile"):
+        var profile: Dictionary = SaveManager.get_meta_return_profile()
+        unlocked_ids = _as_string_array(profile.get("unlocked_ids", []))
     if unlocked_ids.has("nightmare_hidden_meta_return"):
         rows.append(CHALLENGE_LAYER_CL1)
+    if unlocked_ids.has("archive_meta_return"):
+        rows.append(CHALLENGE_LAYER_CL2)
+    if SaveManager.has_method("get_challenge_layer_record"):
+        var cl2_record_var: Variant = SaveManager.get_challenge_layer_record(CHALLENGE_LAYER_CL2)
+        if cl2_record_var is Dictionary and int((cl2_record_var as Dictionary).get("clears", 0)) > 0:
+            rows.append(CHALLENGE_LAYER_CL3)
+        var cl3_record_var: Variant = SaveManager.get_challenge_layer_record(CHALLENGE_LAYER_CL3)
+        if cl3_record_var is Dictionary and int((cl3_record_var as Dictionary).get("clears", 0)) > 0:
+            rows.append(CHALLENGE_LAYER_CL4)
     return rows
+
+
+func _get_challenge_layer_entry_hotkey_label(layer_id: String) -> String:
+    match layer_id.strip_edges().to_upper():
+        CHALLENGE_LAYER_CL4:
+            return "P"
+        CHALLENGE_LAYER_CL3:
+            return "O"
+        CHALLENGE_LAYER_CL2:
+            return "I"
+        _:
+            return "U"
 
 
 func _get_challenge_layer_title_from_plan(plan: Dictionary, fallback: String) -> String:
@@ -2987,6 +3022,8 @@ func _get_shop_item_info(item_id: String) -> Dictionary:
             return {"title": "Nether Shard", "desc": "+5.4 damage and unstable void spread"}
         "wpn_astral_disc":
             return {"title": "Astral Disc", "desc": "+5.0 damage, faster cycle, +1 hit"}
+        "wpn_reliquary_orb":
+            return {"title": "Reliquary Orb", "desc": "+5.6 damage, wider orbit split, +1 hit"}
         _:
             return {"title": item_id, "desc": "Unknown effect"}
 
@@ -3294,6 +3331,22 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "astral_disc"
+        "wpn_reliquary_orb":
+            if weapon != null:
+                if weapon.get("base_damage") != null:
+                    weapon.base_damage += 5.6
+                if weapon.get("attack_interval") != null:
+                    weapon.attack_interval = maxf(0.08, float(weapon.attack_interval) * 0.94)
+                if weapon.get("weapon_mode") != null:
+                    weapon.weapon_mode = "spread"
+                if weapon.get("projectile_count") != null:
+                    weapon.projectile_count = clampi(maxi(int(weapon.projectile_count), 2) + 1, 1, 8)
+                if weapon.get("projectile_hits") != null:
+                    weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
+                if weapon.get("spread_angle_deg") != null:
+                    weapon.spread_angle_deg = clampf(maxf(float(weapon.spread_angle_deg), 12.0) + 4.0, 0.0, 45.0)
+                if weapon.get("projectile_style") != null:
+                    weapon.projectile_style = "reliquary_orb"
 
     _notify_level_up_anchor_from_shop(item_id)
 
@@ -4335,12 +4388,19 @@ func _get_challenge_layer_entry_lines() -> Array[String]:
                     if last_reward_title != "":
                         lines.append("Last archived reward: %s" % last_reward_title)
         lines.append("Archive exit: T: Memory Altar | E: Archive clear and finish run")
-        lines.append("U: Enter %s" % title)
+        lines.append("%s: Enter %s" % [_get_challenge_layer_entry_hotkey_label(layer_id), title])
     return lines
 
 
 func _update_challenge_layer_entry_text() -> void:
     var room_plan: Dictionary = _get_room_plan(_room_index)
+    var next_room_title: String = "Challenge Combat Ring"
+    var next_rooms: Array = room_plan.get("next_rooms", []) as Array
+    if not next_rooms.is_empty():
+        var next_plan: Dictionary = _get_room_plan(int(next_rooms[0]))
+        var preview_title: String = str(next_plan.get("title", "")).strip_edges()
+        if preview_title != "":
+            next_room_title = preview_title
     var lines: Array[String] = []
     lines.append("%s | Challenge staging" % str(room_plan.get("title", "Challenge Layer Entry")))
     lines.append("Objective: %s" % str(room_plan.get("objective", "Prepare the challenge archive route.")))
@@ -4351,7 +4411,7 @@ func _update_challenge_layer_entry_text() -> void:
     if reward_summary != "":
         lines.append("Reward preview: %s" % reward_summary)
     lines.append(_get_difficulty_risk_reward_line())
-    lines.append("Press E -> Challenge Combat Ring")
+    lines.append("Press E -> %s" % next_room_title)
     if _camp_message != "":
         lines.append(_camp_message)
     _room_status_label.text = "\n".join(PackedStringArray(lines))
@@ -4397,18 +4457,31 @@ func _build_challenge_layer_result_payload(outcome: String) -> Dictionary:
     if not _is_challenge_layer_active():
         return {}
     var room_plan: Dictionary = _get_room_plan(_room_index)
+    var challenge_phase: String = str(room_plan.get("challenge_phase", "entry")).strip_edges().to_lower()
     var challenge_rooms_cleared: int = maxi(0, _room_history.size() - 1)
     var challenge_kills: int = maxi(0, _run_kills - _challenge_layer_entry_kills)
-    var reward_payload: Dictionary = _get_challenge_reward_payload()
+    var reward_payload: Dictionary = _get_challenge_reward_payload() if outcome == "victory" else {}
+    var reward_id: String = str(_challenge_reward_selected.get("id", "")).strip_edges() if outcome == "victory" else ""
+    var reward_title: String = str(_challenge_reward_selected.get("title", "")).strip_edges() if outcome == "victory" else ""
+    var reward_summary: String = ""
+    var settlement_summary: String = ""
+    if outcome == "victory":
+        reward_summary = _build_challenge_reward_summary(str(room_plan.get("reward_summary", "Challenge archive sealed | Meta +40 | Sigil +1")).strip_edges())
+        settlement_summary = str(room_plan.get("settlement_summary", "")).strip_edges()
+    else:
+        var failure_title: String = str(room_plan.get("title", room_plan.get("challenge_layer_title", "Challenge Layer"))).strip_edges()
+        reward_summary = "Challenge archive attempt archived without payout"
+        if failure_title != "":
+            reward_summary = "%s | %s" % [reward_summary, failure_title]
     return {
         "challenge_layer_id": _active_challenge_layer_id,
         "challenge_layer_title": str(room_plan.get("challenge_layer_title", "Challenge Layer")).strip_edges(),
-        "challenge_layer_phase": str(room_plan.get("challenge_phase", "entry")).strip_edges().to_lower(),
-        "challenge_layer_reward_id": str(_challenge_reward_selected.get("id", "")).strip_edges(),
-        "challenge_layer_reward_title": str(_challenge_reward_selected.get("title", "")).strip_edges(),
+        "challenge_layer_phase": challenge_phase,
+        "challenge_layer_reward_id": reward_id,
+        "challenge_layer_reward_title": reward_title,
         "challenge_layer_reward_payload": reward_payload,
-        "challenge_layer_reward_summary": _build_challenge_reward_summary(str(room_plan.get("reward_summary", "Challenge archive sealed | Meta +40 | Sigil +1")).strip_edges()),
-        "challenge_layer_settlement_summary": str(room_plan.get("settlement_summary", "")).strip_edges(),
+        "challenge_layer_reward_summary": reward_summary,
+        "challenge_layer_settlement_summary": settlement_summary,
         "challenge_layer_rooms_cleared": challenge_rooms_cleared,
         "challenge_layer_kills": challenge_kills,
         "difficulty_summary": _get_difficulty_summary_text()
@@ -4425,35 +4498,127 @@ func _build_challenge_reward_offers(layer_id: String) -> Array[Dictionary]:
     var layer_key: String = layer_id.strip_edges().to_upper()
     if layer_key == "":
         return []
-    return [
-        {
-            "id": "meta_cache",
-            "title": "Meta Cache",
-            "description": "Meta +40",
-            "meta_bonus": 40,
-            "sigils": 0,
-            "insight": 0,
-            "summary": "Meta Cache | Meta +40"
-        },
-        {
-            "id": "sigil_bundle",
-            "title": "Sigil Bundle",
-            "description": "Sigil +1",
-            "meta_bonus": 0,
-            "sigils": 1,
-            "insight": 0,
-            "summary": "Sigil Bundle | Sigil +1"
-        },
-        {
-            "id": "archive_insight",
-            "title": "Archive Insight",
-            "description": "Insight +1",
-            "meta_bonus": 0,
-            "sigils": 0,
-            "insight": 1,
-            "summary": "Archive Insight | Insight +1"
-        }
-    ]
+    match layer_key:
+        CHALLENGE_LAYER_CL4:
+            return [
+                {
+                    "id": "apex_meta_cache",
+                    "title": "Apex Meta Cache",
+                    "description": "Meta +100",
+                    "meta_bonus": 100,
+                    "sigils": 0,
+                    "insight": 0,
+                    "summary": "Apex Meta Cache | Meta +100"
+                },
+                {
+                    "id": "sigil_constellation",
+                    "title": "Sigil Constellation",
+                    "description": "Sigil +4",
+                    "meta_bonus": 0,
+                    "sigils": 4,
+                    "insight": 0,
+                    "summary": "Sigil Constellation | Sigil +4"
+                },
+                {
+                    "id": "insight_throne",
+                    "title": "Insight Throne",
+                    "description": "Insight +4",
+                    "meta_bonus": 0,
+                    "sigils": 0,
+                    "insight": 4,
+                    "summary": "Insight Throne | Insight +4"
+                }
+            ]
+        CHALLENGE_LAYER_CL3:
+            return [
+                {
+                    "id": "sovereign_meta_cache",
+                    "title": "Sovereign Meta Cache",
+                    "description": "Meta +80",
+                    "meta_bonus": 80,
+                    "sigils": 0,
+                    "insight": 0,
+                    "summary": "Sovereign Meta Cache | Meta +80"
+                },
+                {
+                    "id": "sigil_matrix",
+                    "title": "Sigil Matrix",
+                    "description": "Sigil +3",
+                    "meta_bonus": 0,
+                    "sigils": 3,
+                    "insight": 0,
+                    "summary": "Sigil Matrix | Sigil +3"
+                },
+                {
+                    "id": "insight_reliquary",
+                    "title": "Insight Reliquary",
+                    "description": "Insight +3",
+                    "meta_bonus": 0,
+                    "sigils": 0,
+                    "insight": 3,
+                    "summary": "Insight Reliquary | Insight +3"
+                }
+            ]
+        CHALLENGE_LAYER_CL2:
+            return [
+                {
+                    "id": "deep_meta_cache",
+                    "title": "Deep Meta Cache",
+                    "description": "Meta +60",
+                    "meta_bonus": 60,
+                    "sigils": 0,
+                    "insight": 0,
+                    "summary": "Deep Meta Cache | Meta +60"
+                },
+                {
+                    "id": "sigil_crate",
+                    "title": "Sigil Crate",
+                    "description": "Sigil +2",
+                    "meta_bonus": 0,
+                    "sigils": 2,
+                    "insight": 0,
+                    "summary": "Sigil Crate | Sigil +2"
+                },
+                {
+                    "id": "insight_bundle",
+                    "title": "Insight Bundle",
+                    "description": "Insight +2",
+                    "meta_bonus": 0,
+                    "sigils": 0,
+                    "insight": 2,
+                    "summary": "Insight Bundle | Insight +2"
+                }
+            ]
+        _:
+            return [
+                {
+                    "id": "meta_cache",
+                    "title": "Meta Cache",
+                    "description": "Meta +40",
+                    "meta_bonus": 40,
+                    "sigils": 0,
+                    "insight": 0,
+                    "summary": "Meta Cache | Meta +40"
+                },
+                {
+                    "id": "sigil_bundle",
+                    "title": "Sigil Bundle",
+                    "description": "Sigil +1",
+                    "meta_bonus": 0,
+                    "sigils": 1,
+                    "insight": 0,
+                    "summary": "Sigil Bundle | Sigil +1"
+                },
+                {
+                    "id": "archive_insight",
+                    "title": "Archive Insight",
+                    "description": "Insight +1",
+                    "meta_bonus": 0,
+                    "sigils": 0,
+                    "insight": 1,
+                    "summary": "Archive Insight | Insight +1"
+                }
+            ]
 
 
 func _try_buy_challenge_reward_slot(slot_index: int) -> void:
@@ -4488,11 +4653,10 @@ func _build_challenge_reward_summary(base_summary: String) -> String:
     var reward_summary: String = str(_challenge_reward_selected.get("summary", _challenge_reward_selected.get("title", ""))).strip_edges()
     if reward_summary == "":
         return summary
-    if summary == "":
+    var summary_prefix: String = summary.get_slice("|", 0).strip_edges()
+    if summary_prefix == "":
         return reward_summary
-    if summary.contains(reward_summary):
-        return summary
-    return "%s | %s" % [summary, reward_summary]
+    return "%s | %s" % [summary_prefix, reward_summary]
 
 
 func _update_hidden_layer_settlement_text() -> void:
@@ -4512,6 +4676,17 @@ func _update_hidden_layer_settlement_text() -> void:
     var settlement_summary: String = str(status.get("settlement_summary", "")).strip_edges()
     if settlement_summary != "":
         lines.append("Settlement: %s" % settlement_summary)
+    if SaveManager != null and SaveManager.has_method("get_meta_return_profile"):
+        var meta_return_profile: Dictionary = SaveManager.get_meta_return_profile()
+        var meta_return_parts: PackedStringArray = PackedStringArray()
+        var meta_return_summary: String = str(meta_return_profile.get("summary", "")).strip_edges()
+        var meta_return_next_hint: String = str(meta_return_profile.get("next_hint", "")).strip_edges()
+        if meta_return_summary != "":
+            meta_return_parts.append(meta_return_summary)
+        if meta_return_next_hint != "":
+            meta_return_parts.append(meta_return_next_hint)
+        if not meta_return_parts.is_empty():
+            lines.append("Meta Return: %s" % " | ".join(meta_return_parts))
     lines.append(_get_difficulty_risk_reward_line())
     var gameplay_lines: Array[String] = _get_hidden_layer_gameplay_lines()
     for gameplay_line: String in gameplay_lines:

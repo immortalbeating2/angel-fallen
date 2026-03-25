@@ -61,6 +61,11 @@
       "condition": "hidden_layer_mastery_fs2"
     },
     {
+      "id": "ach_archive_return",
+      "title": "Archive Echo",
+      "condition": "hidden_layer_repeat_archive_return"
+    },
+    {
       "id": "ach_hard_clear",
       "title": "Steel Baptism",
       "condition": "difficulty_clear_hard"
@@ -74,6 +79,26 @@
       "id": "ach_nightmare_hidden",
       "title": "Abyss Crowned",
       "condition": "difficulty_hidden_clear_nightmare"
+    },
+    {
+      "id": "ach_cl1_clear",
+      "title": "Archive Initiate",
+      "condition": "challenge_layer_clear_cl1"
+    },
+    {
+      "id": "ach_cl2_clear",
+      "title": "Crown Archivist",
+      "condition": "challenge_layer_clear_cl2"
+    },
+    {
+      "id": "ach_cl3_clear",
+      "title": "Sovereign Curator",
+      "condition": "challenge_layer_clear_cl3"
+    },
+    {
+      "id": "ach_cl4_clear",
+      "title": "Apex Archivist",
+      "condition": "challenge_layer_clear_cl4"
     }
   ]
 }

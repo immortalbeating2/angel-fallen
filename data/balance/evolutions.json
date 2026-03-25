@@ -259,6 +259,26 @@
         "projectile_hits": 4,
         "projectile_style": "astral_horizon"
       }
+		},
+		{
+			"id": "evo_zenith_reliquary",
+			"weapon_id": "wpn_reliquary_orb",
+			"passive_id": "pas_warding",
+			"required_passive_level": 3,
+			"result_weapon_id": "wpn_zenith_reliquary",
+			"title": "Zenith Reliquary",
+			"desc": "Reliquary orbs collapse into a radiant archive spiral that tears through the final frontier.",
+			"evolution_profile": {
+				"damage_mult": 1.33,
+				"flat_damage_bonus": 5.2,
+				"interval_mult": 0.82,
+				"weapon_mode": "spread",
+				"projectile_count": 5,
+				"spread_angle_deg": 24.0,
+				"spread_jitter_deg": 4.0,
+				"projectile_hits": 4,
+				"projectile_style": "zenith_reliquary"
+			}
     }
   ]
 }

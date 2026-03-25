@@ -115,15 +115,17 @@ func test_hidden_layer_clear_and_mastery_unlock_achievements_and_main_menu_lists
 	assert_string_contains(achievement_label.text, "[x] Echo Sovereign", "achievement list should show unlocked FS1 mastery achievement")
 	assert_string_contains(achievement_label.text, "[x] Forge Archivist", "achievement list should show unlocked FS2 archive achievement")
 	assert_string_contains(achievement_label.text, "[x] Genesis Perfected", "achievement list should show unlocked FS2 mastery achievement")
-	assert_string_contains(achievement_label.text, "Progress: 11/15", "achievement list should show achievement completion progress")
+	assert_string_contains(achievement_label.text, "Progress: 11/20", "achievement list should show achievement completion progress")
 	assert_string_contains(achievement_label.text, "Category Progress:", "achievement list should expose grouped progress summary")
 	assert_string_contains(achievement_label.text, "- Run 7/8", "achievement list should summarize run achievement progress")
-	assert_string_contains(achievement_label.text, "- Hidden Layer 4/4", "achievement list should summarize hidden-layer achievement progress")
+	assert_string_contains(achievement_label.text, "- Hidden Layer 4/5", "achievement list should summarize hidden-layer achievement progress")
 	assert_string_contains(achievement_label.text, "- Difficulty 0/3", "achievement list should summarize difficulty achievement progress")
+	assert_string_contains(achievement_label.text, "- Challenge Layer 0/4", "achievement list should summarize challenge-layer achievement progress")
 	assert_string_contains(achievement_label.text, "Recent Group Breakdown:", "achievement list should summarize recent unlock groups")
 	assert_string_contains(achievement_label.text, "- Run 2", "achievement list should count run unlocks inside the recent window")
 	assert_string_contains(achievement_label.text, "- Hidden Layer 3", "achievement list should count hidden-layer unlocks inside the recent window")
 	assert_string_contains(achievement_label.text, "- Difficulty 0", "achievement list should show zero recent difficulty unlocks when none are present")
+	assert_string_contains(achievement_label.text, "- Challenge Layer 0", "achievement list should show zero recent challenge-layer unlocks when none are present")
 	assert_string_contains(achievement_label.text, "Recent Unlocks (last 5):", "achievement list should expose recent achievement unlocks")
 	assert_string_contains(achievement_label.text, "[Run] First Light", "recent achievement unlocks should label run-milestone achievements")
 	assert_string_contains(achievement_label.text, "[Hidden Layer] Forge Archivist", "recent achievement unlocks should label hidden-layer archive achievements")
@@ -254,15 +256,17 @@ func test_difficulty_clear_progression_unlocks_achievements_and_main_menu_lists_
 	assert_string_contains(achievement_label.text, "[x] Steel Baptism", "achievement list should show unlocked Hard clear achievement")
 	assert_string_contains(achievement_label.text, "[x] Nightmare Victor", "achievement list should show unlocked Nightmare clear achievement")
 	assert_string_contains(achievement_label.text, "[x] Abyss Crowned", "achievement list should show unlocked Nightmare hidden clear achievement")
-	assert_string_contains(achievement_label.text, "Progress: 14/15", "achievement list should update completion progress after difficulty clears")
+	assert_string_contains(achievement_label.text, "Progress: 14/20", "achievement list should update completion progress after difficulty clears")
 	assert_string_contains(achievement_label.text, "Category Progress:", "achievement list should expose grouped progress summary after difficulty clears")
 	assert_string_contains(achievement_label.text, "- Run 7/8", "achievement list should keep run achievement progress after difficulty clears")
-	assert_string_contains(achievement_label.text, "- Hidden Layer 4/4", "achievement list should keep hidden-layer achievement progress after difficulty clears")
+	assert_string_contains(achievement_label.text, "- Hidden Layer 4/5", "achievement list should keep hidden-layer achievement progress after difficulty clears")
 	assert_string_contains(achievement_label.text, "- Difficulty 3/3", "achievement list should summarize difficulty achievement progress after clears")
+	assert_string_contains(achievement_label.text, "- Challenge Layer 0/4", "achievement list should keep challenge-layer achievement progress at zero before challenge clears")
 	assert_string_contains(achievement_label.text, "Recent Group Breakdown:", "achievement list should summarize recent unlock groups after difficulty clears")
 	assert_string_contains(achievement_label.text, "- Run 0", "achievement list should show zero recent run unlocks when the recent window is full of later groups")
 	assert_string_contains(achievement_label.text, "- Hidden Layer 3", "achievement list should keep hidden-layer entries inside the recent window")
 	assert_string_contains(achievement_label.text, "- Difficulty 2", "achievement list should count recent difficulty unlocks inside the recent window")
+	assert_string_contains(achievement_label.text, "- Challenge Layer 0", "achievement list should show zero recent challenge-layer unlocks before any challenge clear milestone")
 	assert_string_contains(achievement_label.text, "Recent Unlocks (last 5):", "achievement list should expose recent unlock history after difficulty clears")
 	assert_string_contains(achievement_label.text, "[Difficulty] Nightmare Victor", "recent achievement unlocks should label the Nightmare clear milestone")
 	assert_string_contains(achievement_label.text, "[Difficulty] Abyss Crowned", "recent achievement unlocks should label the hidden Nightmare milestone")
@@ -273,6 +277,240 @@ func test_difficulty_clear_progression_unlocks_achievements_and_main_menu_lists_
 	assert_string_contains(achievement_label.text, "Fragment progress: 0 / 39", "achievement list should summarize memory fragment progress when the run did not unlock any fragments")
 	assert_string_contains(achievement_label.text, "Recent Fragments (last 5):\n-", "achievement list should show an empty recent fragment section when no fragments were unlocked")
 	assert_string_contains(last_run_label.text, "NewAch 4", "last run summary should surface the full Nightmare hidden-layer burst count")
+
+
+func test_archive_return_and_challenge_layer_clears_expand_achievement_groups() -> void:
+	if SaveManager == null:
+		pending("SaveManager singleton not available")
+		return
+
+	SaveManager.reset_meta()
+	SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 18,
+		"kills": 360,
+		"level_reached": 13,
+		"gold": 220,
+		"ore": 44,
+		"alignment": 72.0,
+		"route_style": "vanguard",
+		"hidden_layer_id": "FS1",
+		"hidden_layer_rooms_cleared": 3,
+		"hidden_layer_kills": 84,
+		"hidden_layer_reward_payload": {
+			"track": "time_fragments",
+			"time_fragments": 5,
+			"rewind_charges": 2,
+			"collection_bonus_awarded": true,
+			"collection_bonus_label": "Rewind +1 | Time Fragments +2",
+			"summary": "Time Fragments +5 | Rewind +2 | Rift archive sealed | Mastery Rewind +1 | Time Fragments +2"
+		},
+		"hidden_layer_reward_summary": "Time Fragments +5 | Rewind +2 | Rift archive sealed | Mastery Rewind +1 | Time Fragments +2",
+		"hidden_layer_gameplay": {
+			"pressure_stage": 3,
+			"boss_echo_collection": ["boss_rock_colossus", "boss_flame_lord", "boss_frost_king", "boss_void_lord"],
+			"collection_complete": true,
+			"mastery_label": "Echo Archive Mastered | Rewind +1 | Time Fragments +2 claimed"
+		}
+	})
+	SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 20,
+		"kills": 410,
+		"level_reached": 14,
+		"gold": 260,
+		"ore": 52,
+		"alignment": 0.0,
+		"route_style": "neutral",
+		"hidden_layer_id": "FS2",
+		"hidden_layer_rooms_cleared": 5,
+		"hidden_layer_kills": 112,
+		"hidden_layer_reward_payload": {
+			"track": "legendary_forge",
+			"recipe_drafts": 3,
+			"relic_merges": 2,
+			"collection_bonus_awarded": true,
+			"collection_bonus_label": "Draft +1 | Merge +1",
+			"summary": "Legendary recipe draft +3 | Relic merge archive +2 | Depth 5/5 | Archive 5/5 | Mastery Draft +1 | Merge +1"
+		},
+		"hidden_layer_reward_summary": "Legendary recipe draft +3 | Relic merge archive +2 | Depth 5/5 | Archive 5/5 | Mastery Draft +1 | Merge +1",
+		"hidden_layer_gameplay": {
+			"trial_depth": 5,
+			"trial_labels": [
+				"Forge Trial I: Ore Tempering",
+				"Forge Trial II: Ember Fold",
+				"Forge Trial III: Frost Bind",
+				"Forge Trial IV: Void Sunder",
+				"Forge Trial V: Genesis Core"
+			],
+			"collection_complete": true,
+			"mastery_label": "Forge Archive Mastered | Draft +1 | Merge +1 claimed"
+		}
+	})
+	var archive_return_result: Dictionary = SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 19,
+		"kills": 300,
+		"level_reached": 13,
+		"gold": 230,
+		"ore": 46,
+		"alignment": 72.0,
+		"route_style": "vanguard",
+		"hidden_layer_id": "FS1",
+		"hidden_layer_rooms_cleared": 3,
+		"hidden_layer_kills": 80,
+		"hidden_layer_reward_payload": {
+			"track": "time_fragments",
+			"time_fragments": 3,
+			"rewind_charges": 1,
+			"collection_bonus_awarded": false,
+			"collection_bonus_label": "Rewind +1 | Time Fragments +2",
+			"summary": "Time Fragments +3 | Rewind +1 | Rift archive sealed"
+		},
+		"hidden_layer_reward_summary": "Time Fragments +3 | Rewind +1 | Rift archive sealed",
+		"hidden_layer_gameplay": {
+			"pressure_stage": 2,
+			"boss_echo_collection": ["boss_rock_colossus", "boss_flame_lord"],
+			"collection_complete": false,
+			"mastery_label": "Echo Archive Mastered | Rewind +1 | Time Fragments +2 ready"
+		}
+	})
+	assert_true((archive_return_result.get("new_achievements", []) as Array).has("ach_archive_return"), "repeating hidden-layer clears after sealing both archives should unlock the Archive Return achievement")
+
+	var cl1_result: Dictionary = SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 12,
+		"kills": 140,
+		"level_reached": 9,
+		"gold": 88,
+		"ore": 14,
+		"alignment": 0.0,
+		"challenge_layer_id": "CL1",
+		"challenge_layer_title": "Challenge Layer",
+		"challenge_layer_phase": "settlement",
+		"challenge_layer_reward_id": "meta_cache",
+		"challenge_layer_reward_title": "Meta Cache",
+		"challenge_layer_reward_payload": {
+			"meta_bonus": 40,
+			"sigils": 0,
+			"insight": 0
+		},
+		"challenge_layer_reward_summary": "Challenge archive sealed | Meta Cache | Meta +40",
+		"challenge_layer_settlement_summary": "The settlement records this challenge clear for the next postgame step.",
+		"challenge_layer_rooms_cleared": 2,
+		"challenge_layer_kills": 24
+	})
+	assert_true((cl1_result.get("new_achievements", []) as Array).has("ach_cl1_clear"), "first CL1 clear should unlock the first challenge-layer achievement")
+
+	var cl2_result: Dictionary = SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 15,
+		"kills": 188,
+		"level_reached": 10,
+		"gold": 112,
+		"ore": 22,
+		"alignment": 0.0,
+		"challenge_layer_id": "CL2",
+		"challenge_layer_title": "Challenge Layer II",
+		"challenge_layer_phase": "settlement",
+		"challenge_layer_reward_id": "insight_bundle",
+		"challenge_layer_reward_title": "Insight Bundle",
+		"challenge_layer_reward_payload": {
+			"meta_bonus": 0,
+			"sigils": 0,
+			"insight": 2
+		},
+		"challenge_layer_reward_summary": "Crucible archive sealed | Insight Bundle | Insight +2",
+		"challenge_layer_settlement_summary": "The second settlement records a deeper challenge clear for the next archive horizon.",
+		"challenge_layer_rooms_cleared": 3,
+		"challenge_layer_kills": 36
+	})
+	assert_true((cl2_result.get("new_achievements", []) as Array).has("ach_cl2_clear"), "first CL2 clear should unlock the second challenge-layer achievement")
+
+	var cl3_result: Dictionary = SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 18,
+		"kills": 224,
+		"level_reached": 12,
+		"gold": 136,
+		"ore": 28,
+		"alignment": 0.0,
+		"challenge_layer_id": "CL3",
+		"challenge_layer_title": "Challenge Layer III",
+		"challenge_layer_phase": "settlement",
+		"challenge_layer_reward_id": "sigil_matrix",
+		"challenge_layer_reward_title": "Sigil Matrix",
+		"challenge_layer_reward_payload": {
+			"meta_bonus": 0,
+			"sigils": 3,
+			"insight": 0
+		},
+		"challenge_layer_reward_summary": "Sovereign archive sealed | Sigil Matrix | Sigil +3",
+		"challenge_layer_settlement_summary": "The third settlement records a sovereign challenge clear for the final archive frontier.",
+		"challenge_layer_rooms_cleared": 4,
+		"challenge_layer_kills": 42
+	})
+	assert_true((cl3_result.get("new_achievements", []) as Array).has("ach_cl3_clear"), "first CL3 clear should unlock the third challenge-layer achievement")
+
+	var cl4_result: Dictionary = SaveManager.submit_run_result({
+		"outcome": "victory",
+		"rooms_cleared": 22,
+		"kills": 248,
+		"level_reached": 14,
+		"gold": 162,
+		"ore": 32,
+		"alignment": 0.0,
+		"challenge_layer_id": "CL4",
+		"challenge_layer_title": "Challenge Layer IV",
+		"challenge_layer_phase": "settlement",
+		"challenge_layer_reward_id": "insight_throne",
+		"challenge_layer_reward_title": "Insight Throne",
+		"challenge_layer_reward_payload": {
+			"meta_bonus": 0,
+			"sigils": 0,
+			"insight": 4
+		},
+		"challenge_layer_reward_summary": "Apex archive sealed | Insight Throne | Insight +4",
+		"challenge_layer_settlement_summary": "The fourth settlement records the apex challenge clear for the final return frontier.",
+		"challenge_layer_rooms_cleared": 5,
+		"challenge_layer_kills": 48
+	})
+	assert_true((cl4_result.get("new_achievements", []) as Array).has("ach_cl4_clear"), "first CL4 clear should unlock the fourth challenge-layer achievement")
+
+	var unlocked: Array[String] = SaveManager.get_unlocked_achievements()
+	assert_true(unlocked.has("ach_archive_return"), "Archive Return achievement should persist")
+	assert_true(unlocked.has("ach_cl1_clear"), "CL1 clear achievement should persist")
+	assert_true(unlocked.has("ach_cl2_clear"), "CL2 clear achievement should persist")
+	assert_true(unlocked.has("ach_cl3_clear"), "CL3 clear achievement should persist")
+	assert_true(unlocked.has("ach_cl4_clear"), "CL4 clear achievement should persist")
+
+	var menu: Control = await _instantiate_main_menu()
+	if menu == null:
+		return
+
+	menu.call("_refresh_achievement_list")
+	var achievement_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/AchievementListValue")
+	var last_run_label: Label = menu.get_node_or_null("CenterContainer/VBoxContainer/LastRunValue")
+	assert_not_null(achievement_label, "achievement list label should exist")
+	assert_not_null(last_run_label, "last run label should exist")
+	if achievement_label == null or last_run_label == null:
+		return
+
+	assert_string_contains(achievement_label.text, "[x] Archive Echo", "achievement list should show the hidden-layer repeat achievement")
+	assert_string_contains(achievement_label.text, "[x] Archive Initiate", "achievement list should show the first challenge-layer achievement")
+	assert_string_contains(achievement_label.text, "[x] Crown Archivist", "achievement list should show the second challenge-layer achievement")
+	assert_string_contains(achievement_label.text, "[x] Sovereign Curator", "achievement list should show the third challenge-layer achievement")
+	assert_string_contains(achievement_label.text, "[x] Apex Archivist", "achievement list should show the fourth challenge-layer achievement")
+	assert_string_contains(achievement_label.text, "Progress: 16/20", "achievement list should include the expanded Stage 6 achievement total")
+	assert_string_contains(achievement_label.text, "- Hidden Layer 5/5", "achievement list should show the expanded hidden-layer achievement group")
+	assert_string_contains(achievement_label.text, "- Challenge Layer 4/4", "achievement list should show the expanded challenge-layer achievement group")
+	assert_string_contains(achievement_label.text, "- Challenge Layer 4", "recent achievement group breakdown should count the recent challenge-layer unlocks")
+	assert_string_contains(achievement_label.text, "[Hidden Layer] Archive Echo", "recent achievement unlocks should label the hidden-layer repeat milestone")
+	assert_string_contains(achievement_label.text, "[Challenge Layer] Archive Initiate", "recent achievement unlocks should label the first challenge-layer milestone")
+	assert_string_contains(achievement_label.text, "[Challenge Layer] Crown Archivist", "recent achievement unlocks should label the second challenge-layer milestone")
+	assert_string_contains(achievement_label.text, "[Challenge Layer] Sovereign Curator", "recent achievement unlocks should label the third challenge-layer milestone")
+	assert_string_contains(achievement_label.text, "[Challenge Layer] Apex Archivist", "recent achievement unlocks should label the fourth challenge-layer milestone")
+	assert_string_contains(last_run_label.text, "NewAch 1", "last run summary should surface the final challenge-layer achievement burst count")
 
 
 func test_recent_endings_follow_actual_unlock_order_in_achievement_list_and_review_archive() -> void:

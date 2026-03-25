@@ -1638,9 +1638,14 @@ def _validate_achievements(data: dict[str, Any], errors: list[str]) -> None:
         "hidden_layer_mastery_fs1",
         "hidden_layer_clear_fs2",
         "hidden_layer_mastery_fs2",
+        "hidden_layer_repeat_archive_return",
         "difficulty_clear_hard",
         "difficulty_clear_nightmare",
         "difficulty_hidden_clear_nightmare",
+        "challenge_layer_clear_cl1",
+        "challenge_layer_clear_cl2",
+        "challenge_layer_clear_cl3",
+        "challenge_layer_clear_cl4",
     }
     for i, row in enumerate(rows):
         if not isinstance(row, dict):

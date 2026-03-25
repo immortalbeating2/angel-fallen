@@ -25,7 +25,7 @@ func test_character_roster_reaches_content_depth_target() -> void:
 	var cfg := _load_json_dict(CHARACTERS_CONFIG_PATH)
 	var rows: Array = cfg.get("characters", [])
 	assert_typeof(rows, TYPE_ARRAY, "characters should be an Array")
-	assert_gte(rows.size(), 12, "characters should contain at least 12 entries")
+	assert_gte(rows.size(), 13, "characters should contain at least 13 entries")
 
 
 func test_character_unlock_achievements_exist() -> void:
@@ -56,7 +56,7 @@ func test_evolution_roster_reaches_content_depth_target() -> void:
 	var cfg := _load_json_dict(EVOLUTIONS_CONFIG_PATH)
 	var rows: Array = cfg.get("evolutions", [])
 	assert_typeof(rows, TYPE_ARRAY, "evolutions should be an Array")
-	assert_gte(rows.size(), 13, "evolutions should contain at least 13 entries")
+	assert_gte(rows.size(), 14, "evolutions should contain at least 14 entries")
 
 	var seen_result_ids := {}
 	for row_var: Variant in rows:
@@ -80,7 +80,7 @@ func test_shop_pools_reach_content_depth_target() -> void:
 	assert_typeof(weapon_pool, TYPE_ARRAY, "weapon pool should be an Array")
 
 	assert_gte(passive_pool.size(), 14, "passive pool should contain at least 14 entries")
-	assert_gte(weapon_pool.size(), 15, "weapon pool should contain at least 15 entries")
+	assert_gte(weapon_pool.size(), 16, "weapon pool should contain at least 16 entries")
 
 
 func test_memory_fragments_reach_content_depth_target() -> void:

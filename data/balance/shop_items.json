@@ -105,7 +105,7 @@
         "weapon": 1.16
       },
       "pool_overrides": {
-        "weapon": ["wpn_holy_cross", "wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_sacred_lance", "wpn_void_chain", "wpn_storm_bow", "wpn_radiant_hammer", "wpn_blood_rite", "wpn_vowblade", "wpn_nether_shard", "wpn_astral_disc"],
+        "weapon": ["wpn_holy_cross", "wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_sacred_lance", "wpn_void_chain", "wpn_storm_bow", "wpn_radiant_hammer", "wpn_blood_rite", "wpn_vowblade", "wpn_nether_shard", "wpn_astral_disc", "wpn_reliquary_orb"],
         "passive": ["pas_might", "pas_armor", "pas_focus", "pas_precision", "pas_fortune", "pas_resolve", "pas_overcharge", "pas_bastion", "pas_siphon", "pas_zeal", "pas_warding", "pas_harvest"]
       }
     },
@@ -132,7 +132,7 @@
         "weapon": 1.24
       },
       "pool_overrides": {
-        "weapon": ["wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_solar_supernova", "wpn_sacred_lance", "wpn_void_chain", "wpn_frost_orb", "wpn_storm_bow", "wpn_radiant_hammer", "wpn_blood_rite", "wpn_vowblade", "wpn_nether_shard", "wpn_astral_disc"],
+        "weapon": ["wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_solar_supernova", "wpn_sacred_lance", "wpn_void_chain", "wpn_frost_orb", "wpn_storm_bow", "wpn_radiant_hammer", "wpn_blood_rite", "wpn_vowblade", "wpn_nether_shard", "wpn_astral_disc", "wpn_reliquary_orb"],
         "passive": ["pas_might", "pas_armor", "pas_focus", "pas_precision", "pas_force", "pas_fortune", "pas_resolve", "pas_momentum", "pas_overcharge", "pas_bastion", "pas_siphon", "pas_zeal", "pas_warding", "pas_harvest"]
       }
     }
@@ -207,6 +207,6 @@
   "pools": {
     "consumable": ["hp_potion", "stamina_tonic"],
     "passive": ["pas_might", "pas_armor", "pas_focus", "pas_precision", "pas_force", "pas_fortune", "pas_resolve", "pas_momentum", "pas_overcharge", "pas_bastion", "pas_siphon", "pas_zeal", "pas_warding", "pas_harvest"],
-    "weapon": ["wpn_magic_missile", "wpn_holy_cross", "wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_solar_supernova", "wpn_sacred_lance", "wpn_void_chain", "wpn_frost_orb", "wpn_storm_bow", "wpn_radiant_hammer", "wpn_blood_rite", "wpn_vowblade", "wpn_nether_shard", "wpn_astral_disc"]
+    "weapon": ["wpn_magic_missile", "wpn_holy_cross", "wpn_arcane_comet", "wpn_holy_judgment", "wpn_shadow_tempest", "wpn_solar_supernova", "wpn_sacred_lance", "wpn_void_chain", "wpn_frost_orb", "wpn_storm_bow", "wpn_radiant_hammer", "wpn_blood_rite", "wpn_vowblade", "wpn_nether_shard", "wpn_astral_disc", "wpn_reliquary_orb"]
   }
 }

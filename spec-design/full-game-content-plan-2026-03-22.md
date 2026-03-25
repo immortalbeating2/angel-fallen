@@ -137,8 +137,8 @@
 | 2 | 主线章节与环境补完 | completed | 第一至四批已落地：四章 room_profiles、新环境机制、章节房间节奏、推进事件/历史节奏、主线节点表达与历史回看摘要 |
 | 3 | Boss 与敌群成品化 | completed | 第一至三批已落地：阶段技能差异、阶段转折压制、Mini-Boss协同与演出节奏/强度曲线收口 |
 | 4 | 构筑与成长深度 | completed | 第一至四批已落地：流派锚点、锻造配方化、饰品/Boss掉落联动、跨章节收益曲线与长局平衡首轮收口 |
-| 5 | 叙事、营地与结局闭环 | in_progress | 前台闭环已基本完成：结算页 / 主菜单 / 记忆祭坛 / 转场已接入后记分支、碎片回看、隐藏层钩子/故事/状态；剩正式收口文档与验收 |
-| 6 | 隐藏层与后期系统 | in_progress | 已落地 `FS1/FS2` 解锁与档案状态基础、`FS1` 最小可玩闭环、`CL1` 挑战层最小闭环；完整版后期系统仍大量待补 |
+| 5 | 叙事、营地与结局闭环 | completed | 已完成正式收口文档、验收记录与统一摘要回写；结算页 / 主菜单 / 记忆祭坛 / 转场已形成稳定前台闭环 |
+| 6 | 隐藏层与后期系统 | completed | 已落地 `FS1/FS2` 解锁与档案状态基础、`FS1/FS2` 最小可玩闭环、`CL1` 挑战层最小闭环、`CL1` 失败/替代奖励分支与营地回显、真实 `CL2/CL3/CL4` 挑战层闭环、`CL2+` challenge schema 基线、隐藏层重复清档的 `Archive Return` 与最终 `Apex Return` Meta Return 链、覆盖隐藏层复清与 `CL1/CL2/CL3/CL4` 的成就扩展、覆盖 `Archive Return` / `Apex Return` / `CL1` / `CL2` / `CL3` / `CL4` 的 archive codex 扩展，以及 `char_curator` / `wpn_reliquary_orb` / `evo_zenith_reliquary` 的最小内容包 |
 | 7 | 成品表现与最终验收 | pending | 音频、视觉替换、通关回归 |
 
 ## 本轮执行记录
@@ -247,4 +247,63 @@
 - 当前已推进第 6 项第二批：
   - 新增 `CL1` 挑战层最小闭环：通过 Meta Return 链解锁，安全营地预览 -> 入口 staging -> 战斗环 -> 结算营地 -> 奖励选择 -> `SaveManager` 落盘 -> 结算页/主菜单 Challenge 摘要。
   - `challenge_layer_record` 已持久化 `attempts`、`clears`、`best_rooms`、`best_kills`、`total_meta_bonus`、`total_sigils`、`total_insight`、`last_reward_title` 等字段，并在 UI 中展示 Reward Ledger / Archive Stats / Last Reward。
-- 下一步从两条线并行推进：先完成 Stage 5 正式收口文档与验收回写，再继续 Stage 6 的 `FS2` 对齐、`CL1` 失败/替代奖励分支与更完整后期系统扩展。
+- 当前已推进第 6 项第三批：
+  - 在 `scripts/game/game_world.gd` 补齐 `CL1` 失败结算语义：失败时不再伪造 reward / settlement 数据，而是明确记录 `archived without payout` 与失败房间标题。
+  - 将挑战层 reward summary 调整为基于实际已选奖励生成，使 `Sigil Bundle` / `Archive Insight` 分支在结算营地、结算页与主菜单 Last Run 中回显真实选择，而不再沿用默认 `Meta +40` 摘要。
+  - 在 `test/unit/test_challenge_layer_flow.gd` 新增失败路径、`Sigil Bundle` 分支、`Archive Insight` 分支与安全营地预览回显测试；并补跑 `test/unit/test_hidden_layer_achievement_flow.gd` 确认摘要 UI 未回归。
+  - 本轮已通过 `test/unit/test_challenge_layer_flow.gd`（`5/5 passed`, `205` asserts）与 `test/unit/test_hidden_layer_achievement_flow.gd`（`9/9 passed`, `198` asserts），合计 `14` tests / `403` asserts / all passed。
+- 当前已推进第 6 项第四批：
+  - 在 `test/unit/test_narrative_camp_flow.gd` 新增 `test_safe_camp_can_enter_fs2_and_finish_forge_settlement_loop()`，锁定 `FS2` 从安全营地入口、五段 Forge Trial、Boss 到 Settlement 的最小可玩闭环。
+  - `FS2` 运行时结算已由真实 `GameWorld` payload 回写 `SaveManager`，并验证 `recipe_drafts=3`、`relic_merges=2`、`trial_labels=5`、`deepest_trial_label=Forge Trial V: Genesis Core` 等关键档案字段。
+  - 本轮已通过 `test/unit/test_narrative_camp_flow.gd`（`5/5 passed`, `158` asserts），确认 `FS2` 已从“只有解锁/档案状态”升级为“具备对齐的最小可玩基线”。
+- 当前已推进第 6 项第五批：
+  - 在 `scripts/autoload/save_manager.gd` 泛化 `_sanitize_challenge_layer_records(...)`，不再只保留 `CL1`，从而为 `CL2+` 保留 challenge record row 与后续展示扩展入口。
+  - 在 `test/unit/test_challenge_layer_flow.gd` 新增 `test_save_manager_preserves_future_challenge_layer_records()`，直接锁定未来 `CL2+` challenge record 不会在 sanitize 过程中丢失。
+  - 同时明确 Stage 6 当前资源策略：`sigils` / `insight` 继续停留在挑战层 Archive Ledger / UI 字段，不升级为真实全局资源，以避免过早耦合主 Meta 经济与多系统消费链路。
+  - 本轮已通过 `test/unit/test_challenge_layer_flow.gd`（`6/6 passed`, `215` asserts），确认 `CL2+` schema 基线与资源口径已稳定。
+- 当前已推进第 6 项第六批：
+  - 在 `scripts/autoload/save_manager.gd` 为 Meta Return 新增 `Archive Return` 里程碑：当 `FS1` 与 `FS2` 都已封档，且隐藏层总清档次数达到 `3` 次时，再给一次 `+10% Meta` 的长期回流奖励。
+  - 在 `scripts/game/game_world.gd` 的隐藏层 settlement 文案中接入 `Meta Return` 当前倍率与下一条提示，让玩家在 `FS1/FS2` 结算出口直接看到重复清档仍有回流价值。
+  - 在 `test/unit/test_meta_return_progression.gd` 扩展回归，锁定“首通双档案 + 一次重复清档 -> 解锁 `Archive Return` -> 总倍率到 `x1.50`”的完整链路；并补跑 `test/unit/test_meta_shop_progression.gd`、`test/unit/test_narrative_camp_flow.gd`。
+  - 本轮已通过 `test/unit/test_meta_return_progression.gd`（`1/1 passed`, `32` asserts）、`test/unit/test_meta_shop_progression.gd`（`1/1 passed`, `27` asserts）与 `test/unit/test_narrative_camp_flow.gd`（`5/5 passed`, `158` asserts），合计 `7` tests / `217` asserts / all passed。
+- 当前已推进第 6 项第七批：
+  - 在 `scripts/autoload/save_manager.gd` 新增 `CHALLENGE_LAYER_CL2` 常量与 `camp_challenge_layer_2` 输入绑定（`I`），并让 `archive_meta_return` 成为第二挑战层的解锁门槛。
+  - 在 `scripts/systems/map_generator.gd` 新增首个真实 `CL2` 运行时计划：`Entry -> Elite -> Boss -> Settlement` 四段链路，含独立 `Archive Crucible` / `Crown Trial` / `Challenge Layer II Settlement` 文案与更高档奖励预览。
+  - 在 `scripts/game/game_world.gd` 接入 `CL2` 营地预览、动态 entry prompt、第二挑战层奖励档位（`Deep Meta Cache` / `Sigil Crate` / `Insight Bundle`）与结算回显。
+  - 在 `test/unit/test_challenge_layer_flow.gd` 新增 `test_safe_camp_can_enter_challenge_layer_two_and_finish_boss_settlement_loop()`，并在 `test/unit/test_map_generation_config.gd` 新增 `CL1/CL2` challenge runtime plan 断言。
+  - 本轮已通过 `test/unit/test_challenge_layer_flow.gd`（`7/7 passed`, `274` asserts）、`test/unit/test_map_generation_config.gd`（`6/6 passed`, `708` asserts）与 `test/unit/test_meta_return_progression.gd`（`1/1 passed`, `32` asserts），合计 `14` tests / `1014` asserts / all passed。
+- 当前已推进第 6 项第八批：
+  - 在 `data/balance/achievements.json` 新增 `Archive Return`、`Archive Initiate`、`Crown Archivist` 三条 Stage 6 成就，分别覆盖隐藏层复清回流、`CL1` 首通与 `CL2` 首通。
+  - 在 `scripts/autoload/save_manager.gd` 扩展成就条件判定，新增 `hidden_layer_repeat_archive_return`、`challenge_layer_clear_cl1`、`challenge_layer_clear_cl2` 三类条件，无需引入额外全局状态即可基于现有隐藏层/挑战层结果落盘解锁。
+  - 在 `scripts/ui/main_menu.gd` 将成就分组从 `Run / Hidden Layer / Difficulty` 扩展为 `Run / Hidden Layer / Difficulty / Challenge Layer`，让 Stage 6 新成就不会混入 Run 分类。
+  - 在 `test/unit/test_hidden_layer_achievement_flow.gd` 新增 `test_archive_return_and_challenge_layer_clears_expand_achievement_groups()`，并同步更新现有进度/分组断言；同时补跑 `test/unit/test_content_depth_targets.gd` 与 `test/unit/test_challenge_layer_flow.gd`。
+  - 本轮已通过 `test/unit/test_hidden_layer_achievement_flow.gd`（`10/10 passed`, `223` asserts）、`test/unit/test_content_depth_targets.gd`（`5/5 passed`, `56` asserts）与 `test/unit/test_challenge_layer_flow.gd`（`7/7 passed`, `274` asserts），合计 `22` tests / `553` asserts / all passed。
+- 当前已推进第 6 项第九批：
+  - 在 `scripts/autoload/save_manager.gd` 新增 Stage 6 archive codex 解锁链路：`archive_return_protocol`、`cl1_challenge_archive`、`cl2_crown_archive`。
+  - 在 `scripts/ui/main_menu.gd` 的 `ARCHIVE_CODEX_ENTRIES` 新增上述三条条目，并补齐 Meta Return / Challenge Layer detail 页面与 `Meta Return Unlock` / `Challenge Layer Clear` source label。
+  - 在 `test/unit/test_codex_archive_flow.gd` 更新 archive catalog 断言，并新增 `test_archive_return_and_challenge_layers_unlock_codex_entries_and_show_archive_details()` 回归，覆盖新条目解锁、catalog 展示、detail 页面与 source 文案。
+  - 本轮已通过 `test/unit/test_codex_archive_flow.gd`（`4/4 passed`, `106` asserts）、`test/unit/test_meta_return_progression.gd`（`1/1 passed`, `32` asserts）与 `test/unit/test_challenge_layer_flow.gd`（`7/7 passed`, `274` asserts），合计 `12` tests / `412` asserts / all passed。
+- 当前已推进第 6 项第十批：
+  - 在 `scripts/autoload/save_manager.gd` 新增 `CHALLENGE_LAYER_CL3` 常量与 `camp_challenge_layer_3` 输入绑定（`O`），为更深层挑战层提供独立营地入口。
+  - 在 `scripts/game/game_world.gd` 接入 `CL3` 解锁链路（`CL2` 清档后开放）、第三挑战层热键、第三档奖励（`Sovereign Meta Cache` / `Sigil Matrix` / `Insight Reliquary`）与结算回显。
+  - 在 `scripts/systems/map_generator.gd` 新增首个真实 `CL3` 运行时计划：`Entry -> Elite -> Combat -> Boss -> Settlement` 五段链路，含独立 `Null Gauntlet` / `Archive Breach` / `Sovereign Echo` / `Challenge Layer III Settlement` 文案与更高档奖励预览。
+  - 在 `test/unit/test_challenge_layer_flow.gd` 新增 `test_safe_camp_can_enter_challenge_layer_three_and_finish_sovereign_settlement_loop()`，并在 `test/unit/test_map_generation_config.gd` 将 challenge runtime plan 断言扩到 `CL1/CL2/CL3`。
+  - 本轮已通过 `test/unit/test_challenge_layer_flow.gd`（`8/8 passed`, `340` asserts）、`test/unit/test_map_generation_config.gd`（`6/6 passed`, `719` asserts）与 `test/unit/test_meta_return_progression.gd`（`1/1 passed`, `32` asserts），合计 `15` tests / `1091` asserts / all passed。
+- 当前已推进第 6 项第十一批：
+  - 在 `data/balance/achievements.json` 新增 `ach_cl3_clear`（`Sovereign Curator`），让首个 `CL3` 清档正式进入 Stage 6 成就矩阵。
+  - 在 `scripts/autoload/save_manager.gd` 扩展 `challenge_layer_clear_cl3` 成就判定，并让 archive codex 解锁链新增 `cl3_sovereign_archive`。
+  - 在 `scripts/ui/main_menu.gd` 的 `ARCHIVE_CODEX_ENTRIES` 新增 `Sovereign Echo Archive`，沿用现有 Challenge Layer detail 页面展示 `CL3` 的 ledger / clear / last reward 档案信息。
+  - 在 `test/unit/test_hidden_layer_achievement_flow.gd` 与 `test/unit/test_codex_archive_flow.gd` 将既有 `CL1/CL2` 回归扩到 `CL3`，同步更新 Stage 6 成就总数、主菜单分组进度、archive catalog 与 detail 断言；并补跑 `test/unit/test_content_depth_targets.gd`、`test/unit/test_challenge_layer_flow.gd`。
+  - 本轮已通过 `test/unit/test_hidden_layer_achievement_flow.gd`（`10/10 passed`, `227` asserts）、`test/unit/test_codex_archive_flow.gd`（`4/4 passed`, `114` asserts）、`test/unit/test_challenge_layer_flow.gd`（`8/8 passed`, `340` asserts）与 `test/unit/test_content_depth_targets.gd`（`5/5 passed`, `56` asserts），合计 `27` tests / `737` asserts / all passed。
+- 当前已推进第 6 项第十二批（阶段 6 收口）：
+  - 在 `scripts/autoload/save_manager.gd` 与 `scripts/autoload/game_manager.gd` 新增 `CHALLENGE_LAYER_CL4`、`camp_challenge_layer_4`（`P`）以及最终 `apex_meta_return` / `Apex Return` 链路，让 `CL4` 清档可把长期回流倍率补齐到 `Return x1.60`。
+  - 在 `scripts/game/game_world.gd` 与 `scripts/systems/map_generator.gd` 落地最终 `CL4`：`CL3` 清档后开放第四挑战层，具备安全营地预览、Entry -> Elite -> Combat -> Elite -> Boss -> Settlement 六段流程、第四档奖励（`Apex Meta Cache` / `Sigil Constellation` / `Insight Throne`）与 Archive 回显。
+  - 在 `data/balance/achievements.json`、`scripts/ui/main_menu.gd`、`scripts/autoload/save_manager.gd` 补齐 `ach_cl4_clear`、`Apex Return Protocol`、`Apex Throne Archive` 等最终 Stage 6 成就 / archive codex 行。
+  - 在 `data/balance/characters.json`、`data/balance/shop_items.json`、`data/balance/evolutions.json`、`data/balance/resource_acceptance_targets.json` 以及 `resources/characters/char_curator.tres`、`resources/weapons/wpn_reliquary_orb.tres`、`resources/evolutions/evo_zenith_reliquary.tres`、`resources/forge_recipes/forge_zenith_reliquary.tres` 中补齐最小内容包：`char_curator`、`wpn_reliquary_orb`、`evo_zenith_reliquary` / `wpn_zenith_reliquary` 与对应验收资源桩。
+  - 在 `test/unit/test_challenge_layer_flow.gd`、`test/unit/test_map_generation_config.gd`、`test/unit/test_meta_return_progression.gd`、`test/unit/test_hidden_layer_achievement_flow.gd`、`test/unit/test_codex_archive_flow.gd`、`test/unit/test_content_depth_targets.gd` 中将 Stage 6 回归扩到 `CL4` / `Apex Return` / 最终内容包。
+  - 本轮已通过 `test/unit/test_challenge_layer_flow.gd`（`9/9 passed`, `410` asserts）、`test/unit/test_map_generation_config.gd`（`6/6 passed`, `731` asserts）、`test/unit/test_meta_return_progression.gd`（`1/1 passed`, `37` asserts）、`test/unit/test_hidden_layer_achievement_flow.gd`（`10/10 passed`, `231` asserts）、`test/unit/test_codex_archive_flow.gd`（`4/4 passed`, `127` asserts）、`test/unit/test_content_depth_targets.gd`（`5/5 passed`, `59` asserts）、`test/unit/test_character_weapon_profiles.gd`（`2/2 passed`, `112` asserts）、`test/unit/test_narrative_camp_flow.gd`（`5/5 passed`, `158` asserts）、`test/unit/test_meta_shop_progression.gd`（`1/1 passed`, `27` asserts），合计 `43` tests / `1892` asserts / all passed，并补跑 `python scripts/tools/check_json_syntax.py`、`python scripts/validate_configs.py`、`python scripts/check_resources.py` 全部通过。
+- 当前已推进第 5 项收口：
+  - 新增 `spec-design/stage5-closure-2026-03-25.md`、`spec-design/stage5-acceptance-record-2026-03-25.md`、`spec-design/stage5-acceptance-summary-2026-03-25.md`，正式沉淀 Stage 5 的已完成真值、验收口径与后续承接基线。
+  - 在 `test/unit/test_narrative_payoff_flow.gd` 新增 `test_save_manager_covers_all_endings_and_distinguishes_first_vs_repeat_unlocks()`，直接锁定三结局与首通/复通差异。
+  - 本轮已补跑 Stage 5 相关专项测试：`33` tests / `904` asserts / all passed。
+- 下一步只保留一条主线推进：Stage 6 已正式完成，后续直接转入 Stage 7 的音频/视觉成品化、完整联合回归与最终验收。

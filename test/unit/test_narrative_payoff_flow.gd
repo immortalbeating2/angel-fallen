@@ -113,6 +113,51 @@ func test_save_manager_persists_stage5_payoff_fields_on_victory() -> void:
 	assert_eq(triggers.size(), 1, "fragment trigger log should be persisted")
 
 
+func test_save_manager_covers_all_endings_and_distinguishes_first_vs_repeat_unlocks() -> void:
+	if SaveManager == null:
+		pending("SaveManager singleton not available")
+		return
+
+	SaveManager.reset_meta()
+	var outcome_rows: Array[Dictionary] = [
+		{"alignment": 0.0, "route_style": "neutral", "ending_id": "nar_ending_balance", "branch_key": "first_unlock"},
+		{"alignment": -72.0, "route_style": "rebel", "ending_id": "nar_ending_fall", "branch_key": "first_unlock"},
+		{"alignment": 72.0, "route_style": "vanguard", "ending_id": "nar_ending_redeem", "branch_key": "first_unlock"},
+		{"alignment": 72.0, "route_style": "vanguard", "ending_id": "nar_ending_redeem", "branch_key": "repeat_unlock"}
+	]
+
+	for i in range(outcome_rows.size()):
+		var row: Dictionary = outcome_rows[i]
+		var result: Dictionary = SaveManager.submit_run_result({
+			"outcome": "victory",
+			"rooms_cleared": 12 + i,
+			"kills": 180 + i * 20,
+			"level_reached": 9 + i,
+			"gold": 90 + i * 10,
+			"ore": 18 + i * 2,
+			"alignment": float(row.get("alignment", 0.0)),
+			"route_style": str(row.get("route_style", "neutral"))
+		})
+
+		assert_eq(
+			str(result.get("ending_id", "")),
+			str(row.get("ending_id", "")),
+			"run %d should resolve to the expected ending id" % (i + 1)
+		)
+		var epilogue_branch: Dictionary = result.get("epilogue_branch", {})
+		assert_eq(
+			str(epilogue_branch.get("branch_key", "")),
+			str(row.get("branch_key", "")),
+			"run %d should resolve to the expected branch mode" % (i + 1)
+		)
+
+	var unlocked_endings: Array[String] = SaveManager.get_unlocked_endings()
+	assert_eq(unlocked_endings.size(), 3, "meta should only persist three unique ending unlocks after one repeat clear")
+	assert_true(unlocked_endings.has("nar_ending_balance"), "balance ending should persist in unlocked ending archive")
+	assert_true(unlocked_endings.has("nar_ending_fall"), "fall ending should persist in unlocked ending archive")
+	assert_true(unlocked_endings.has("nar_ending_redeem"), "redeem ending should persist in unlocked ending archive")
+
+
 func test_save_manager_tracks_fs2_unlock_from_boss_relic_collection() -> void:
 	if SaveManager == null:
 		pending("SaveManager singleton not available")
