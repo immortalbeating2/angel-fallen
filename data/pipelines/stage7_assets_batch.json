@@ -1,0 +1,87 @@
+{
+    "global_config": {
+        "style_prefix": "dark fantasy, fallen angel themed, sacred ruins aesthetic",
+        "style_suffix": "high contrast, no text, no watermark, game-ready",
+        "image_suffix": "strict pixel art, restricted palette, single transparent background",
+        "audio_suffix": "high fidelity, no vocal, clean mix",
+        "sfx_suffix": "crisp foley, no reverb tail, clean cut",
+        "bgm_suffix": "instrumental only, seamless loop friendly, cinematic mix",
+        "voice_suffix": "",
+        "video_suffix": "60fps, smooth camera motion, cinematic lighting",
+        "seed": 42,
+        "default_variants": 1
+    },
+    "tasks": [
+        {
+            "type": "sfx",
+            "prompt": "short game ui stinger, holy relic activation, bright metallic shimmer with ancient rune pulse, under 1 second",
+            "path": "assets/audio/sfx/sfx_ui_relic_activate.wav",
+            "variants": 3,
+            "duration": 1
+        },
+        {
+            "type": "sfx",
+            "prompt": "reward claim stinger, sacred archive unlock, elegant metallic resonance, subtle choir sparkle, under 1.5 seconds",
+            "path": "assets/audio/sfx/sfx_reward_archive_unlock.wav",
+            "variants": 2,
+            "duration": 2
+        },
+        {
+            "type": "sfx",
+            "prompt": "hidden layer unlock sound, forbidden archive seal opening, restrained impact, low ritual resonance, under 2 seconds",
+            "path": "assets/audio/sfx/sfx_hidden_seal_break.wav",
+            "variants": 2,
+            "duration": 2
+        },
+        {
+            "type": "bgm",
+            "prompt": "menu theme, solemn choir textures, distant bells, slow tempo, melancholic strings",
+            "path": "assets/audio/bgm/bgm_main_menu_fallen_sanctuary.ogg",
+            "variants": 2
+        },
+        {
+            "type": "bgm",
+            "prompt": "intense boss battle theme, aggressive percussion, distorted organ, rising tension, epic climax",
+            "path": "assets/audio/bgm/bgm_boss_void_lord.ogg",
+            "variants": 2
+        },
+        {
+            "type": "voice",
+            "prompt": "感受这神圣废土的愤怒吧，愚蠢的堕落者！",
+            "path": "assets/audio/sfx/voice_boss_intro_01.ogg",
+            "voice_name": "Aoede",
+            "variants": 1
+        },
+        {
+            "type": "image",
+            "prompt": "health potion icon, glowing holy liquid in ornate glass vial, detailed",
+            "path": "assets/sprites/ui/icons/item_potion_health.png",
+            "use_nano_banana": "true",
+            "aspect_ratio": "1:1",
+            "variants": 3
+        },
+        {
+            "type": "image",
+            "prompt": "knight character top-down concept art, holy armor with runic engravings, fallen angel wings partially visible, full body reference sheet",
+            "path": "assets/sprites/characters/char_knight_topdown_concept_v1.png",
+            "use_nano_banana": "false",
+            "aspect_ratio": "1:1",
+            "variants": 2
+        },
+        {
+            "type": "image",
+            "prompt": "enemy family style board, chapter 1 corrupted creatures, slime variants, brute variants, stalker variants, consistent pixel art style",
+            "path": "assets/sprites/enemies/enemy_chapter_1_family_board_v1.png",
+            "use_nano_banana": "false",
+            "aspect_ratio": "16:9",
+            "variants": 2
+        },
+        {
+            "type": "video",
+            "prompt": "Camera slowly pans up revealing the massive divine gate, god rays shimmering through the dust, epic lighting, fallen angel silhouette",
+            "path": "assets/video/ending_cutscene_redemption.mp4",
+            "reference_image": "assets/sprites/concepts/concept_cinematic_ending_v1_1774694251937.png",
+            "variants": 1
+        }
+    ]
+}

@@ -31,6 +31,7 @@ SaveManager="*res://scripts/autoload/save_manager.gd"
 MCPScreenshot="*res://addons/godot_mcp/mcp_screenshot_service.gd"
 MCPInputService="*res://addons/godot_mcp/mcp_input_service.gd"
 MCPGameInspector="*res://addons/godot_mcp/mcp_game_inspector_service.gd"
+ControllerIcons="*uid://bwuqcsg4d8ju7"
 
 [display]
 
@@ -41,7 +42,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg", "res://addons/gut/plugin.cfg")
+enabled=PackedStringArray("res://addons/AsepriteWizard/plugin.cfg", "res://addons/GodotSavesAddon/plugin.cfg", "res://addons/controller_icons/plugin.cfg", "res://addons/godot_mcp/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/gut/plugin.cfg")
 
 [network]
 

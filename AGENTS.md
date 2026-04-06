@@ -206,3 +206,106 @@ godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.
 - 新代码符合本地命名、类型和注释习惯
 - 新增注释简洁且为中文
 - 资源路径、资源 ID、JSON 键名不会破坏现有校验
+
+## AI 资产自动化管线使用指南
+
+本项目集成了一套基于 Python 的全模态游戏资产自动化生成管线，位于 `scripts/tools/game_asset_pipeline.py`。
+
+### 支持的资产类型
+
+| type 字段 | 输出格式 | 底层 API | 说明 |
+|-----------|---------|---------|------|
+| `sfx` | `.wav` | ElevenLabs | 短促拟音特效（UI 交互、打击音效等） |
+| `bgm` | `.ogg` | Google Lyria 3 | 长篇 BGM 和环境循环音 |
+| `voice` | `.ogg` | Google Gemini TTS | 角色台词、旁白配音 |
+| `image` | `.png` | Google Imagen 3 / Nano Banana | 2D 静态图像（图标、立绘、地块） |
+| `video` | `.mp4` | Google Veo | 过场动画视频 |
+
+### 运行命令
+
+```bash
+# 批量生成模式：读取 JSON/CSV 配置清单，自动遍历生成全部资产（完成后自动输出产出清单 manifest）
+python scripts/tools/game_asset_pipeline.py --config data/pipelines/stage7_assets_batch.json
+
+# 审阅状态扫描：对比 manifest 和磁盘文件，报告已就绪/待选择/已丢失的资产组
+python scripts/tools/game_asset_pipeline.py --status data/pipelines/stage7_assets_batch_manifest.json
+
+# 批量定稿：将所有仅剩 1 个变体的组自动正式化，归档废弃变体到 _drafts/
+python scripts/tools/game_asset_pipeline.py --finalize-dir --manifest data/pipelines/stage7_assets_batch_manifest.json
+
+# 单个变体定稿：手动选定某个变体文件正式化
+python scripts/tools/game_asset_pipeline.py --finalize assets/audio/sfx/click_v2.wav
+
+# 查看帮助
+python scripts/tools/game_asset_pipeline.py --help
+```
+
+### 完整生命周期
+
+1. **`--config` 批量生成** → 脚本跑完后自动输出 `*_manifest.json` 产出清单
+2. **`--status` 审阅扫描** → 扫描清单，报告哪些组待选择、已就绪、已丢失
+3. **人工审阅** → 打开对应目录，删除不满意的变体
+4. **重复 `--status`** → 直到报告显示"0 组待选择"
+5. **`--finalize-dir` 批量定稿** → 一键将所有仅剩 1 个变体的组全部正式化
+
+### 配置文件格式
+
+支持 JSON 和 CSV 两种格式（自动识别扩展名），推荐使用 JSON。
+示例文件位于 `data/pipelines/stage7_assets_batch.json`。
+
+JSON 结构：
+- `global_config`：全局风格锁定（前缀、后缀、种子、默认变体数）
+- `tasks`：任务数组，每条任务包含 `type`、`prompt`、`path`、`variants` 及可选的类型特定参数
+
+### 三种运行场景的人机协同策略
+
+| 场景 | 图像任务 | 音频/视频任务 | 说明 |
+|------|---------|-------------|------|
+| **在 Antigravity 中运行** | 自动跳过，由 Agent 原生画笔接管 | 正常调用 API 执行 | 在 Antigravity 对话框中对 AI 下达指令出图获取最高品质 |
+| **命令行独立运行** | 正常调用 Imagen/Nano Banana API | 正常调用 API 执行 | 完全自洽，无需 Agent |
+| **CI/CD 流水线运行** | 同命令行 | 同命令行 | 适合批量化预生产 |
+
+**核心原则**：脚本负责处理纯粹的工程自动化（量与速度），Antigravity 负责处理带有多模态需求（画图）的混合自动化（审美与逻辑闭环）。在 Antigravity 环境中，可以直接让 Agent 读取配置清单并逐条用内置画笔执行图像任务，无需手动逐条下达指令。
+
+### 环境准备
+
+1. 安装依赖：`pip install elevenlabs google-genai python-dotenv tqdm`
+2. 在项目根目录创建 `.env` 文件，写入两行密钥（详见脚本顶部说明）：
+   ```ini
+   ELEVENLABS_API_KEY=sk-xxxx...
+   GEMINI_API_KEY=AIzaSy...
+   ```
+3. `.env` 文件**已在 `.gitignore` 中被忽略**，不会被提交到版本控制。任何包含密钥的文件都不要手动 `git add`，防止泄露。如果发现 `.gitignore` 中缺少 `.env` 条目，必须立即补上
+
+## AI 生成能力边界声明
+
+以下声明旨在明确 AI 自动化工具链能够和不能够处理的游戏资产类型，避免团队产生错误预期。
+
+### ✅ 可完全自动化的资产
+
+| 资产类别 | 自动化程度 | 使用工具 |
+|---------|:---:|---------|
+| 静态立绘 / 道具图标 / UI 元素 | 100% | Imagen 3 / Nano Banana |
+| 环境背景 / 关卡氛围概念图 | 100% | Imagen 3 |
+| 短促拟音特效 (SFX) | 100% | ElevenLabs |
+| 长篇 BGM / 环境循环音 | 100% | Lyria 3 |
+| 角色台词配音 | 100% | Gemini TTS |
+| 着色器代码 (Shader) | 100% | Agent 编写 |
+| 过场动画视频 (从静帧生成镜头运动) | 90% | Veo |
+
+### ⚠️ 需要人工收尾的资产
+
+| 资产类别 | AI 贡献 | 人工收尾内容 |
+|---------|:---:|-------------|
+| 无缝地块 (Tileset) | 80% | AI 出原始大图，需在 Photoshop 中用偏移滤镜修补四边接缝 |
+| VFX 概念转化 | 70% | AI 出概念参考图，需转化为引擎粒子系统或着色器 |
+| 跨角色风格统一 | 70% | AI 通过全局前缀约束风格，但仍需人工调色板映射与线条标准化 |
+
+### ❌ 当前 AI 无法实现的资产
+
+| 资产类别 | 原因 | 推荐解法 |
+|---------|------|---------|
+| 角色动画序列帧 (Sprite Sheet) | 帧间一致性无法保证，每帧角色外观会微妙偏移 | AI 出立绘底稿 → Aseprite 手工逐帧描改，或 3D 简模渲染导出 |
+| 无缝循环动画（水面、火焰等） | 首尾帧数学级吻合超出生成模型能力 | 用 Godot Shader 或 GPUParticles2D 程序化生成 |
+| 骨骼动画数据 (Skeleton / Rig) | 纯结构化工程数据，不在生成模型范畴 | Godot 编辑器中手动创建 Skeleton2D + Bone2D |
+| 字体文件 (.ttf / .otf) | AI 无法生成可用的向量字体文件 | 从 Google Fonts / DaFont 下载符合风格的现成字体 |
