@@ -18,6 +18,8 @@ var websocket_server: Node
 var command_router: Node
 var status_panel: Control
 var auto_dismiss_dialogs: bool = false
+# Track which autoloads THIS session injected (vs project-owned)
+var _session_injected_autoloads: Array[String] = []
 
 func _enter_tree() -> void:
 	# Create command router
@@ -35,14 +37,21 @@ func _enter_tree() -> void:
 	# Create status panel
 	var panel_scene: PackedScene = preload("res://addons/godot_mcp/ui/status_panel.tscn")
 	status_panel = panel_scene.instantiate()
-	add_control_to_bottom_panel(status_panel, "MCP Server")
+	add_control_to_bottom_panel(status_panel, "MCP Pro")
 	status_panel.call_deferred("setup", websocket_server, command_router)
 
 	# Inject MCP autoloads into project settings
 	_inject_autoloads()
 
 	websocket_server.start_server()
-	print("[MCP] Godot MCP Pro v1.6.0 started (ports 6505-6509)")
+	var cfg := ConfigFile.new()
+	var ver := "unknown"
+	if cfg.load("res://addons/godot_mcp/plugin.cfg") == OK:
+		ver = cfg.get_value("plugin", "version", "unknown")
+	# 端口规划需和 Node server、PowerShell 诊断脚本、通用补丁脚本同步。
+	# 端口规划必须与 Node server、PowerShell 脚本、补丁脚本和连通性指南同步。
+	# 17605-17619 是 stdio primary；17620-17624 是 CLI primary；6505-6509/6510-6514 仅为 legacy。
+	print("[MCP] Godot MCP Pro v%s started (stdio 17605-17619; cli 17620-17624; legacy 6505-6509/6510-6514)" % ver)
 
 
 func _exit_tree() -> void:
@@ -67,24 +76,28 @@ func _exit_tree() -> void:
 
 
 func _inject_autoloads() -> void:
+	_session_injected_autoloads.clear()
 	var changed := false
 	for entry: Array in _MCP_AUTOLOADS:
 		var key: String = entry[0]
 		var script: String = entry[1]
 		if not ProjectSettings.has_setting(key):
 			ProjectSettings.set_setting(key, "*" + script)
+			_session_injected_autoloads.append(key)
 			changed = true
 	if changed:
 		ProjectSettings.save()
 
 
 func _remove_autoloads() -> void:
+	# Only remove autoloads that THIS session injected.
+	# Pre-existing project-owned autoloads are preserved.
 	var changed := false
-	for entry: Array in _MCP_AUTOLOADS:
-		var key: String = entry[0]
+	for key: String in _session_injected_autoloads:
 		if ProjectSettings.has_setting(key):
 			ProjectSettings.set_setting(key, null)
 			changed = true
+	_session_injected_autoloads.clear()
 	if changed:
 		ProjectSettings.save()
 

@@ -11,8 +11,18 @@ const COLOR_SUCCESS := Color(0.6, 1, 0.6)
 const COLOR_ERROR := Color(1, 0.6, 0.6)
 const COLOR_DIM := Color(0.6, 0.6, 0.6)
 
-const BASE_PORT := 6505
-const MAX_PORT := 6509
+const STDIO_PRIMARY_START := 17605
+const STDIO_PRIMARY_END := 17619
+const CLI_PRIMARY_START := 17620
+const CLI_PRIMARY_END := 17624
+const LEGACY_STDIO_START := 6505
+const LEGACY_STDIO_END := 6509
+const LEGACY_CLI_START := 6510
+const LEGACY_CLI_END := 6514
+
+# 状态面板只用于人工复核：它显示插件扫描范围和端口角色，方便确认 Godot editor
+# 是否看到了 bridge / CLI 端口。真正 stale 清理必须由 PowerShell 脚本结合
+# lock/heartbeat、PID、TCP 连接和 workspace 归属判断，不能只看面板上的连接年龄。
 
 # Header
 var _status_icon: Label
@@ -47,6 +57,12 @@ func setup(ws_server: Node, cmd_router: Node = null) -> void:
 	if websocket_server:
 		websocket_server.client_connected.connect(_on_client_connected)
 		websocket_server.client_disconnected.connect(_on_client_disconnected)
+		if websocket_server.has_signal("workspace_handshake_sent"):
+			websocket_server.workspace_handshake_sent.connect(_on_workspace_handshake_sent)
+		if websocket_server.has_signal("workspace_handshake_accepted"):
+			websocket_server.workspace_handshake_accepted.connect(_on_workspace_handshake_accepted)
+		if websocket_server.has_signal("workspace_handshake_rejected"):
+			websocket_server.workspace_handshake_rejected.connect(_on_workspace_handshake_rejected)
 		if websocket_server.has_signal("command_completed"):
 			websocket_server.command_completed.connect(_on_command_completed)
 		else:
@@ -67,7 +83,7 @@ func _build_ui() -> void:
 	header.add_child(_status_icon)
 
 	_status_label = Label.new()
-	_status_label.text = " MCP Server: Waiting for connection..."
+	_status_label.text = " MCP Pro: Waiting for connection..."
 	header.add_child(_status_label)
 
 	var spacer := Control.new()
@@ -134,7 +150,7 @@ func _build_clients_tab() -> void:
 	vbox.name = "Clients"
 	_tab_container.add_child(vbox)
 
-	for p in range(BASE_PORT, MAX_PORT + 1):
+	for p in _status_ports():
 		var row := HBoxContainer.new()
 		vbox.add_child(row)
 
@@ -146,6 +162,7 @@ func _build_clients_tab() -> void:
 		var lbl := Label.new()
 		lbl.text = "  Port %d  —  Disconnected" % p
 		row.add_child(lbl)
+		lbl.text = "  Port %d%s  - Disconnected" % [p, _port_role_suffix(p)]
 
 		_port_labels[p] = {"icon": icon, "label": lbl}
 
@@ -217,13 +234,14 @@ func _process(_delta: float) -> void:
 
 	if count > 0:
 		_status_icon.add_theme_color_override("font_color", COLOR_CONNECTED)
-		_status_label.text = " MCP Server: Connected"
+		_status_label.text = " MCP Pro: Connected"
 	else:
 		_status_icon.add_theme_color_override("font_color", COLOR_DISCONNECTED)
-		_status_label.text = " MCP Server: Waiting for connection..."
+		_status_label.text = " MCP Pro: Waiting for connection..."
 
 	# Update clients tab
 	_update_clients_tab()
+	_apply_port_role_labels()
 
 
 func _update_clients_tab() -> void:
@@ -255,12 +273,65 @@ func _update_clients_tab() -> void:
 
 # --- Activity callbacks ---
 
+func _port_role_suffix(port: int) -> String:
+	# 端口角色与 Node server / 诊断脚本 / 补丁脚本保持一致：
+	# 17605-17619 是 stdio primary，17620-17624 是 CLI primary；
+	# 6505-6509 / 6510-6514 只保留 legacy 兼容观察。
+	if port >= STDIO_PRIMARY_START and port <= STDIO_PRIMARY_END:
+		return " (stdio primary)"
+	if port >= CLI_PRIMARY_START and port <= CLI_PRIMARY_END:
+		return " (CLI primary)"
+	if port >= LEGACY_STDIO_START and port <= LEGACY_STDIO_END:
+		return " (legacy stdio)"
+	if port >= LEGACY_CLI_START and port <= LEGACY_CLI_END:
+		return " (legacy CLI)"
+	return " (rendezvous)"
+
+
+func _status_ports() -> Array[int]:
+	var ports: Array[int] = []
+	if websocket_server and websocket_server.has_method("get_tracked_ports"):
+		ports = websocket_server.get_tracked_ports()
+	else:
+		for p in range(STDIO_PRIMARY_START, CLI_PRIMARY_END + 1):
+			ports.append(p)
+		for p in range(LEGACY_STDIO_START, LEGACY_CLI_END + 1):
+			ports.append(p)
+	ports.sort()
+	return ports
+
+
+func _apply_port_role_labels() -> void:
+	var connected_ports: Array[int] = []
+	if websocket_server and websocket_server.has_method("get_connected_ports"):
+		connected_ports = websocket_server.get_connected_ports()
+	for p: int in _port_labels:
+		var info: Dictionary = _port_labels[p]
+		var lbl: Label = info["label"]
+		if p in connected_ports:
+			lbl.text = "  Port %d%s  - Connected" % [p, _port_role_suffix(p)]
+		else:
+			lbl.text = "  Port %d%s  - Disconnected" % [p, _port_role_suffix(p)]
+
+
 func _on_client_connected() -> void:
 	_add_log("Client connected", COLOR_CONNECTED)
 
 
 func _on_client_disconnected() -> void:
 	_add_log("Client disconnected", COLOR_DISCONNECTED)
+
+
+func _on_workspace_handshake_sent(port: int, workspace: String) -> void:
+	_add_log("Handshake sent on port %d for %s" % [port, workspace], COLOR_DIM)
+
+
+func _on_workspace_handshake_accepted(port: int, session_id: String) -> void:
+	_add_log("Handshake accepted on port %d (%s)" % [port, session_id], COLOR_CONNECTED)
+
+
+func _on_workspace_handshake_rejected(port: int, reason: String) -> void:
+	_add_log("Handshake rejected on port %d: %s" % [port, reason], COLOR_ERROR)
 
 
 func _on_command_executed(method: String, ok: bool) -> void:

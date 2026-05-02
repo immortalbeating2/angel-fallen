@@ -15,6 +15,8 @@ func get_commands() -> Dictionary:
 		"get_signals": _get_signals,
 		"compare_screenshots": _compare_screenshots,
 		"set_auto_dismiss": _set_auto_dismiss,
+		"get_editor_camera": _get_editor_camera,
+		"set_editor_camera": _set_editor_camera,
 	}
 
 
@@ -248,6 +250,19 @@ func _get_editor_screenshot(params: Dictionary) -> Dictionary:
 	if image == null:
 		return error_internal("Could not get image from viewport")
 
+	var save_path: String = params.get("save_path", "")
+	if save_path != "":
+		var abs_path := _resolve_save_path(save_path)
+		var err := image.save_png(abs_path)
+		if err != OK:
+			return error_internal("Failed to save screenshot: %s" % error_string(err))
+		return success({
+			"saved_path": save_path,
+			"width": image.get_width(),
+			"height": image.get_height(),
+			"format": "png",
+		})
+
 	var png_buffer := image.save_png_to_buffer()
 	var base64 := Marshalls.raw_to_base64(png_buffer)
 
@@ -302,11 +317,24 @@ func _get_game_screenshot(params: Dictionary) -> Dictionary:
 		DirAccess.remove_absolute(screenshot_path)
 		return error_internal("Failed to load screenshot: %s" % error_string(err))
 
+	# Clean up temp file
+	DirAccess.remove_absolute(screenshot_path)
+
+	var save_path_param: String = params.get("save_path", "")
+	if save_path_param != "":
+		var abs_path := _resolve_save_path(save_path_param)
+		var save_err := image.save_png(abs_path)
+		if save_err != OK:
+			return error_internal("Failed to save screenshot: %s" % error_string(save_err))
+		return success({
+			"saved_path": save_path_param,
+			"width": image.get_width(),
+			"height": image.get_height(),
+			"format": "png",
+		})
+
 	var png_buffer := image.save_png_to_buffer()
 	var base64 := Marshalls.raw_to_base64(png_buffer)
-
-	# Clean up
-	DirAccess.remove_absolute(screenshot_path)
 
 	return success({
 		"image_base64": base64,
@@ -314,6 +342,12 @@ func _get_game_screenshot(params: Dictionary) -> Dictionary:
 		"height": image.get_height(),
 		"format": "png",
 	})
+
+
+func _resolve_save_path(path: String) -> String:
+	if path.begins_with("res://") or path.begins_with("user://"):
+		return ProjectSettings.globalize_path(path)
+	return path
 
 
 func _execute_editor_script(params: Dictionary) -> Dictionary:
@@ -536,6 +570,68 @@ func _compare_screenshots(params: Dictionary) -> Dictionary:
 		"width": width,
 		"height": height,
 		"diff_image_base64": diff_base64,
+	})
+
+
+func _get_editor_camera(_params: Dictionary) -> Dictionary:
+	var vp3d := EditorInterface.get_editor_viewport_3d()
+	var cam := vp3d.get_camera_3d() if vp3d else null
+	if not cam:
+		return error(-32000, "No 3D editor camera found", {
+			"suggestion": "Make sure a 3D scene is open in the editor",
+		})
+	var pos := cam.global_position
+	var rot := cam.rotation_degrees
+	return success({
+		"position": {"x": pos.x, "y": pos.y, "z": pos.z},
+		"rotation_degrees": {"x": rot.x, "y": rot.y, "z": rot.z},
+		"fov": cam.fov,
+		"near": cam.near,
+		"far": cam.far,
+	})
+
+
+func _set_editor_camera(params: Dictionary) -> Dictionary:
+	var vp3d := EditorInterface.get_editor_viewport_3d()
+	var cam := vp3d.get_camera_3d() if vp3d else null
+	if not cam:
+		return error(-32000, "No 3D editor camera found", {
+			"suggestion": "Make sure a 3D scene is open in the editor",
+		})
+
+	# Set position
+	if params.has("position"):
+		var p: Dictionary = params["position"]
+		cam.global_position = Vector3(
+			float(p.get("x", cam.global_position.x)),
+			float(p.get("y", cam.global_position.y)),
+			float(p.get("z", cam.global_position.z)),
+		)
+
+	# Set rotation
+	if params.has("rotation_degrees"):
+		var r: Dictionary = params["rotation_degrees"]
+		cam.rotation_degrees = Vector3(
+			float(r.get("x", cam.rotation_degrees.x)),
+			float(r.get("y", cam.rotation_degrees.y)),
+			float(r.get("z", cam.rotation_degrees.z)),
+		)
+
+	# Look at target (overrides rotation if set)
+	if params.has("look_at"):
+		var t: Dictionary = params["look_at"]
+		cam.look_at(Vector3(float(t.get("x", 0)), float(t.get("y", 0)), float(t.get("z", 0))))
+
+	# Set FOV
+	if params.has("fov"):
+		cam.fov = float(params["fov"])
+
+	var pos := cam.global_position
+	var rot := cam.rotation_degrees
+	return success({
+		"position": {"x": pos.x, "y": pos.y, "z": pos.z},
+		"rotation_degrees": {"x": rot.x, "y": rot.y, "z": rot.z},
+		"fov": cam.fov,
 	})
 
 

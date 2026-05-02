@@ -24,6 +24,17 @@ func get_commands() -> Dictionary:
 	}
 
 
+func _find_script_by_class_name(class_name_str: String) -> Script:
+	# Search project files for a script with matching class_name
+	var global_classes: Array = ProjectSettings.get_global_class_list()
+	for entry: Dictionary in global_classes:
+		if entry.get("class", "") == class_name_str:
+			var path: String = entry.get("path", "")
+			if not path.is_empty():
+				return load(path) as Script
+	return null
+
+
 func _add_node(params: Dictionary) -> Dictionary:
 	var result := require_string(params, "type")
 	if result[1] != null:
@@ -34,9 +45,6 @@ func _add_node(params: Dictionary) -> Dictionary:
 	var node_name: String = optional_string(params, "name", "")
 	var properties: Dictionary = params.get("properties", {})
 
-	if not ClassDB.class_exists(type):
-		return error_invalid_params("Unknown node type: %s" % type)
-
 	var root := get_edited_root()
 	if root == null:
 		return error_no_scene()
@@ -45,7 +53,21 @@ func _add_node(params: Dictionary) -> Dictionary:
 	if parent == null:
 		return error_not_found("Parent node '%s'" % parent_path, "Use get_scene_tree to see available nodes")
 
-	var node: Node = ClassDB.instantiate(type)
+	var node: Node
+	var custom_script: Script = null
+
+	if ClassDB.class_exists(type):
+		node = ClassDB.instantiate(type)
+	else:
+		# Try to find a script with matching class_name
+		custom_script = _find_script_by_class_name(type)
+		if custom_script == null:
+			return error_invalid_params("Unknown node type: '%s'. Not found in ClassDB or as a script class_name. Use list_scripts to see available script classes." % type)
+		var base_type: String = custom_script.get_instance_base_type()
+		if not ClassDB.class_exists(base_type):
+			return error_invalid_params("Script '%s' extends '%s' which is not a valid node type" % [type, base_type])
+		node = ClassDB.instantiate(base_type)
+		node.set_script(custom_script)
 	if not node_name.is_empty():
 		node.name = node_name
 
@@ -234,6 +256,20 @@ func _update_property(params: Dictionary) -> Dictionary:
 	var old_value: Variant = node.get(property)
 	var target_type := typeof(old_value)
 	var parsed_value: Variant = PropertyParser.parse_value(value, target_type)
+
+	# Handle @export node references (e.g. @export var hud: HUD)
+	# typeof() returns TYPE_NIL when unset or TYPE_OBJECT when set,
+	# neither resolves a string path to a node — check the property hint instead
+	if value is String:
+		for prop in node.get_property_list():
+			if prop["name"] == property and prop["hint"] == PROPERTY_HINT_NODE_TYPE:
+				var target_node: Node = node.get_node_or_null(NodePath(value))
+				if target_node == null:
+					target_node = root.get_node_or_null(NodePath(value))
+				if target_node == null:
+					return error_not_found("Node '%s'" % value, "Could not resolve node path for property '%s'" % property)
+				parsed_value = target_node
+				break
 
 	var undo_redo := get_undo_redo()
 	undo_redo.create_action("MCP: Set %s.%s" % [node.name, property])
