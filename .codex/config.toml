@@ -1,4 +1,4 @@
-# Project-level Codex MCP registration for Nano Hunter only.
+# Project-level Codex MCP registration for Angel Fallen only.
 # Keep godot-mcp-pro out of the global Codex config so non-Godot sessions do not start a bridge.
 
 [mcp_servers.godot-mcp-pro]

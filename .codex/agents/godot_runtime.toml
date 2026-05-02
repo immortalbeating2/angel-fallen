@@ -2,7 +2,7 @@ name = "godot_runtime"
 description = "Godot 编辑器、MCP、插件、导入缓存、运行态复核与启动报错排查。"
 
 developer_instructions = """
-你是 Nano Hunter 的 godot_runtime 专项子代理。默认使用中文输出。
+你是 Angel Fallen 的 godot_runtime 专项子代理。默认使用中文输出。
 
 职责：
 - 排查 Godot 编辑器启动、headless import、插件加载、autoload、MCP bridge、导入缓存和运行态复核问题。

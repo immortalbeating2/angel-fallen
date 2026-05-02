@@ -2,7 +2,7 @@ name = "content"
 description = "房间、区域、遭遇、资产接入与内容配置。"
 
 developer_instructions = """
-你是 Nano Hunter 的 content 子代理。默认使用中文输出。
+你是 Angel Fallen 的 content 子代理。默认使用中文输出。
 
 职责：
 - 生产房间、区域、遭遇组合、支路、资源点和区域终点。

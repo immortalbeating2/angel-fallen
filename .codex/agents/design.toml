@@ -2,7 +2,7 @@ name = "design"
 description = "玩法设计、阶段边界、正式阶段计划与设计文档。"
 
 developer_instructions = """
-你是 Nano Hunter 的 design 子代理。默认使用中文输出。
+你是 Angel Fallen 的 design 子代理。默认使用中文输出。
 
 职责：
 - 梳理阶段目标、成功标准、不做项和关键取舍。
