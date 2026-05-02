@@ -1,6 +1,6 @@
 {
   "version": "stub_catalog_v8",
-  "generated_at_utc": "2026-03-20T12:45:07Z",
+  "generated_at_utc": "2026-05-02T07:53:24Z",
   "asset_state": "mixed_candidate_ready",
   "material_profile_map": {
     "characters": "res://resources/material_profiles/mat_character_base.tres",
@@ -342,14 +342,14 @@
     }
   },
   "production_ready_counts": {
-    "characters": 12,
-    "weapons": 15,
+    "characters": 13,
+    "weapons": 16,
     "passives": 14,
     "accessories": 4,
     "enemies": 20,
-    "evolutions": 13,
+    "evolutions": 14,
     "meta_upgrades": 5,
-    "forge_recipes": 13
+    "forge_recipes": 14
   },
   "production_ready_ratio_by_category": {
     "characters": 1.0,
@@ -364,11 +364,11 @@
   "acceptance_tier_counts": {
     "characters": {
       "candidate": 0,
-      "ready": 12
+      "ready": 13
     },
     "weapons": {
       "candidate": 0,
-      "ready": 15
+      "ready": 16
     },
     "passives": {
       "candidate": 0,
@@ -384,7 +384,7 @@
     },
     "evolutions": {
       "candidate": 0,
-      "ready": 13
+      "ready": 14
     },
     "meta_upgrades": {
       "candidate": 0,
@@ -392,21 +392,21 @@
     },
     "forge_recipes": {
       "candidate": 0,
-      "ready": 13
+      "ready": 14
     }
   },
   "acceptance_bucket_counts": {
     "menu": {
-      "entries": 17,
-      "ready_entries": 17
+      "entries": 18,
+      "ready_entries": 18
     },
     "combat": {
-      "entries": 53,
-      "ready_entries": 53
+      "entries": 54,
+      "ready_entries": 54
     },
     "ui": {
-      "entries": 26,
-      "ready_entries": 26
+      "entries": 28,
+      "ready_entries": 28
     }
   },
   "categories": {
@@ -425,6 +425,17 @@
       {
         "id": "char_cleric",
         "path": "res://resources/characters/char_cleric.tres",
+        "source_json": "res://data/balance/characters.json",
+        "material_profile": "res://resources/material_profiles/mat_character_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
+        "acceptance_profile": "menu_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "char_curator",
+        "path": "res://resources/characters/char_curator.tres",
         "source_json": "res://data/balance/characters.json",
         "material_profile": "res://resources/material_profiles/mat_character_base.tres",
         "asset_state": "production_ready",
@@ -636,6 +647,17 @@
       {
         "id": "wpn_radiant_hammer",
         "path": "res://resources/weapons/wpn_radiant_hammer.tres",
+        "source_json": "res://data/balance/shop_items.json",
+        "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "acceptance_scene": "res://scenes/game/game_world.tscn",
+        "acceptance_profile": "combat_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "wpn_reliquary_orb",
+        "path": "res://resources/weapons/wpn_reliquary_orb.tres",
         "source_json": "res://data/balance/shop_items.json",
         "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
         "asset_state": "production_ready",
@@ -1278,6 +1300,17 @@
         "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
         "acceptance_profile": "ui_ready_matrix",
         "acceptance_tier": "ready"
+      },
+      {
+        "id": "evo_zenith_reliquary",
+        "path": "res://resources/evolutions/evo_zenith_reliquary.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_evolution_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch4.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
       }
     ],
     "meta_upgrades": [
@@ -1473,6 +1506,17 @@
       {
         "id": "forge_vowstorm",
         "path": "res://resources/forge_recipes/forge_vowstorm.tres",
+        "source_json": "res://data/balance/evolutions.json",
+        "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
+        "asset_state": "production_ready",
+        "preview_texture": "res://assets/sprites/tiles/doors_ch3.png",
+        "acceptance_scene": "res://scenes/ui/level_up_panel.tscn",
+        "acceptance_profile": "ui_ready_matrix",
+        "acceptance_tier": "ready"
+      },
+      {
+        "id": "forge_zenith_reliquary",
+        "path": "res://resources/forge_recipes/forge_zenith_reliquary.tres",
         "source_json": "res://data/balance/evolutions.json",
         "material_profile": "res://resources/material_profiles/mat_forge_recipe_base.tres",
         "asset_state": "production_ready",

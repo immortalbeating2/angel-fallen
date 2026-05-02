@@ -34,6 +34,9 @@
 | [stage5-closure-2026-03-25.md](./stage5-closure-2026-03-25.md) | Stage 5 正式收口说明：明确已完成真值、Stage 5/6/7 边界与本轮自动化验收基线 |
 | [stage5-acceptance-record-2026-03-25.md](./stage5-acceptance-record-2026-03-25.md) | Stage 5 验收记录：回写三路线、三结局、首通/复通差异与主要 UI 出口的通过结论 |
 | [stage5-acceptance-summary-2026-03-25.md](./stage5-acceptance-summary-2026-03-25.md) | Stage 5 统一验收摘要：为后续 Stage 6 session 提供最短承接基线 |
+| [2026-5-2-plan.md](./2026-5-2-plan.md) | Stage 7 前的初步整改与人工复核补位计划，跟踪资源 catalog、LFS、文档口径与人工 ledger |
+| [current-remediation-baseline-2026-05-02.md](./current-remediation-baseline-2026-05-02.md) | 当前整改基线快照：记录轻量校验结果、资源 catalog 差异、已知阻塞与 Stage 7 进入条件 |
+| [manual-review-ledger-2026-05-02.md](./manual-review-ledger-2026-05-02.md) | 人工复核 ledger：为 Windows 启动、主菜单、长局、FS/CL 入口、音量设置与导出包启动建立首轮记录表 |
 | [mvp-release-freeze-2026-03-22.md](./mvp-release-freeze-2026-03-22.md) | D43 后的可发布 MVP 冻结范围、发布阻塞项与最短执行路径 |
 | [release-smoke-checklist-2026-03-22.md](./release-smoke-checklist-2026-03-22.md) | MVP 发布前的自动化门禁、三平台导出命令与人工 smoke checklist |
 | [export-template-setup-2026-03-22.md](./export-template-setup-2026-03-22.md) | Godot 4.6.1 导出模板安装要求、本机 CLI 约定与导出前置校验 |
@@ -151,3 +154,6 @@
 | 0.4.83 | 2026-03-25 | 推进 Stage 6 中期第五步：落地首个更深层 `CL3` 挑战层闭环，补齐 `CL2` 清档后的 `O` 热键、Entry/Elite/Combat/Boss/Settlement 五段流程、第三档奖励与 Stage 6 文档回写 |
 | 0.4.84 | 2026-03-25 | 推进 Stage 6 中期第六步：补齐 `CL3` 对应的 challenge-specific achievement / archive codex，扩展 `Sovereign Curator` 与 `Sovereign Echo Archive`，并回写 Stage 6 文档与回归结果 |
 | 0.4.85 | 2026-03-25 | 完成 Stage 6 正式收口：落地最终 `CL4` 与 `Apex Return`、补齐 `CL4` 对应成就/codex、追加 `char_curator` / `wpn_reliquary_orb` / `evo_zenith_reliquary` 最小内容包，并将总计划状态回写为 completed |
+| 0.4.86 | 2026-05-02 | 基于初步整改计划新增执行追踪、当前整改基线与人工复核 ledger，记录资源 catalog、LFS 与 Godot 验证待办 |
+| 0.4.87 | 2026-05-02 | 执行下一步整改：通过同步脚本修复 resource catalog 漂移，并补跑 Python、Godot 启动、资源验收与全量 GUT 结果 |
+| 0.4.88 | 2026-05-02 | 执行 LFS 归一化下一步：将 7 个场景文件按 `.gitattributes` 重新登记为 LFS 对象，并保留插件/项目配置变更为独立待确认项 |
