@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - "**"
+    tags:
+      - "release-*"
   pull_request:
+  workflow_dispatch:
 
 jobs:
   validate-config-and-resources:
@@ -104,6 +107,7 @@ jobs:
         run: godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.gd
 
       - name: Run visual snapshot release-blocking template
+        if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/release-') }}
         env:
           VISUAL_PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.backend_tag }}-release-blocking
           VISUAL_SNAPSHOT_BACKEND_TAG: ${{ matrix.backend_tag }}
