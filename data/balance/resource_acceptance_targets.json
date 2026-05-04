@@ -173,7 +173,7 @@
       },
       {
         "scene": "res://scenes/ui/run_result_panel.tscn",
-        "node_path": "CenterContainer/PanelContainer/VBoxContainer/Unlocks",
+        "node_path": "Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/Unlocks",
         "node_type": "Label",
         "property": "text",
         "rule": "non_empty_string"
@@ -225,7 +225,7 @@
       },
       {
         "scene": "res://scenes/ui/run_result_panel.tscn",
-        "node_path": "CenterContainer/PanelContainer/VBoxContainer/RouteStyleSummary",
+        "node_path": "Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/RouteStyleSummary",
         "node_type": "Label",
         "property": "text",
         "rule": "non_empty_string"
@@ -277,7 +277,7 @@
     "forge_recipes": [
       {
         "scene": "res://scenes/ui/run_result_panel.tscn",
-        "node_path": "CenterContainer/PanelContainer/VBoxContainer/TimelineAnchorButton",
+        "node_path": "Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TimelineButtons/TimelineAnchorButton",
         "node_type": "Button",
         "property": "text",
         "rule": "non_empty_string"
@@ -298,7 +298,7 @@
       },
       {
         "scene": "res://scenes/ui/run_result_panel.tscn",
-        "node_path": "CenterContainer/PanelContainer/VBoxContainer/TimelineScopeButton",
+        "node_path": "Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TimelineButtons/TimelineScopeButton",
         "node_type": "Button",
         "property": "visible",
         "rule": "bool_true"
