@@ -21,13 +21,13 @@ func _instantiate_world() -> Node:
 	return world
 
 
-func _instantiate_run_result_panel() -> Control:
+func _instantiate_run_result_panel() -> Node:
 	var scene: PackedScene = load(RUN_RESULT_PANEL_SCENE_PATH)
 	assert_not_null(scene, "run_result_panel scene should load")
 	if scene == null:
 		return null
 
-	var panel: Control = scene.instantiate() as Control
+	var panel: Node = scene.instantiate()
 	assert_not_null(panel, "run_result_panel scene should instantiate")
 	if panel == null:
 		return null
@@ -825,11 +825,11 @@ func test_challenge_layer_failure_path_records_attempt_without_reward() -> void:
 	assert_eq(int(challenge_record.get("total_insight", 0)), 0, "failed challenge runs should not add insight to the ledger")
 	assert_eq(str(challenge_record.get("last_reward_title", "")), "", "failed challenge runs should not stamp a last reward title")
 
-	var panel: Control = await _instantiate_run_result_panel()
+	var panel: Node = await _instantiate_run_result_panel()
 	if panel == null:
 		return
 	panel.call("show_result", result)
-	var unlock_label: Label = panel.get_node_or_null("CenterContainer/PanelContainer/VBoxContainer/Unlocks")
+	var unlock_label: Label = panel.get_node_or_null("Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/Unlocks")
 	assert_not_null(unlock_label, "run result unlock label should exist")
 	if unlock_label == null:
 		return
@@ -948,11 +948,11 @@ func test_challenge_layer_archive_insight_branch_updates_result_ui_and_preview()
 	assert_eq(int(challenge_record.get("total_insight", 0)), 1, "insight branch should add one insight to the archive ledger")
 	assert_eq(str(challenge_record.get("last_reward_title", "")), "Archive Insight", "insight branch should update the archive last reward title")
 
-	var panel: Control = await _instantiate_run_result_panel()
+	var panel: Node = await _instantiate_run_result_panel()
 	if panel == null:
 		return
 	panel.call("show_result", result)
-	var unlock_label: Label = panel.get_node_or_null("CenterContainer/PanelContainer/VBoxContainer/Unlocks")
+	var unlock_label: Label = panel.get_node_or_null("Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/Unlocks")
 	assert_not_null(unlock_label, "run result unlock label should exist")
 	if unlock_label == null:
 		return
@@ -1029,11 +1029,11 @@ func test_save_manager_and_result_ui_persist_challenge_layer_summary() -> void:
 	assert_eq(int(challenge_record.get("total_meta_bonus", 0)), 40, "challenge record should accumulate reward-shop meta bonus")
 	assert_eq(str(challenge_record.get("last_reward_title", "")), "Meta Cache", "challenge record should remember the last selected reward")
 
-	var panel: Control = await _instantiate_run_result_panel()
+	var panel: Node = await _instantiate_run_result_panel()
 	if panel == null:
 		return
 	panel.call("show_result", result)
-	var unlock_label: Label = panel.get_node_or_null("CenterContainer/PanelContainer/VBoxContainer/Unlocks")
+	var unlock_label: Label = panel.get_node_or_null("Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/Unlocks")
 	assert_not_null(unlock_label, "run result unlock label should exist")
 	if unlock_label == null:
 		return

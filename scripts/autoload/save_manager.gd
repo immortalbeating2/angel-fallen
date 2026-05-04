@@ -976,6 +976,8 @@ func _default_meta() -> Dictionary:
 
 func _default_runtime_settings() -> Dictionary:
     return {
+        "display_mode": "windowed",
+        "resolution": "1280x720",
         "master_volume": 1.0,
         "bgm_volume": 1.0,
         "sfx_volume": 1.0,
@@ -1023,6 +1025,8 @@ func _sanitize_runtime_settings(value: Variant) -> Dictionary:
         source = value
 
     var out: Dictionary = defaults.duplicate(true)
+    out["display_mode"] = _sanitize_display_mode(str(source.get("display_mode", out["display_mode"])))
+    out["resolution"] = _sanitize_resolution(str(source.get("resolution", out["resolution"])))
     out["master_volume"] = clampf(float(source.get("master_volume", out["master_volume"])), 0.0, 1.0)
     out["bgm_volume"] = clampf(float(source.get("bgm_volume", out["bgm_volume"])), 0.0, 1.0)
     out["sfx_volume"] = clampf(float(source.get("sfx_volume", out["sfx_volume"])), 0.0, 1.0)
@@ -1035,6 +1039,7 @@ func _sanitize_runtime_settings(value: Variant) -> Dictionary:
 
 func apply_runtime_settings() -> void:
     var settings: Dictionary = get_runtime_settings()
+    _apply_display_settings(settings)
     if AudioManager != null and AudioManager.has_method("apply_runtime_settings"):
         AudioManager.apply_runtime_settings(settings)
 
@@ -1044,6 +1049,59 @@ func apply_runtime_settings() -> void:
 
     if EventBus != null and EventBus.has_signal("settings_changed"):
         EventBus.settings_changed.emit(settings)
+
+
+func _apply_display_settings(settings: Dictionary) -> void:
+    if DisplayServer.get_name() == "headless":
+        return
+
+    var mode: String = _sanitize_display_mode(str(settings.get("display_mode", "windowed")))
+    var resolution: Vector2i = _parse_resolution(str(settings.get("resolution", "1280x720")))
+
+    match mode:
+        "fullscreen":
+            DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+            DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+        "borderless":
+            DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+            DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
+            DisplayServer.window_set_size(resolution)
+            DisplayServer.window_set_position(_get_centered_window_position(resolution))
+        _:
+            DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+            DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+            DisplayServer.window_set_size(resolution)
+            DisplayServer.window_set_position(_get_centered_window_position(resolution))
+
+
+func _sanitize_display_mode(value: String) -> String:
+    match value:
+        "windowed", "borderless", "fullscreen":
+            return value
+        _:
+            return "windowed"
+
+
+func _sanitize_resolution(value: String) -> String:
+    var allowed: Array[String] = ["1280x720", "1600x900", "1920x1080", "2560x1440", "3840x2160"]
+    if allowed.has(value):
+        return value
+    return "1280x720"
+
+
+func _parse_resolution(value: String) -> Vector2i:
+    var sanitized: String = _sanitize_resolution(value)
+    var parts: PackedStringArray = sanitized.split("x")
+    if parts.size() != 2:
+        return Vector2i(1280, 720)
+    return Vector2i(int(parts[0]), int(parts[1]))
+
+
+func _get_centered_window_position(size: Vector2i) -> Vector2i:
+    var screen_index: int = DisplayServer.window_get_current_screen()
+    var screen_position: Vector2i = DisplayServer.screen_get_position(screen_index)
+    var screen_size: Vector2i = DisplayServer.screen_get_size(screen_index)
+    return screen_position + (screen_size - size) / 2
 
 
 func apply_input_bindings() -> void:

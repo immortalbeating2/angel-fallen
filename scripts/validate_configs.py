@@ -10,6 +10,7 @@ REQUIRED_FILES = {
     "enemy_scaling.json",
     "drop_tables.json",
     "evolutions.json",
+    "weapon_levels.json",
     "shop_items.json",
     "environment_config.json",
     "boss_phases.json",
@@ -1747,6 +1748,14 @@ def _validate_evolutions(data: dict[str, Any], errors: list[str]) -> None:
         if not isinstance(required_level, int) or required_level < 1 or required_level > 5:
             _add_error(errors, f"evolutions.json evolutions[{i}].required_passive_level must be int within [1, 5]")
 
+        required_weapon_level = row.get("required_weapon_level", 1)
+        if not isinstance(required_weapon_level, int) or required_weapon_level < 1 or required_weapon_level > 8:
+            _add_error(errors, f"evolutions.json evolutions[{i}].required_weapon_level must be int within [1, 8]")
+
+        trigger_source = row.get("trigger_source", "level_up")
+        if trigger_source not in {"level_up", "treasure_chest", "boss_reward"}:
+            _add_error(errors, f"evolutions.json evolutions[{i}].trigger_source must be level_up, treasure_chest, or boss_reward")
+
         profile = row.get("evolution_profile")
         if not isinstance(profile, dict) or not profile:
             _add_error(errors, f"evolutions.json evolutions[{i}].evolution_profile must be non-empty object")
@@ -1780,6 +1789,66 @@ def _validate_evolutions(data: dict[str, Any], errors: list[str]) -> None:
             _add_error(errors, f"evolutions.json evolutions[{i}].evolution_profile.projectile_hits must be int within [1, 12]")
         if not isinstance(projectile_style, str) or not projectile_style.strip():
             _add_error(errors, f"evolutions.json evolutions[{i}].evolution_profile.projectile_style must be non-empty string")
+
+
+def _validate_weapon_levels(data: dict[str, Any], errors: list[str]) -> None:
+    max_level = data.get("max_level", 8)
+    if not isinstance(max_level, int) or max_level != 8:
+        _add_error(errors, "weapon_levels.json max_level must be 8")
+        max_level = 8
+
+    default_levels = data.get("default_levels")
+    if not isinstance(default_levels, dict):
+        _add_error(errors, "weapon_levels.json default_levels must be object")
+        default_levels = {}
+
+    for level in range(1, max_level + 1):
+        row = default_levels.get(str(level))
+        if not isinstance(row, dict):
+            _add_error(errors, f"weapon_levels.json default_levels.{level} must exist")
+            continue
+        damage_mult = _to_float(row.get("damage_mult"))
+        interval_mult = _to_float(row.get("interval_mult"))
+        projectile_count = row.get("projectile_count")
+        projectile_hits = row.get("projectile_hits")
+        impact_radius = _to_float(row.get("impact_radius", 0.0))
+        duration = _to_float(row.get("duration", 0.0))
+        if damage_mult is None or damage_mult < 0.5 or damage_mult > 2.5:
+            _add_error(errors, f"weapon_levels.json default_levels.{level}.damage_mult must be within [0.5, 2.5]")
+        if interval_mult is None or interval_mult < 0.35 or interval_mult > 1.25:
+            _add_error(errors, f"weapon_levels.json default_levels.{level}.interval_mult must be within [0.35, 1.25]")
+        if not isinstance(projectile_count, int) or projectile_count < 1 or projectile_count > 8:
+            _add_error(errors, f"weapon_levels.json default_levels.{level}.projectile_count must be int within [1, 8]")
+        if not isinstance(projectile_hits, int) or projectile_hits < 1 or projectile_hits > 12:
+            _add_error(errors, f"weapon_levels.json default_levels.{level}.projectile_hits must be int within [1, 12]")
+        if impact_radius is None or impact_radius < 0.0 or impact_radius > 160.0:
+            _add_error(errors, f"weapon_levels.json default_levels.{level}.impact_radius must be within [0.0, 160.0]")
+        if duration is None or duration < 0.0 or duration > 20.0:
+            _add_error(errors, f"weapon_levels.json default_levels.{level}.duration must be within [0.0, 20.0]")
+
+    weapons = data.get("weapons")
+    if not isinstance(weapons, dict) or not weapons:
+        _add_error(errors, "weapon_levels.json weapons must be non-empty object")
+        return
+
+    for weapon_id, row in weapons.items():
+        if not isinstance(weapon_id, str) or not weapon_id.startswith("wpn_"):
+            _add_error(errors, f"weapon_levels.json weapon id '{weapon_id}' must start with wpn_")
+            continue
+        if not isinstance(row, dict):
+            _add_error(errors, f"weapon_levels.json {weapon_id} must be object")
+            continue
+        if not isinstance(row.get("style", ""), str) or not row.get("style", "").strip():
+            _add_error(errors, f"weapon_levels.json {weapon_id}.style must be non-empty string")
+        if not isinstance(row.get("projectile_style", ""), str) or not row.get("projectile_style", "").strip():
+            _add_error(errors, f"weapon_levels.json {weapon_id}.projectile_style must be non-empty string")
+        levels = row.get("levels", default_levels)
+        if not isinstance(levels, dict):
+            _add_error(errors, f"weapon_levels.json {weapon_id}.levels must be object when present")
+            continue
+        for level in range(1, max_level + 1):
+            if str(level) not in levels:
+                _add_error(errors, f"weapon_levels.json {weapon_id}.levels missing level {level}")
 
 
 def _validate_quality_baseline_targets(data: dict[str, Any], errors: list[str]) -> None:
@@ -4040,6 +4109,8 @@ def main() -> int:
         _validate_meta_upgrades(parsed_by_name["meta_upgrades.json"], errors)
     if "evolutions.json" in parsed_by_name:
         _validate_evolutions(parsed_by_name["evolutions.json"], errors)
+    if "weapon_levels.json" in parsed_by_name:
+        _validate_weapon_levels(parsed_by_name["weapon_levels.json"], errors)
     if "quality_baseline_targets.json" in parsed_by_name:
         _validate_quality_baseline_targets(parsed_by_name["quality_baseline_targets.json"], errors)
     if "release_gate_targets.json" in parsed_by_name:

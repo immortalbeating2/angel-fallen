@@ -1,0 +1,61 @@
+{
+  "max_level": 8,
+  "default_levels": {
+    "1": {"damage_mult": 1.00, "flat_damage_bonus": 0.0, "interval_mult": 1.00, "projectile_count": 1, "projectile_hits": 1, "impact_radius": 0.0, "duration": 0.0},
+    "2": {"damage_mult": 1.04, "flat_damage_bonus": 1.5, "interval_mult": 0.98, "projectile_count": 1, "projectile_hits": 1, "impact_radius": 0.0, "duration": 0.0},
+    "3": {"damage_mult": 1.06, "flat_damage_bonus": 2.0, "interval_mult": 0.96, "projectile_count": 2, "projectile_hits": 1, "impact_radius": 12.0, "duration": 0.4},
+    "4": {"damage_mult": 1.08, "flat_damage_bonus": 2.5, "interval_mult": 0.94, "projectile_count": 2, "projectile_hits": 2, "impact_radius": 18.0, "duration": 0.6},
+    "5": {"damage_mult": 1.10, "flat_damage_bonus": 3.0, "interval_mult": 0.92, "projectile_count": 3, "projectile_hits": 2, "impact_radius": 24.0, "duration": 0.8},
+    "6": {"damage_mult": 1.12, "flat_damage_bonus": 3.5, "interval_mult": 0.90, "projectile_count": 3, "projectile_hits": 3, "impact_radius": 30.0, "duration": 1.0},
+    "7": {"damage_mult": 1.14, "flat_damage_bonus": 4.0, "interval_mult": 0.88, "projectile_count": 4, "projectile_hits": 3, "impact_radius": 36.0, "duration": 1.2},
+    "8": {"damage_mult": 1.18, "flat_damage_bonus": 5.0, "interval_mult": 0.84, "projectile_count": 4, "projectile_hits": 4, "impact_radius": 42.0, "duration": 1.5}
+  },
+  "weapons": {
+    "wpn_magic_missile": {"style": "mage_orb", "projectile_style": "mage_orb", "tags": ["projectile"]},
+    "wpn_holy_cross": {"style": "knight_lance", "projectile_style": "knight_lance", "tags": ["projectile", "precision"]},
+    "wpn_shadow_fang": {"style": "rogue_dart", "projectile_style": "rogue_dart", "tags": ["projectile", "tempo"]},
+    "wpn_solar_lance": {"style": "solar_lance", "projectile_style": "solar_lance", "tags": ["projectile", "ground"], "levels": {
+      "1": {"damage_mult": 1.00, "flat_damage_bonus": 0.0, "interval_mult": 1.00, "projectile_count": 1, "projectile_hits": 1, "impact_radius": 24.0, "duration": 0.8, "projectile_style": "solar_lance"},
+      "2": {"damage_mult": 1.05, "flat_damage_bonus": 1.8, "interval_mult": 0.98, "projectile_count": 1, "projectile_hits": 1, "impact_radius": 30.0, "duration": 1.0, "projectile_style": "solar_lance"},
+      "3": {"damage_mult": 1.07, "flat_damage_bonus": 2.5, "interval_mult": 0.96, "projectile_count": 1, "projectile_hits": 2, "impact_radius": 36.0, "duration": 1.2, "projectile_style": "solar_lance"},
+      "4": {"damage_mult": 1.09, "flat_damage_bonus": 3.0, "interval_mult": 0.94, "projectile_count": 2, "projectile_hits": 2, "impact_radius": 42.0, "duration": 1.5, "projectile_style": "solar_lance"},
+      "5": {"damage_mult": 1.11, "flat_damage_bonus": 3.6, "interval_mult": 0.92, "projectile_count": 2, "projectile_hits": 3, "impact_radius": 50.0, "duration": 1.8, "projectile_style": "solar_lance"},
+      "6": {"damage_mult": 1.13, "flat_damage_bonus": 4.2, "interval_mult": 0.90, "projectile_count": 3, "projectile_hits": 3, "impact_radius": 58.0, "duration": 2.1, "projectile_style": "solar_lance"},
+      "7": {"damage_mult": 1.15, "flat_damage_bonus": 4.8, "interval_mult": 0.88, "projectile_count": 3, "projectile_hits": 4, "impact_radius": 66.0, "duration": 2.4, "projectile_style": "solar_lance"},
+      "8": {"damage_mult": 1.20, "flat_damage_bonus": 6.0, "interval_mult": 0.84, "projectile_count": 4, "projectile_hits": 4, "impact_radius": 76.0, "duration": 2.8, "projectile_style": "solar_lance"}
+    }},
+    "wpn_sacred_lance": {"style": "sacred_lance", "projectile_style": "sacred_lance", "tags": ["projectile", "precision"]},
+    "wpn_void_chain": {"style": "void_chain", "projectile_style": "void_chain", "tags": ["projectile", "orbit"]},
+    "wpn_frost_orb": {"style": "frost_orb", "projectile_style": "frost_orb", "tags": ["projectile", "aura"]},
+    "wpn_storm_bow": {"style": "storm_bow", "projectile_style": "storm_bow", "tags": ["projectile", "tempo"]},
+    "wpn_radiant_hammer": {"style": "radiant_hammer", "projectile_style": "radiant_hammer", "tags": ["projectile", "aura"]},
+    "wpn_blood_rite": {"style": "blood_rite", "projectile_style": "blood_rite", "tags": ["projectile"]},
+    "wpn_vowblade": {"style": "vowblade", "projectile_style": "vowblade", "tags": ["projectile", "precision"]},
+    "wpn_nether_shard": {"style": "nether_shard", "projectile_style": "nether_shard", "tags": ["projectile"]},
+    "wpn_astral_disc": {"style": "astral_disc", "projectile_style": "astral_disc", "tags": ["projectile", "orbit"]},
+    "wpn_reliquary_orb": {"style": "reliquary_orb", "projectile_style": "reliquary_orb", "tags": ["projectile", "orbit"], "levels": {
+      "1": {"damage_mult": 1.00, "flat_damage_bonus": 0.0, "interval_mult": 1.00, "projectile_count": 1, "projectile_hits": 1, "impact_radius": 38.0, "duration": 0.0, "orbit_count": 2, "orbit_radius": 68.0, "projectile_style": "reliquary_orb"},
+      "2": {"damage_mult": 1.04, "flat_damage_bonus": 1.5, "interval_mult": 0.98, "projectile_count": 1, "projectile_hits": 1, "impact_radius": 42.0, "duration": 0.0, "orbit_count": 2, "orbit_radius": 72.0, "projectile_style": "reliquary_orb"},
+      "3": {"damage_mult": 1.06, "flat_damage_bonus": 2.0, "interval_mult": 0.96, "projectile_count": 2, "projectile_hits": 2, "impact_radius": 46.0, "duration": 0.0, "orbit_count": 3, "orbit_radius": 76.0, "projectile_style": "reliquary_orb"},
+      "4": {"damage_mult": 1.08, "flat_damage_bonus": 2.7, "interval_mult": 0.94, "projectile_count": 2, "projectile_hits": 2, "impact_radius": 50.0, "duration": 0.0, "orbit_count": 3, "orbit_radius": 80.0, "projectile_style": "reliquary_orb"},
+      "5": {"damage_mult": 1.10, "flat_damage_bonus": 3.4, "interval_mult": 0.92, "projectile_count": 3, "projectile_hits": 3, "impact_radius": 54.0, "duration": 0.0, "orbit_count": 4, "orbit_radius": 84.0, "projectile_style": "reliquary_orb"},
+      "6": {"damage_mult": 1.12, "flat_damage_bonus": 4.0, "interval_mult": 0.90, "projectile_count": 3, "projectile_hits": 3, "impact_radius": 58.0, "duration": 0.0, "orbit_count": 4, "orbit_radius": 88.0, "projectile_style": "reliquary_orb"},
+      "7": {"damage_mult": 1.15, "flat_damage_bonus": 4.8, "interval_mult": 0.88, "projectile_count": 4, "projectile_hits": 4, "impact_radius": 62.0, "duration": 0.0, "orbit_count": 5, "orbit_radius": 92.0, "projectile_style": "reliquary_orb"},
+      "8": {"damage_mult": 1.20, "flat_damage_bonus": 6.0, "interval_mult": 0.84, "projectile_count": 4, "projectile_hits": 4, "impact_radius": 68.0, "duration": 0.0, "orbit_count": 5, "orbit_radius": 98.0, "projectile_style": "reliquary_orb"}
+    }},
+    "wpn_arcane_comet": {"style": "arcane_comet", "projectile_style": "arcane_comet", "tags": ["projectile", "ground"]},
+    "wpn_holy_judgment": {"style": "holy_judgment", "projectile_style": "holy_judgment", "tags": ["projectile", "aura"]},
+    "wpn_shadow_tempest": {"style": "shadow_tempest", "projectile_style": "shadow_tempest", "tags": ["projectile", "tempo"]},
+    "wpn_solar_supernova": {"style": "solar_supernova", "projectile_style": "solar_supernova", "tags": ["projectile", "ground"]},
+    "wpn_seraph_lance": {"style": "seraph_lance", "projectile_style": "seraph_lance", "tags": ["projectile", "aura"]},
+    "wpn_abyssal_chain": {"style": "abyssal_chain", "projectile_style": "abyssal_chain", "tags": ["projectile", "orbit"]},
+    "wpn_glacial_nova": {"style": "glacial_nova", "projectile_style": "glacial_nova", "tags": ["projectile", "aura"]},
+    "wpn_radiant_cataclysm": {"style": "radiant_cataclysm", "projectile_style": "radiant_cataclysm", "tags": ["projectile", "aura"]},
+    "wpn_tempest_onslaught": {"style": "tempest_onslaught", "projectile_style": "tempest_onslaught", "tags": ["projectile", "tempo"]},
+    "wpn_blood_requiem": {"style": "blood_requiem", "projectile_style": "blood_requiem", "tags": ["projectile"]},
+    "wpn_vowstorm": {"style": "vowstorm", "projectile_style": "vowstorm", "tags": ["projectile", "precision"]},
+    "wpn_nether_maelstrom": {"style": "nether_maelstrom", "projectile_style": "nether_maelstrom", "tags": ["projectile"]},
+    "wpn_astral_horizon": {"style": "astral_horizon", "projectile_style": "astral_horizon", "tags": ["projectile", "orbit"]},
+    "wpn_zenith_reliquary": {"style": "zenith_reliquary", "projectile_style": "zenith_reliquary", "tags": ["projectile", "orbit"]}
+  }
+}

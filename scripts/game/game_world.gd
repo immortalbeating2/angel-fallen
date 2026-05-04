@@ -11,6 +11,8 @@ extends Node2D
 @onready var _ambient_fx_tilemap: TileMap = $AmbientFxTileMap
 @onready var _hazard_flash: ColorRect = $HazardFlash
 @onready var _spawner: Node2D = $EnemySpawner
+@onready var _run_director: Node = $RunDirector
+@onready var _weapon_loadout: Node = $WeaponLoadout
 @onready var _map_generator: Node = $MapGenerator
 @onready var _player: CharacterBody2D = $Player
 @onready var _pickups_root: Node2D = $Pickups
@@ -18,11 +20,12 @@ extends Node2D
 @onready var _right_door: Polygon2D = $Doors/RightDoor
 @onready var _narrative_system: Node = $NarrativeSystem
 @onready var _narrative_event_panel: Control = $NarrativeEventPanel
-@onready var _chapter_intro_panel: Control = $ChapterIntroPanel
+@onready var _chapter_intro_panel: Node = $ChapterIntroPanel
 @onready var _chapter_transition_panel: Control = $ChapterTransitionPanel
 @onready var _memory_altar_panel: Control = $MemoryAltarPanel
 @onready var _pause_panel: Control = $PausePanel
-@onready var _run_result_panel: Control = $RunResultPanel
+@onready var _run_build_panel: Control = $RunBuildPanel
+@onready var _run_result_panel: Node = $RunResultPanel
 
 @export var pickup_scene: PackedScene
 
@@ -370,6 +373,8 @@ func _ready() -> void:
     EventBus.frostbite_changed.emit(_frostbite)
     EventBus.void_corruption_changed.emit(_void_corruption)
     _apply_selected_character_profile()
+    if _run_director != null and _run_director.has_method("reset"):
+        _run_director.reset()
     _apply_meta_upgrades()
     if _narrative_system != null and _narrative_system.has_method("reset_run_choices"):
         _narrative_system.reset_run_choices()
@@ -391,6 +396,8 @@ func _ready() -> void:
         _pause_panel.retreat_requested.connect(_on_pause_retreat_requested)
     if _pause_panel != null and _pause_panel.has_signal("quit_to_menu_requested"):
         _pause_panel.quit_to_menu_requested.connect(_on_pause_quit_to_menu_requested)
+    if _run_build_panel != null and _run_build_panel.has_method("close_panel"):
+        _run_build_panel.close_panel()
     if _run_result_panel != null and _run_result_panel.has_signal("back_to_menu_requested"):
         _run_result_panel.back_to_menu_requested.connect(_on_run_result_back_to_menu)
     if _pause_panel != null and _pause_panel.has_method("close_panel"):
@@ -401,6 +408,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+    _update_run_director(delta)
+
     if _room_active and _is_combat_progress_room(_current_room_type) and _spawner != null and _spawner.has_method("get_room_time"):
         _room_timer_label.text = "%.1f s" % _spawner.get_room_time()
     elif not _room_active:
@@ -415,7 +424,25 @@ func _process(delta: float) -> void:
     _refresh_room_status_with_difficulty()
 
 
+func _update_run_director(delta: float) -> void:
+    if not _room_active:
+        return
+    if not _is_combat_progress_room(_current_room_type):
+        return
+    if _run_director == null or not _run_director.has_method("advance"):
+        return
+    if _spawner == null or not _spawner.has_method("apply_director_wave"):
+        return
+
+    var profile: Dictionary = _run_director.advance(delta)
+    _spawner.apply_director_wave(profile)
+
+
 func _unhandled_input(event: InputEvent) -> void:
+    if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_TAB:
+        _toggle_run_build_panel()
+        return
+
     if event.is_action_pressed("pause"):
         if _chapter_intro_pending or _narrative_event_pending or _chapter_transition_pending or _memory_altar_pending:
             return
@@ -1442,6 +1469,8 @@ func _reset_pause_state() -> void:
 
     if _pause_panel != null and _pause_panel.has_method("close_panel"):
         _pause_panel.close_panel()
+    if _run_build_panel != null and _run_build_panel.has_method("close_panel"):
+        _run_build_panel.close_panel()
 
     if not _run_finished:
         GameManager.set_state(GameManager.GameState.PLAYING)
@@ -2694,10 +2723,18 @@ func _apply_selected_character_profile() -> void:
                 weapon.projectile_hits = clampi(int(weapon_profile.get("projectile_hits", weapon.projectile_hits)), 1, 8)
             if weapon.get("projectile_style") != null:
                 weapon.projectile_style = str(weapon_profile.get("projectile_style", weapon.projectile_style))
+            if weapon.get("impact_radius") != null:
+                weapon.impact_radius = clampf(float(weapon_profile.get("impact_radius", weapon.impact_radius)), 0.0, 120.0)
+            if weapon.get("impact_damage_mult") != null:
+                weapon.impact_damage_mult = clampf(float(weapon_profile.get("impact_damage_mult", weapon.impact_damage_mult)), 0.15, 0.85)
             weapon_codex_id = str(weapon_profile.get("projectile_style", "")).strip_edges()
 
         if weapon.has_method("reset_weapon_state"):
             weapon.reset_weapon_state(base_weapon_id)
+        if _weapon_loadout != null and _weapon_loadout.has_method("setup_starting_weapon"):
+            _weapon_loadout.setup_starting_weapon(base_weapon_id, str(weapon.get("projectile_style")))
+            if _weapon_loadout.has_method("get_weapon_level_profile") and weapon.has_method("apply_weapon_level_profile"):
+                weapon.apply_weapon_level_profile(_weapon_loadout.get_weapon_level_profile(base_weapon_id, 1))
 
         if weapon_codex_id == "":
             weapon_codex_id = str(selected_row.get("id", "")).strip_edges()
@@ -3109,6 +3146,13 @@ func _apply_shop_item_effect(item_id: String) -> void:
     var health: Node = _player.get_node_or_null("HealthComponent")
     var weapon: Node = _player.get_node_or_null("AutoWeapon")
 
+    if item_id.begins_with("wpn_"):
+        _apply_weapon_loadout_shop_pick(item_id, weapon)
+        _notify_level_up_anchor_from_shop(item_id)
+        return
+    if item_id.begins_with("pas_") and _weapon_loadout != null and _weapon_loadout.has_method("add_or_level_passive"):
+        _weapon_loadout.add_or_level_passive(item_id)
+
     match item_id:
         "hp_potion":
             if health != null and health.has_method("heal"):
@@ -3199,6 +3243,8 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.spread_angle_deg = clampf(maxf(float(weapon.spread_angle_deg), 14.0), 0.0, 45.0)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "arcane_comet"
+                if weapon.get("impact_radius") != null:
+                    weapon.impact_radius = maxf(float(weapon.impact_radius), 42.0)
         "wpn_holy_judgment":
             if weapon != null:
                 if weapon.get("base_damage") != null:
@@ -3207,6 +3253,8 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "holy_judgment"
+                if weapon.get("impact_radius") != null:
+                    weapon.impact_radius = maxf(float(weapon.impact_radius), 38.0)
             if stats != null and stats.get("crit_chance") != null:
                 stats.crit_chance = minf(0.95, stats.crit_chance + 0.02)
         "wpn_shadow_tempest":
@@ -3233,6 +3281,10 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.spread_angle_deg = clampf(float(weapon.spread_angle_deg) + 6.0, 0.0, 45.0)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "solar_supernova"
+                if weapon.get("impact_radius") != null:
+                    weapon.impact_radius = maxf(float(weapon.impact_radius), 66.0)
+                if weapon.get("impact_damage_mult") != null:
+                    weapon.impact_damage_mult = maxf(float(weapon.impact_damage_mult), 0.48)
         "wpn_sacred_lance":
             if weapon != null:
                 if weapon.get("base_damage") != null:
@@ -3265,6 +3317,8 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "frost_orb"
+                if weapon.get("impact_radius") != null:
+                    weapon.impact_radius = maxf(float(weapon.impact_radius), 36.0)
         "wpn_storm_bow":
             if weapon != null:
                 if weapon.get("base_damage") != null:
@@ -3287,6 +3341,10 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 2, 1, 12)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "radiant_hammer"
+                if weapon.get("impact_radius") != null:
+                    weapon.impact_radius = maxf(float(weapon.impact_radius), 58.0)
+                if weapon.get("impact_damage_mult") != null:
+                    weapon.impact_damage_mult = maxf(float(weapon.impact_damage_mult), 0.45)
         "wpn_blood_rite":
             if weapon != null:
                 if weapon.get("base_damage") != null:
@@ -3331,6 +3389,8 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.projectile_hits = clampi(int(weapon.projectile_hits) + 1, 1, 12)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "astral_disc"
+                if weapon.get("impact_radius") != null:
+                    weapon.impact_radius = maxf(float(weapon.impact_radius), 46.0)
         "wpn_reliquary_orb":
             if weapon != null:
                 if weapon.get("base_damage") != null:
@@ -3347,6 +3407,8 @@ func _apply_shop_item_effect(item_id: String) -> void:
                     weapon.spread_angle_deg = clampf(maxf(float(weapon.spread_angle_deg), 12.0) + 4.0, 0.0, 45.0)
                 if weapon.get("projectile_style") != null:
                     weapon.projectile_style = "reliquary_orb"
+                if weapon.get("impact_radius") != null:
+                    weapon.impact_radius = maxf(float(weapon.impact_radius), 46.0)
 
     _notify_level_up_anchor_from_shop(item_id)
 
@@ -3829,6 +3891,28 @@ func _notify_level_up_anchor_from_shop(item_id: String) -> void:
         return
     if _level_up_system.has_method("register_build_anchor_from_shop"):
         _level_up_system.register_build_anchor_from_shop(item_id)
+
+
+func _apply_weapon_loadout_shop_pick(item_id: String, weapon: Node) -> void:
+    if _weapon_loadout == null or not _weapon_loadout.has_method("add_or_level_weapon"):
+        return
+
+    var result: Dictionary = _weapon_loadout.add_or_level_weapon(item_id)
+    if not bool(result.get("accepted", false)):
+        if str(result.get("reason", "")) == "weapon_slots_full":
+            _gold += 10
+            EventBus.gold_changed.emit(_gold)
+        return
+
+    if weapon == null:
+        return
+    var current_weapon_id: String = str(weapon.get("current_weapon_id")).strip_edges()
+    var slot_index: int = int(result.get("slot_index", -1))
+    if current_weapon_id != item_id and slot_index != 0:
+        return
+    if _weapon_loadout.has_method("get_weapon_level_profile") and weapon.has_method("apply_weapon_level_profile"):
+        var level: int = int(result.get("level", _weapon_loadout.get_weapon_level(item_id)))
+        weapon.apply_weapon_level_profile(_weapon_loadout.get_weapon_level_profile(item_id, level))
 
 
 func _notify_level_up_anchor_from_forge(forge_type: String) -> void:
@@ -5941,8 +6025,6 @@ func _process_environment_hazards(delta: float) -> void:
 
         if _active_hazards.has("lava_pool"):
             tick_damage += 4.0 * intensity
-        if _active_hazards.has("spore_cloud"):
-            tick_damage += 1.6 * intensity
         if _active_hazards.has("blizzard"):
             tick_damage += 1.4 * intensity * (1.0 - frost_resist)
         if _active_hazards.has("crystal_reflection"):
@@ -6173,10 +6255,16 @@ func _map_item_to_pickup(item_id: String) -> Dictionary:
             return {"type": "ore", "amount": _scale_reward_amount(4, _route_ore_drop_mult, "ore")}
         "hp_orb":
             return {"type": "hp", "amount": 10}
+        "food":
+            return {"type": "food", "amount": 20}
+        "magnet":
+            return {"type": "magnet", "amount": 1}
+        "gold_bag":
+            return {"type": "gold_bag", "amount": _scale_reward_amount(36, _route_gold_drop_mult, "gold", true)}
         "chest_common":
-            return {"type": "gold", "amount": _scale_reward_amount(24, _route_gold_drop_mult, "gold", true)}
+            return {"type": "chest", "amount": _scale_reward_amount(24, _route_gold_drop_mult, "gold", true)}
         "chest_rare":
-            return {"type": "gold", "amount": _scale_reward_amount(40, _route_gold_drop_mult, "gold", true)}
+            return {"type": "chest", "amount": _scale_reward_amount(40, _route_gold_drop_mult, "gold", true)}
         "accessory_drop":
             return {"type": "accessory", "amount": 1}
         "acc_heart_of_mine", "acc_flame_core", "acc_zero_mark", "acc_void_eye":
@@ -6258,6 +6346,17 @@ func _on_pickup_collected(pickup_type: String, amount: int, pickup_id: String) -
             var health_component: Node = _player.get_node_or_null("HealthComponent")
             if health_component != null and health_component.has_method("heal"):
                 health_component.heal(float(amount))
+        "food":
+            var food_health_component: Node = _player.get_node_or_null("HealthComponent")
+            if food_health_component != null and food_health_component.has_method("heal"):
+                food_health_component.heal(float(amount))
+        "magnet":
+            _activate_pickup_vacuum()
+        "gold_bag":
+            _gold += amount
+            EventBus.gold_changed.emit(_gold)
+        "chest":
+            _open_runtime_treasure_chest(amount, pickup_id)
         "accessory":
             pass
         _:
@@ -6267,6 +6366,165 @@ func _on_pickup_collected(pickup_type: String, amount: int, pickup_id: String) -
         _grant_random_accessory()
     elif pickup_id.begins_with("acc_"):
         _grant_specific_accessory(pickup_id, "pickup")
+
+
+func _activate_pickup_vacuum() -> void:
+    if _player == null:
+        return
+    for node: Node in get_tree().get_nodes_in_group("pickup"):
+        if node == null or not is_instance_valid(node):
+            continue
+        if node.has_method("activate_vacuum"):
+            node.activate_vacuum(_player, 4.5)
+
+
+func _open_runtime_treasure_chest(amount: int, pickup_id: String) -> Array[Dictionary]:
+    var scene: PackedScene = load("res://scenes/game/treasure_chest.tscn")
+    if scene == null:
+        return []
+
+    var eligible_evolutions: Array[Dictionary] = []
+    if _level_up_system != null and _level_up_system.has_method("get_available_treasure_evolutions"):
+        var evo_var: Variant = _level_up_system.get_available_treasure_evolutions("treasure_chest")
+        if evo_var is Array:
+            for row in evo_var:
+                if row is Dictionary:
+                    eligible_evolutions.append((row as Dictionary).duplicate(true))
+
+    var rewards: Array[Dictionary] = _build_treasure_reward_rows(amount, pickup_id)
+    var chest: Node = scene.instantiate()
+    add_child(chest)
+    if chest.has_method("configure"):
+        chest.configure(rewards, eligible_evolutions, _get_treasure_reward_count(pickup_id))
+
+    var opened_rewards: Array[Dictionary] = []
+    if chest.has_method("open"):
+        var opened_var: Variant = chest.open()
+        if opened_var is Array:
+            for row in opened_var:
+                if row is Dictionary:
+                    opened_rewards.append((row as Dictionary).duplicate(true))
+    chest.queue_free()
+
+    _apply_treasure_reward_rows(opened_rewards)
+    _show_treasure_reward_popup(opened_rewards)
+    return opened_rewards
+
+
+func _build_treasure_reward_rows(amount: int, pickup_id: String) -> Array[Dictionary]:
+    var base_gold: int = maxi(1, amount)
+    var rewards: Array[Dictionary] = [
+        {"type": "gold", "amount": base_gold, "title": "+%d Gold" % base_gold},
+        {"type": "ore", "amount": maxi(1, int(round(float(base_gold) / 28.0))), "title": "Ore Cache"},
+        {"type": "food", "amount": 24 if pickup_id == "chest_rare" else 14, "title": "Food"}
+    ]
+    return rewards
+
+
+func _get_treasure_reward_count(pickup_id: String) -> int:
+    if pickup_id == "chest_rare":
+        return 3
+    return 1
+
+
+func _apply_treasure_reward_rows(rewards: Array[Dictionary]) -> void:
+    for reward in rewards:
+        var reward_type: String = str(reward.get("type", ""))
+        match reward_type:
+            "evolution":
+                var recipe_var: Variant = reward.get("recipe", {})
+                if recipe_var is Dictionary and _level_up_system != null and _level_up_system.has_method("apply_evolution_recipe"):
+                    var recipe: Dictionary = recipe_var
+                    if _level_up_system.apply_evolution_recipe(recipe):
+                        if _weapon_loadout != null and _weapon_loadout.has_method("mark_weapon_evolved"):
+                            _weapon_loadout.mark_weapon_evolved(str(recipe.get("weapon_id", "")), str(recipe.get("result_weapon_id", "")))
+            "gold":
+                _gold += int(reward.get("amount", 0))
+                EventBus.gold_changed.emit(_gold)
+            "ore":
+                _ore += int(reward.get("amount", 0))
+                EventBus.ore_changed.emit(_ore)
+            "food":
+                var health_component: Node = _player.get_node_or_null("HealthComponent")
+                if health_component != null and health_component.has_method("heal"):
+                    health_component.heal(float(reward.get("amount", 0)))
+
+
+func _show_treasure_reward_popup(rewards: Array[Dictionary]) -> void:
+    if rewards.is_empty():
+        return
+
+    var layer: CanvasLayer = CanvasLayer.new()
+    layer.name = "TreasureRewardPopup"
+    layer.layer = 80
+    add_child(layer)
+
+    var center: CenterContainer = CenterContainer.new()
+    center.set_anchors_preset(Control.PRESET_FULL_RECT)
+    layer.add_child(center)
+
+    var panel: PanelContainer = PanelContainer.new()
+    panel.custom_minimum_size = Vector2(360, 140)
+    center.add_child(panel)
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.add_theme_constant_override("margin_left", 18)
+    margin.add_theme_constant_override("margin_top", 14)
+    margin.add_theme_constant_override("margin_right", 18)
+    margin.add_theme_constant_override("margin_bottom", 14)
+    panel.add_child(margin)
+
+    var label: Label = Label.new()
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    label.text = _format_treasure_reward_text(rewards)
+    margin.add_child(label)
+
+    var tween: Tween = center.create_tween()
+    tween.tween_interval(1.45)
+    tween.tween_property(center, "modulate:a", 0.0, 0.22)
+    tween.tween_callback(layer.queue_free)
+
+
+func _format_treasure_reward_text(rewards: Array[Dictionary]) -> String:
+    var lines: Array[String] = ["Treasure Chest"]
+    for reward in rewards:
+        if str(reward.get("type", "")) == "evolution":
+            lines.append("Evolution: %s" % str(reward.get("id", "weapon")))
+        else:
+            lines.append("%s x%d" % [str(reward.get("title", reward.get("type", "Reward"))), int(reward.get("amount", 1))])
+    return "\n".join(lines)
+
+
+func _toggle_run_build_panel() -> void:
+    if _run_build_panel == null:
+        return
+    if _run_build_panel.visible:
+        if _run_build_panel.has_method("close_panel"):
+            _run_build_panel.close_panel()
+        return
+    if _weapon_loadout == null or not _weapon_loadout.has_method("get_snapshot"):
+        return
+
+    var run_stats: Dictionary = {
+        "trait": str(GameManager.selected_character_id),
+        "kills": _run_kills,
+        "estimated_dps": _estimate_current_dps(),
+        "damage_taken": 0.0,
+    }
+    if _run_build_panel.has_method("open_panel"):
+        _run_build_panel.open_panel(_weapon_loadout.get_snapshot(), run_stats)
+
+
+func _estimate_current_dps() -> float:
+    var weapon: Node = _player.get_node_or_null("AutoWeapon")
+    if weapon == null:
+        return 0.0
+    var damage: float = float(weapon.get("base_damage"))
+    var interval: float = maxf(0.08, float(weapon.get("attack_interval")))
+    var count: int = maxi(1, int(weapon.get("projectile_count")))
+    return damage * float(count) / interval
 
 
 func _grant_random_accessory() -> void:

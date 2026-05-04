@@ -66,11 +66,17 @@ var _codex_stats_source_filter_index: int = 0
 var _codex_stats_chapter_filter_index: int = 0
 var _menu_layout_ready: bool = false
 var _home_scroll_root: ScrollContainer = null
+var _run_setup_overlay: Control = null
+var _run_setup_button: Button = null
+var _run_setup_start_button: Button = null
+var _difficulty_hint_value: Label = null
+var _difficulty_buttons: Dictionary = {}
 var _meta_shop_overlay: Control = null
 var _archive_overlay: Control = null
-var _archive_section: String = "achievements"
+var _archive_section: String = "overview"
 var _meta_shop_button: Button = null
 var _archive_button: Button = null
+var _archive_overview_button: Button = null
 var _archive_achievement_button: Button = null
 var _archive_fragment_button: Button = null
 var _archive_ending_button: Button = null
@@ -78,6 +84,12 @@ var _archive_last_run_button: Button = null
 var _codex_quick_close_button: Button = null
 
 const CODEX_CATEGORIES: Array[String] = ["characters", "weapons", "passives", "enemies", "accessories", "archives"]
+const HOME_CONTENT_MAX_WIDTH: float = 760.0
+const HOME_CONTENT_MIN_WIDTH: float = 360.0
+const OVERLAY_MARGIN_X: float = 48.0
+const META_SHOP_MAX_WIDTH: float = 560.0
+const ARCHIVE_MAX_WIDTH: float = 780.0
+const CODEX_MAX_WIDTH: float = 720.0
 const CODEX_CATEGORY_NAMES: Dictionary = {
     "characters": "Characters",
     "weapons": "Weapons",
@@ -297,6 +309,11 @@ func _ready() -> void:
     _refresh_meta_text()
 
 
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_RESIZED:
+        _refresh_responsive_layout()
+
+
 func _setup_formal_menu_layout() -> void:
     if _menu_layout_ready or _main_vbox == null:
         return
@@ -306,16 +323,17 @@ func _setup_formal_menu_layout() -> void:
     _title_label.add_theme_font_size_override("font_size", 54)
     _subtitle_label.text = "Choose a character, start a run, or review your postgame archive."
     _subtitle_label.add_theme_font_size_override("font_size", 18)
-    _subtitle_label.custom_minimum_size = Vector2(760, 0)
+    _subtitle_label.custom_minimum_size = Vector2(_get_home_content_width(), 0)
     _subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _ensure_home_summary_panel()
     _ensure_character_panel()
-    _ensure_home_overview_row()
     _ensure_primary_action_grid()
+    _ensure_run_setup_overlay()
     _ensure_meta_shop_overlay()
     _ensure_archive_overlay()
     _ensure_codex_overlay_layout()
     _refresh_archive_section_visibility()
+    _refresh_responsive_layout()
     _menu_layout_ready = true
 
 
@@ -333,10 +351,12 @@ func _ensure_home_scroll_layout() -> void:
 
     var margin: MarginContainer = MarginContainer.new()
     margin.name = "HomeScrollMargin"
+    margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
     margin.add_theme_constant_override("margin_left", 24)
-    margin.add_theme_constant_override("margin_top", 24)
+    margin.add_theme_constant_override("margin_top", 16)
     margin.add_theme_constant_override("margin_right", 24)
-    margin.add_theme_constant_override("margin_bottom", 24)
+    margin.add_theme_constant_override("margin_bottom", 16)
     _home_scroll_root.add_child(margin)
 
     var row: HBoxContainer = HBoxContainer.new()
@@ -346,9 +366,99 @@ func _ensure_home_scroll_layout() -> void:
     margin.add_child(row)
 
     _reparent_control(_main_vbox, row)
-    _main_vbox.custom_minimum_size = Vector2(760, 0)
+    _main_vbox.custom_minimum_size = Vector2(_get_home_content_width(), 0)
     _main_vbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     _center_container.visible = false
+
+
+func _get_responsive_width(max_width: float, min_width: float = HOME_CONTENT_MIN_WIDTH) -> float:
+    var available_width: float = maxf(280.0, get_viewport_rect().size.x - OVERLAY_MARGIN_X)
+    return minf(max_width, maxf(min_width, available_width))
+
+
+func _get_home_content_width() -> float:
+    return _get_responsive_width(HOME_CONTENT_MAX_WIDTH)
+
+
+func _get_run_setup_scroll_height() -> float:
+    return minf(620.0, maxf(320.0, get_viewport_rect().size.y - 260.0))
+
+
+func _refresh_responsive_layout() -> void:
+    if _main_vbox != null:
+        var home_width: float = _get_home_content_width()
+        _main_vbox.custom_minimum_size = Vector2(home_width, 0)
+        _subtitle_label.custom_minimum_size = Vector2(home_width, 0)
+        var action_wrap: Control = _main_vbox.get_node_or_null("PrimaryActionWrap") as Control
+        if action_wrap != null:
+            action_wrap.custom_minimum_size = Vector2(home_width, 0)
+
+    _refresh_meta_shop_responsive_widths()
+    _refresh_run_setup_responsive_widths()
+    _refresh_archive_responsive_widths()
+    _refresh_codex_responsive_widths()
+
+
+func _refresh_run_setup_responsive_widths() -> void:
+    if _run_setup_overlay == null:
+        return
+    var panel: Control = _run_setup_overlay.get_node_or_null("CenterContainer/PanelContainer") as Control
+    var scroll: Control = _run_setup_overlay.get_node_or_null("CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ContentScroll") as Control
+    if panel != null:
+        panel.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH), 0)
+    if scroll != null:
+        scroll.custom_minimum_size = Vector2(0, _get_run_setup_scroll_height())
+
+
+func _refresh_meta_shop_responsive_widths() -> void:
+    if _meta_shop_overlay == null:
+        return
+    var panel_width: float = _get_responsive_width(META_SHOP_MAX_WIDTH)
+    var panel: Control = _meta_shop_overlay.get_node_or_null("CenterContainer/PanelContainer") as Control
+    if panel != null:
+        panel.custom_minimum_size = Vector2(panel_width, 0)
+    if _shop_message_value != null:
+        _shop_message_value.custom_minimum_size = Vector2(maxf(280.0, panel_width - 40.0), 60)
+
+
+func _refresh_archive_responsive_widths() -> void:
+    if _archive_overlay == null:
+        return
+    var panel_width: float = _get_responsive_width(ARCHIVE_MAX_WIDTH)
+    var panel: Control = _archive_overlay.get_node_or_null("CenterContainer/PanelContainer") as Control
+    var scroll: Control = _archive_overlay.get_node_or_null("CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer") as Control
+    var content_width: float = maxf(280.0, panel_width - 60.0)
+    if panel != null:
+        panel.custom_minimum_size = Vector2(panel_width, 0)
+    if scroll != null:
+        scroll.custom_minimum_size = Vector2(maxf(300.0, panel_width - 20.0), 430)
+    if _achievement_list_value != null:
+        _achievement_list_value.custom_minimum_size = Vector2(content_width, 0)
+    if _fragment_review_value != null:
+        _fragment_review_value.custom_minimum_size = Vector2(content_width, 0)
+    if _ending_review_value != null:
+        _ending_review_value.custom_minimum_size = Vector2(content_width, 0)
+    if _last_run_value != null:
+        _last_run_value.custom_minimum_size = Vector2(content_width, 0)
+
+
+func _refresh_codex_responsive_widths() -> void:
+    if _codex_overlay == null:
+        return
+    var panel_width: float = _get_responsive_width(CODEX_MAX_WIDTH)
+    var content_width: float = maxf(280.0, panel_width - 100.0)
+    var codex_panel: Control = _codex_overlay.get_node_or_null("CenterContainer/PanelContainer") as Control
+    if codex_panel != null:
+        codex_panel.custom_minimum_size = Vector2(panel_width, 0)
+    if _codex_title != null:
+        _codex_title.custom_minimum_size = Vector2(content_width, 0)
+    if _codex_content != null:
+        _codex_content.custom_minimum_size = Vector2(content_width, 136)
+    if _codex_detail != null:
+        _codex_detail.custom_minimum_size = Vector2(content_width, 110)
+    if _codex_stats_value != null:
+        _codex_stats_value.custom_minimum_size = Vector2(content_width, 118)
+    _snap_codex_overlay_into_view()
 
 
 func _ensure_home_summary_panel() -> void:
@@ -481,30 +591,6 @@ func _ensure_character_panel() -> void:
     _reparent_control(_character_switch_row, box)
 
 
-func _ensure_home_overview_row() -> void:
-    if _main_vbox.get_node_or_null("HomeOverviewRow") != null:
-        return
-
-    var summary_panel: Control = _main_vbox.get_node_or_null("HomeSummaryPanel")
-    var character_panel: Control = _main_vbox.get_node_or_null("CharacterPanel")
-    if summary_panel == null or character_panel == null:
-        return
-
-    var row: HBoxContainer = HBoxContainer.new()
-    row.name = "HomeOverviewRow"
-    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    row.add_theme_constant_override("separation", 16)
-    _main_vbox.add_child(row)
-    var action_wrap: Node = _main_vbox.get_node_or_null("PrimaryActionWrap")
-    if action_wrap != null:
-        _main_vbox.move_child(row, action_wrap.get_index() + 1)
-    else:
-        _main_vbox.move_child(row, 2)
-
-    _reparent_control(summary_panel, row)
-    _reparent_control(character_panel, row)
-
-
 func _reparent_control(node: Control, new_parent: Node) -> void:
     if node == null or new_parent == null:
         return
@@ -519,7 +605,7 @@ func _reparent_control(node: Control, new_parent: Node) -> void:
 func _ensure_primary_action_grid() -> void:
     var action_wrap: PanelContainer = PanelContainer.new()
     action_wrap.name = "PrimaryActionWrap"
-    action_wrap.custom_minimum_size = Vector2(760, 0)
+    action_wrap.custom_minimum_size = Vector2(_get_home_content_width(), 0)
     action_wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
     var margin: MarginContainer = MarginContainer.new()
@@ -539,12 +625,13 @@ func _ensure_primary_action_grid() -> void:
     title.name = "Title"
     title.text = "Play"
     title.add_theme_font_size_override("font_size", 22)
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     box.add_child(title)
 
     var hint: Label = Label.new()
     hint.name = "Hint"
-    hint.text = "Start immediately, or open the secondary progression screens from here."
+    hint.text = "Start with the current setup, or configure your next run before entering."
+    hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
     box.add_child(hint)
@@ -552,6 +639,7 @@ func _ensure_primary_action_grid() -> void:
     var action_grid: GridContainer = GridContainer.new()
     action_grid.name = "PrimaryActionGrid"
     action_grid.columns = 2
+    action_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     action_grid.add_theme_constant_override("h_separation", 12)
     action_grid.add_theme_constant_override("v_separation", 10)
     box.add_child(action_grid)
@@ -559,14 +647,23 @@ func _ensure_primary_action_grid() -> void:
     _meta_shop_button = Button.new()
     _meta_shop_button.name = "MetaShopHomeButton"
     _meta_shop_button.text = "Meta Shop"
-    _meta_shop_button.custom_minimum_size = Vector2(220, 44)
+    _meta_shop_button.custom_minimum_size = Vector2(0, 44)
+    _meta_shop_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _meta_shop_button.pressed.connect(_on_meta_shop_button_pressed)
 
     _archive_button = Button.new()
     _archive_button.name = "ArchiveHomeButton"
     _archive_button.text = "Archive"
-    _archive_button.custom_minimum_size = Vector2(220, 44)
+    _archive_button.custom_minimum_size = Vector2(0, 44)
+    _archive_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _archive_button.pressed.connect(_on_archive_button_pressed)
+
+    _run_setup_button = Button.new()
+    _run_setup_button.name = "RunSetupButton"
+    _run_setup_button.text = "Run Setup"
+    _run_setup_button.custom_minimum_size = Vector2(0, 48)
+    _run_setup_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _run_setup_button.pressed.connect(_on_run_setup_button_pressed)
 
     _main_vbox.add_child(action_wrap)
     _main_vbox.move_child(action_wrap, 2)
@@ -574,19 +671,171 @@ func _ensure_primary_action_grid() -> void:
     _start_button.custom_minimum_size = Vector2(0, 56)
     _start_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _start_button.add_theme_font_size_override("font_size", 20)
-    _meta_shop_button.custom_minimum_size = Vector2(210, 44)
-    _archive_button.custom_minimum_size = Vector2(210, 44)
-    _settings_button.custom_minimum_size = Vector2(210, 44)
-    _codex_button.custom_minimum_size = Vector2(210, 44)
+    _meta_shop_button.custom_minimum_size = Vector2(0, 44)
+    _archive_button.custom_minimum_size = Vector2(0, 44)
+    _settings_button.custom_minimum_size = Vector2(0, 44)
+    _codex_button.custom_minimum_size = Vector2(0, 44)
+    _settings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _codex_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _quit_button.custom_minimum_size = Vector2(0, 42)
     _quit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
     _reparent_control(_start_button, box)
+    box.add_child(_run_setup_button)
     action_grid.add_child(_meta_shop_button)
     action_grid.add_child(_archive_button)
     _reparent_control(_codex_button, action_grid)
     _reparent_control(_settings_button, action_grid)
     _reparent_control(_quit_button, box)
+    box.move_child(_start_button, 2)
+    box.move_child(_run_setup_button, 3)
+    box.move_child(action_grid, 4)
+
+
+func _ensure_run_setup_overlay() -> void:
+    if _run_setup_overlay != null:
+        return
+
+    _run_setup_overlay = Control.new()
+    _run_setup_overlay.name = "RunSetupOverlay"
+    _run_setup_overlay.visible = false
+    _run_setup_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _run_setup_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+    add_child(_run_setup_overlay)
+
+    var dim: ColorRect = ColorRect.new()
+    dim.name = "Dim"
+    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+    dim.color = Color(0, 0, 0, 0.82)
+    dim.mouse_filter = Control.MOUSE_FILTER_STOP
+    _run_setup_overlay.add_child(dim)
+
+    var center: CenterContainer = CenterContainer.new()
+    center.name = "CenterContainer"
+    center.set_anchors_preset(Control.PRESET_FULL_RECT)
+    _run_setup_overlay.add_child(center)
+
+    var panel: PanelContainer = PanelContainer.new()
+    panel.name = "PanelContainer"
+    panel.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH), 0)
+    center.add_child(panel)
+
+    var margin: MarginContainer = MarginContainer.new()
+    margin.name = "MarginContainer"
+    margin.add_theme_constant_override("margin_left", 20)
+    margin.add_theme_constant_override("margin_top", 18)
+    margin.add_theme_constant_override("margin_right", 20)
+    margin.add_theme_constant_override("margin_bottom", 18)
+    panel.add_child(margin)
+
+    var box: VBoxContainer = VBoxContainer.new()
+    box.name = "VBoxContainer"
+    box.add_theme_constant_override("separation", 12)
+    margin.add_child(box)
+
+    var title: Label = Label.new()
+    title.name = "Title"
+    title.text = "Run Setup"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 28)
+    box.add_child(title)
+
+    var scroll: ScrollContainer = ScrollContainer.new()
+    scroll.name = "ContentScroll"
+    scroll.custom_minimum_size = Vector2(0, _get_run_setup_scroll_height())
+    scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    box.add_child(scroll)
+
+    var content_box: VBoxContainer = VBoxContainer.new()
+    content_box.name = "ContentVBox"
+    content_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content_box.add_theme_constant_override("separation", 12)
+    scroll.add_child(content_box)
+
+    var character_panel: Control = _main_vbox.get_node_or_null("CharacterPanel")
+    if character_panel != null:
+        _reparent_control(character_panel, content_box)
+        _apply_run_setup_character_panel_style(character_panel)
+
+    var difficulty_panel: PanelContainer = PanelContainer.new()
+    difficulty_panel.name = "DifficultyPanel"
+    difficulty_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content_box.add_child(difficulty_panel)
+
+    var difficulty_margin: MarginContainer = MarginContainer.new()
+    difficulty_margin.add_theme_constant_override("margin_left", 16)
+    difficulty_margin.add_theme_constant_override("margin_top", 12)
+    difficulty_margin.add_theme_constant_override("margin_right", 16)
+    difficulty_margin.add_theme_constant_override("margin_bottom", 12)
+    difficulty_panel.add_child(difficulty_margin)
+
+    var difficulty_box: VBoxContainer = VBoxContainer.new()
+    difficulty_box.add_theme_constant_override("separation", 8)
+    difficulty_margin.add_child(difficulty_box)
+
+    var difficulty_title: Label = Label.new()
+    difficulty_title.text = "Difficulty"
+    difficulty_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    difficulty_title.add_theme_font_size_override("font_size", 22)
+    difficulty_box.add_child(difficulty_title)
+
+    var difficulty_row: HBoxContainer = HBoxContainer.new()
+    difficulty_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    difficulty_row.add_theme_constant_override("separation", 8)
+    difficulty_box.add_child(difficulty_row)
+
+    _difficulty_buttons.clear()
+    for tier: int in range(3):
+        var button: Button = Button.new()
+        button.custom_minimum_size = Vector2(150, 42)
+        button.toggle_mode = true
+        button.text = _get_difficulty_label(tier)
+        button.pressed.connect(_on_difficulty_button_pressed.bind(tier))
+        difficulty_row.add_child(button)
+        _difficulty_buttons[tier] = button
+
+    _difficulty_hint_value = Label.new()
+    _difficulty_hint_value.name = "DifficultyHint"
+    _difficulty_hint_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _difficulty_hint_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _difficulty_hint_value.modulate = Color(0.82, 0.86, 0.94, 0.88)
+    difficulty_box.add_child(_difficulty_hint_value)
+
+    var actions: HBoxContainer = HBoxContainer.new()
+    actions.alignment = BoxContainer.ALIGNMENT_CENTER
+    actions.add_theme_constant_override("separation", 10)
+    box.add_child(actions)
+
+    _run_setup_start_button = Button.new()
+    _run_setup_start_button.name = "StartRunButton"
+    _run_setup_start_button.text = "Start Run"
+    _run_setup_start_button.custom_minimum_size = Vector2(220, 44)
+    _run_setup_start_button.pressed.connect(_on_start_pressed)
+    actions.add_child(_run_setup_start_button)
+
+    var close_button: Button = Button.new()
+    close_button.name = "CloseButton"
+    close_button.text = "Close"
+    close_button.custom_minimum_size = Vector2(180, 44)
+    close_button.pressed.connect(_close_run_setup_overlay)
+    actions.add_child(close_button)
+
+    _refresh_run_setup_overlay()
+
+
+func _apply_run_setup_character_panel_style(character_panel: Control) -> void:
+    var title: Label = character_panel.get_node_or_null("MarginContainer/VBoxContainer/Title") as Label
+    var hint: Label = character_panel.get_node_or_null("MarginContainer/VBoxContainer/Hint") as Label
+    if title != null:
+        title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        title.add_theme_font_size_override("font_size", 20)
+    if hint != null:
+        hint.visible = false
+    _character_name_value.add_theme_font_size_override("font_size", 22)
+    _character_desc_value.custom_minimum_size = Vector2(0, 0)
+    _character_trait_value.custom_minimum_size = Vector2(0, 0)
+    _character_unlock_value.custom_minimum_size = Vector2(0, 0)
 
 
 func _ensure_meta_shop_overlay() -> void:
@@ -617,7 +866,7 @@ func _ensure_meta_shop_overlay() -> void:
 
     var panel: PanelContainer = PanelContainer.new()
     panel.name = "PanelContainer"
-    panel.custom_minimum_size = Vector2(560, 0)
+    panel.custom_minimum_size = Vector2(_get_responsive_width(META_SHOP_MAX_WIDTH), 0)
     center.add_child(panel)
 
     var margin: MarginContainer = MarginContainer.new()
@@ -648,7 +897,7 @@ func _ensure_meta_shop_overlay() -> void:
     hint.modulate = Color(0.82, 0.86, 0.94, 0.88)
     box.add_child(hint)
 
-    _shop_message_value.custom_minimum_size = Vector2(520, 60)
+    _shop_message_value.custom_minimum_size = Vector2(_get_responsive_width(META_SHOP_MAX_WIDTH) - 40.0, 60)
     _shop_message_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _shop_message_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _reparent_control(_shop_message_value, box)
@@ -665,6 +914,7 @@ func _ensure_meta_shop_overlay() -> void:
     close_button.custom_minimum_size = Vector2(220, 42)
     close_button.pressed.connect(_close_meta_shop_overlay)
     box.add_child(close_button)
+    _refresh_meta_shop_responsive_widths()
 
 
 func _ensure_archive_overlay() -> void:
@@ -692,7 +942,7 @@ func _ensure_archive_overlay() -> void:
 
     var panel: PanelContainer = PanelContainer.new()
     panel.name = "PanelContainer"
-    panel.custom_minimum_size = Vector2(780, 0)
+    panel.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH), 0)
     center.add_child(panel)
 
     var margin: MarginContainer = MarginContainer.new()
@@ -729,10 +979,12 @@ func _ensure_archive_overlay() -> void:
     nav_row.add_theme_constant_override("separation", 8)
     box.add_child(nav_row)
 
+    _archive_overview_button = _make_archive_section_button("Overview", "overview")
     _archive_achievement_button = _make_archive_section_button("Achievements", "achievements")
     _archive_fragment_button = _make_archive_section_button("Fragments", "fragments")
     _archive_ending_button = _make_archive_section_button("Endings", "endings")
     _archive_last_run_button = _make_archive_section_button("Last Run", "last_run")
+    nav_row.add_child(_archive_overview_button)
     nav_row.add_child(_archive_achievement_button)
     nav_row.add_child(_archive_fragment_button)
     nav_row.add_child(_archive_ending_button)
@@ -740,7 +992,7 @@ func _ensure_archive_overlay() -> void:
 
     var scroll: ScrollContainer = ScrollContainer.new()
     scroll.name = "ScrollContainer"
-    scroll.custom_minimum_size = Vector2(760, 430)
+    scroll.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH) - 20.0, 430)
     scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
     box.add_child(scroll)
 
@@ -750,15 +1002,18 @@ func _ensure_archive_overlay() -> void:
     content_box.add_theme_constant_override("separation", 10)
     scroll.add_child(content_box)
 
-    _achievement_list_value.custom_minimum_size = Vector2(720, 0)
+    _achievement_list_value.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH) - 60.0, 0)
     _achievement_list_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    _fragment_review_value.custom_minimum_size = Vector2(720, 0)
-    _ending_review_value.custom_minimum_size = Vector2(720, 0)
-    _last_run_value.custom_minimum_size = Vector2(720, 0)
+    _fragment_review_value.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH) - 60.0, 0)
+    _ending_review_value.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH) - 60.0, 0)
+    _last_run_value.custom_minimum_size = Vector2(_get_responsive_width(ARCHIVE_MAX_WIDTH) - 60.0, 0)
     _last_run_value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _review_fragment_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     _review_ending_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
+    var summary_panel: Control = _main_vbox.get_node_or_null("HomeSummaryPanel")
+    if summary_panel != null:
+        _reparent_control(summary_panel, content_box)
     _reparent_control(_achievement_list_value, content_box)
     _reparent_control(_review_fragment_button, content_box)
     _reparent_control(_fragment_review_value, content_box)
@@ -775,6 +1030,7 @@ func _ensure_archive_overlay() -> void:
     close_button.custom_minimum_size = Vector2(220, 42)
     close_button.pressed.connect(_close_archive_overlay)
     box.add_child(close_button)
+    _refresh_archive_responsive_widths()
 
 
 func _ensure_codex_overlay_layout() -> void:
@@ -788,7 +1044,7 @@ func _ensure_codex_overlay_layout() -> void:
     var codex_margin: MarginContainer = _codex_overlay.get_node_or_null("CenterContainer/PanelContainer/MarginContainer")
     var codex_box: VBoxContainer = _codex_overlay.get_node_or_null("CenterContainer/PanelContainer/MarginContainer/VBoxContainer")
     if codex_panel != null:
-        codex_panel.custom_minimum_size = Vector2(720, 0)
+        codex_panel.custom_minimum_size = Vector2(_get_responsive_width(CODEX_MAX_WIDTH), 0)
     if codex_margin != null:
         codex_margin.add_theme_constant_override("margin_left", 14)
         codex_margin.add_theme_constant_override("margin_top", 12)
@@ -797,13 +1053,13 @@ func _ensure_codex_overlay_layout() -> void:
     if codex_box != null:
         codex_box.add_theme_constant_override("separation", 6)
 
-    _codex_title.custom_minimum_size = Vector2(620, 0)
+    _codex_title.custom_minimum_size = Vector2(_get_responsive_width(CODEX_MAX_WIDTH) - 100.0, 0)
     _codex_title.add_theme_font_size_override("font_size", 24)
-    _codex_content.custom_minimum_size = Vector2(620, 136)
+    _codex_content.custom_minimum_size = Vector2(_get_responsive_width(CODEX_MAX_WIDTH) - 100.0, 136)
     _codex_content.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-    _codex_detail.custom_minimum_size = Vector2(620, 110)
+    _codex_detail.custom_minimum_size = Vector2(_get_responsive_width(CODEX_MAX_WIDTH) - 100.0, 110)
     _codex_detail.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-    _codex_stats_value.custom_minimum_size = Vector2(620, 118)
+    _codex_stats_value.custom_minimum_size = Vector2(_get_responsive_width(CODEX_MAX_WIDTH) - 100.0, 118)
     _codex_stats_value.vertical_alignment = VERTICAL_ALIGNMENT_TOP
     _codex_stats_source_button.custom_minimum_size = Vector2(200, 32)
     _codex_stats_chapter_button.custom_minimum_size = Vector2(200, 32)
@@ -828,6 +1084,7 @@ func _ensure_codex_overlay_layout() -> void:
         _codex_quick_close_button.offset_bottom = 62.0
         _codex_quick_close_button.pressed.connect(_close_codex_overlay)
         _codex_overlay.add_child(_codex_quick_close_button)
+    _refresh_codex_responsive_widths()
 
 
 func _snap_codex_overlay_into_view() -> void:
@@ -870,6 +1127,9 @@ func _refresh_archive_section_visibility() -> void:
         return
 
     var section: String = _archive_section
+    var summary_panel: Control = _archive_overlay.get_node_or_null("CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/ContentVBox/HomeSummaryPanel") as Control
+    if summary_panel != null:
+        summary_panel.visible = section == "overview"
     _achievement_list_value.visible = section == "achievements"
     _review_fragment_button.visible = section == "fragments"
     _fragment_review_value.visible = section == "fragments"
@@ -883,6 +1143,8 @@ func _refresh_archive_section_visibility() -> void:
 
 
 func _refresh_archive_section_buttons() -> void:
+    if _archive_overview_button != null:
+        _archive_overview_button.disabled = _archive_section == "overview"
     if _archive_achievement_button != null:
         _archive_achievement_button.disabled = _archive_section == "achievements"
     if _archive_fragment_button != null:
@@ -897,6 +1159,18 @@ func _open_meta_shop_overlay() -> void:
     _close_secondary_overlays(_meta_shop_overlay)
     if _meta_shop_overlay != null:
         _meta_shop_overlay.visible = true
+
+
+func _open_run_setup_overlay() -> void:
+    _close_secondary_overlays(_run_setup_overlay)
+    _refresh_run_setup_overlay()
+    if _run_setup_overlay != null:
+        _run_setup_overlay.visible = true
+
+
+func _close_run_setup_overlay() -> void:
+    if _run_setup_overlay != null:
+        _run_setup_overlay.visible = false
 
 
 func _close_meta_shop_overlay() -> void:
@@ -917,6 +1191,8 @@ func _close_archive_overlay() -> void:
 
 
 func _close_secondary_overlays(except_overlay: Control = null) -> void:
+    if _run_setup_overlay != null and _run_setup_overlay != except_overlay:
+        _run_setup_overlay.visible = false
     if _meta_shop_overlay != null and _meta_shop_overlay != except_overlay:
         _meta_shop_overlay.visible = false
     if _archive_overlay != null and _archive_overlay != except_overlay:
@@ -927,7 +1203,58 @@ func _close_secondary_overlays(except_overlay: Control = null) -> void:
         _settings_overlay.visible = false
 
 
+func _refresh_run_setup_overlay() -> void:
+    _refresh_difficulty_buttons()
+    _refresh_character_preview()
+
+
+func _refresh_difficulty_buttons() -> void:
+    var settings: Dictionary = SaveManager.get_runtime_settings()
+    var current_tier: int = clampi(int(settings.get("difficulty_tier", 0)), 0, 2)
+    var max_tier: int = SaveManager.get_max_unlocked_difficulty_tier()
+    for tier_var: Variant in _difficulty_buttons.keys():
+        var tier: int = int(tier_var)
+        var button: Button = _difficulty_buttons.get(tier, null)
+        if button == null:
+            continue
+        button.text = _get_difficulty_label(tier)
+        button.button_pressed = tier == current_tier
+        button.disabled = tier > max_tier
+
+    if _difficulty_hint_value != null:
+        _difficulty_hint_value.text = _get_difficulty_hint_text(current_tier, max_tier)
+
+
+func _get_difficulty_label(tier: int) -> String:
+    if SaveManager != null and SaveManager.has_method("get_difficulty_label"):
+        return str(SaveManager.get_difficulty_label(tier))
+    match tier:
+        1:
+            return "Hard"
+        2:
+            return "Nightmare"
+        _:
+            return "Normal"
+
+
+func _get_difficulty_hint_text(current_tier: int, max_tier: int) -> String:
+    var summary: String = ""
+    if SaveManager != null and SaveManager.has_method("get_difficulty_summary"):
+        summary = str(SaveManager.get_difficulty_summary(current_tier)).strip_edges()
+    var unlock_hint: String = ""
+    if SaveManager != null and SaveManager.has_method("get_next_difficulty_unlock_hint"):
+        unlock_hint = str(SaveManager.get_next_difficulty_unlock_hint()).strip_edges()
+    if current_tier >= max_tier and unlock_hint != "" and max_tier < 2:
+        return "%s\n%s" % [summary, unlock_hint] if summary != "" else unlock_hint
+    return summary
+
+
 func _unhandled_input(event: InputEvent) -> void:
+    if _run_setup_overlay != null and _run_setup_overlay.visible:
+        if event.is_action_pressed("pause") or event.is_action_pressed("interact"):
+            _close_run_setup_overlay()
+            return
+
     if _archive_overlay != null and _archive_overlay.visible:
         if event.is_action_pressed("pause") or event.is_action_pressed("interact"):
             _close_archive_overlay()
@@ -972,6 +1299,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_start_pressed() -> void:
+    if _run_setup_overlay != null and _run_setup_overlay.visible:
+        _close_run_setup_overlay()
     if _archive_overlay != null and _archive_overlay.visible:
         _close_archive_overlay()
         return
@@ -992,6 +1321,9 @@ func _on_start_pressed() -> void:
 
 
 func _on_quit_pressed() -> void:
+    if _run_setup_overlay != null and _run_setup_overlay.visible:
+        _close_run_setup_overlay()
+        return
     if _archive_overlay != null and _archive_overlay.visible:
         _close_archive_overlay()
         return
@@ -1049,6 +1381,17 @@ func _on_meta_shop_button_pressed() -> void:
 
 func _on_archive_button_pressed() -> void:
     _open_archive_overlay()
+
+
+func _on_run_setup_button_pressed() -> void:
+    _open_run_setup_overlay()
+
+
+func _on_difficulty_button_pressed(tier: int) -> void:
+    if SaveManager == null or not SaveManager.has_method("update_runtime_settings"):
+        return
+    SaveManager.update_runtime_settings({"difficulty_tier": tier})
+    _refresh_difficulty_buttons()
 
 
 func _on_settings_button_pressed() -> void:

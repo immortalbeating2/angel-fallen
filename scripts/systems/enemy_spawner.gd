@@ -18,6 +18,12 @@ var _last_boss_support_snapshot: Dictionary = {}
 var _runtime_spawn_rate_mult: float = 1.0
 var _runtime_enemy_hp_mult: float = 1.0
 var _runtime_enemy_damage_mult: float = 1.0
+var _director_spawn_rate_mult: float = 1.0
+var _director_enemy_hp_mult: float = 1.0
+var _director_enemy_damage_mult: float = 1.0
+var _director_max_alive_bonus: int = 0
+var _director_wave_profile: Dictionary = {}
+var _director_archetype_weights: Dictionary = {}
 var _elite_wave_interval: int = 8
 var _enemy_type_weights: Dictionary = {
     "normal": 46.0,
@@ -127,6 +133,36 @@ func set_runtime_modifiers(spawn_rate_mult: float, enemy_hp_mult: float, enemy_d
     _runtime_enemy_damage_mult = clampf(enemy_damage_mult, 0.55, 1.8)
 
 
+func apply_director_wave(profile: Dictionary) -> void:
+    _director_wave_profile = profile.duplicate(true)
+    _director_spawn_rate_mult = clampf(float(profile.get("spawn_rate_mult", 1.0)), 0.75, 1.9)
+    _director_enemy_hp_mult = clampf(float(profile.get("enemy_hp_mult", 1.0)), 0.75, 1.95)
+    _director_enemy_damage_mult = clampf(float(profile.get("enemy_damage_mult", 1.0)), 0.75, 1.85)
+    _director_max_alive_bonus = clampi(int(profile.get("max_alive_bonus", 0)), 0, 18)
+
+    var interval: int = int(profile.get("elite_wave_interval", _elite_wave_interval))
+    if interval > 0:
+        _elite_wave_interval = clampi(interval, 3, 8)
+
+    _director_archetype_weights.clear()
+    var weights_var: Variant = profile.get("archetype_weights", {})
+    if weights_var is Dictionary:
+        var weights: Dictionary = weights_var
+        for key: Variant in weights.keys():
+            var weight: float = maxf(0.0, float(weights.get(key, 0.0)))
+            if weight > 0.0:
+                _director_archetype_weights[str(key)] = weight
+
+
+func get_director_wave_snapshot() -> Dictionary:
+    var snapshot: Dictionary = _director_wave_profile.duplicate(true)
+    snapshot["director_spawn_rate_mult"] = _director_spawn_rate_mult
+    snapshot["director_enemy_hp_mult"] = _director_enemy_hp_mult
+    snapshot["director_enemy_damage_mult"] = _director_enemy_damage_mult
+    snapshot["director_max_alive_bonus"] = _director_max_alive_bonus
+    return snapshot
+
+
 func _spawn_enemy() -> void:
     if enemy_scene == null:
         return
@@ -134,6 +170,7 @@ func _spawn_enemy() -> void:
     if _combat_mode == "elite":
         alive_limit = mini(max_alive, maxi(6, int(round(float(max_alive) * 0.55))))
 
+    alive_limit += _director_max_alive_bonus
     if get_alive_count() >= alive_limit:
         return
 
@@ -161,8 +198,8 @@ func _spawn_enemy() -> void:
 
     var pressure: Dictionary = _get_room_pressure_values()
     var floor_mult: float = _get_floor_multiplier()
-    var hp_mult: float = floor_mult * float(pressure.get("hp_mult", 1.0)) * _runtime_enemy_hp_mult * float(profile.get("hp_mult", 1.0))
-    var damage_mult: float = floor_mult * float(pressure.get("damage_mult", 1.0)) * _runtime_enemy_damage_mult * float(profile.get("damage_mult", 1.0))
+    var hp_mult: float = floor_mult * float(pressure.get("hp_mult", 1.0)) * _runtime_enemy_hp_mult * _director_enemy_hp_mult * float(profile.get("hp_mult", 1.0))
+    var damage_mult: float = floor_mult * float(pressure.get("damage_mult", 1.0)) * _runtime_enemy_damage_mult * _director_enemy_damage_mult * float(profile.get("damage_mult", 1.0))
     var speed_mult: float = float(profile.get("speed_mult", 1.0))
     var attack_interval_mult: float = float(profile.get("attack_interval_mult", 1.0))
 
@@ -218,8 +255,8 @@ func _spawn_boss() -> bool:
     else:
         boss.global_position = global_position
 
-    var health_mult: float = (10.0 + float(floor_index) * 1.7) * _runtime_enemy_hp_mult
-    var damage_mult: float = (1.8 + float(floor_index) * 0.08) * _runtime_enemy_damage_mult
+    var health_mult: float = (10.0 + float(floor_index) * 1.7) * _runtime_enemy_hp_mult * _director_enemy_hp_mult
+    var damage_mult: float = (1.8 + float(floor_index) * 0.08) * _runtime_enemy_damage_mult * _director_enemy_damage_mult
     var speed_mult: float = 1.0
     var scale_mult: float = 1.0
     var boss_color: Color = Color(0.95, 0.45, 0.2, 1.0)
@@ -488,8 +525,8 @@ func _spawn_boss_support_enemy(chapter_id: String, archetype: String, is_elite: 
     enemy.global_position = center + Vector2.RIGHT.rotated(angle) * distance
 
     var support_curve: Dictionary = _build_boss_support_curve(chapter_id, phase_index, is_miniboss)
-    var support_hp_mult: float = float(support_curve.get("hp_mult", 1.0)) * _runtime_enemy_hp_mult
-    var support_damage_mult: float = float(support_curve.get("damage_mult", 1.0)) * _runtime_enemy_damage_mult
+    var support_hp_mult: float = float(support_curve.get("hp_mult", 1.0)) * _runtime_enemy_hp_mult * _director_enemy_hp_mult
+    var support_damage_mult: float = float(support_curve.get("damage_mult", 1.0)) * _runtime_enemy_damage_mult * _director_enemy_damage_mult
     var support_speed_mult: float = float(support_curve.get("speed_mult", 1.0))
     var support_attack_interval_mult: float = float(support_curve.get("attack_interval_mult", 1.0))
 
@@ -538,8 +575,12 @@ func _spawn_boss_support_enemy(chapter_id: String, archetype: String, is_elite: 
 
 
 func _pick_enemy_archetype() -> String:
+    var active_weights: Dictionary = _enemy_type_weights
+    if not _director_archetype_weights.is_empty():
+        active_weights = _director_archetype_weights
+
     var total: float = 0.0
-    for value: Variant in _enemy_type_weights.values():
+    for value: Variant in active_weights.values():
         total += maxf(0.0, float(value))
     if total <= 0.0:
         return "normal"
@@ -547,8 +588,8 @@ func _pick_enemy_archetype() -> String:
     var roll: float = randf() * total
     var cumulative: float = 0.0
     # 用累积权重做一次随机落点，保持配置热更新后仍能按权重稳定抽样。
-    for key: Variant in _enemy_type_weights.keys():
-        var weight: float = maxf(0.0, float(_enemy_type_weights.get(key, 0.0)))
+    for key: Variant in active_weights.keys():
+        var weight: float = maxf(0.0, float(active_weights.get(key, 0.0)))
         cumulative += weight
         if roll <= cumulative:
             return str(key)
@@ -689,7 +730,7 @@ func _get_spawn_interval() -> float:
     elif _room_time > 30.0:
         time_ratio = 1.25
 
-    var interval: float = 1.3 / (floor_ratio * time_ratio * _runtime_spawn_rate_mult)
+    var interval: float = 1.3 / (floor_ratio * time_ratio * _runtime_spawn_rate_mult * _director_spawn_rate_mult)
     if _combat_mode == "elite":
         interval *= 1.18
     return clampf(interval, 0.2, 1.3)

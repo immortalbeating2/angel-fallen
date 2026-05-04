@@ -1,18 +1,22 @@
-extends Control
+extends CanvasLayer
 
 signal intro_closed
 
-@onready var _title_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Title
-@onready var _subtitle_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Subtitle
-@onready var _hazards_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Hazards
-@onready var _blessing_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Blessing
+@onready var _root: Control = $Root
+@onready var _panel: PanelContainer = $Root/CenterContainer/PanelContainer
+@onready var _title_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Title
+@onready var _subtitle_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Subtitle
+@onready var _hazards_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Hazards
+@onready var _blessing_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Blessing
+@onready var _continue_button: Button = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ContinueButton
 
 var _active: bool = false
 
 
 func _ready() -> void:
     visible = false
-
+    _root.mouse_filter = Control.MOUSE_FILTER_STOP
+    _refresh_layout()
 
 func show_intro(chapter_index: int, hazards_text: String, blessing_text: String) -> void:
     var row: Dictionary = _get_intro_data(chapter_index)
@@ -22,7 +26,9 @@ func show_intro(chapter_index: int, hazards_text: String, blessing_text: String)
     _blessing_label.text = "Active Blessing: %s" % blessing_text
 
     _active = true
+    _refresh_layout()
     visible = true
+    _continue_button.grab_focus()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -30,6 +36,7 @@ func _unhandled_input(event: InputEvent) -> void:
         return
     if event.is_action_pressed("interact") or event.is_action_pressed("pause"):
         _close()
+        get_viewport().set_input_as_handled()
 
 
 func _on_continue_pressed() -> void:
@@ -42,6 +49,16 @@ func _close() -> void:
     _active = false
     visible = false
     intro_closed.emit()
+
+
+func _refresh_layout() -> void:
+    if _panel == null:
+        return
+    var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+    var panel_width: float = clampf(viewport_size.x * 0.54, 520.0, 760.0)
+    if viewport_size.x < 700.0:
+        panel_width = maxf(320.0, viewport_size.x - 40.0)
+    _panel.custom_minimum_size = Vector2(panel_width, 0)
 
 
 func _get_intro_data(chapter_id: int) -> Dictionary:

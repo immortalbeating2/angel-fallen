@@ -1,19 +1,23 @@
-extends Control
+extends CanvasLayer
 
 signal back_to_menu_requested
 
-@onready var _title_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Title
-@onready var _summary_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Summary
-@onready var _ending_label: Label = $CenterContainer/PanelContainer/VBoxContainer/EndingStory
-@onready var _choices_label: Label = $CenterContainer/PanelContainer/VBoxContainer/NarrativeChoices
-@onready var _route_style_label: Label = $CenterContainer/PanelContainer/VBoxContainer/RouteStyleSummary
-@onready var _effects_timeline_label: Label = $CenterContainer/PanelContainer/VBoxContainer/ChapterEffectsTimeline
-@onready var _timeline_filter_button: Button = $CenterContainer/PanelContainer/VBoxContainer/TimelineFilterButton
-@onready var _timeline_view_button: Button = $CenterContainer/PanelContainer/VBoxContainer/TimelineViewButton
-@onready var _timeline_anchor_button: Button = $CenterContainer/PanelContainer/VBoxContainer/TimelineAnchorButton
-@onready var _timeline_scope_button: Button = $CenterContainer/PanelContainer/VBoxContainer/TimelineScopeButton
-@onready var _unlock_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Unlocks
-@onready var _hint_label: Label = $CenterContainer/PanelContainer/VBoxContainer/Hint
+@onready var _root: Control = $Root
+@onready var _panel: PanelContainer = $Root/CenterContainer/PanelContainer
+@onready var _scroll_container: ScrollContainer = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer
+@onready var _title_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Title
+@onready var _summary_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Summary
+@onready var _ending_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/EndingStory
+@onready var _choices_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/NarrativeChoices
+@onready var _route_style_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/RouteStyleSummary
+@onready var _effects_timeline_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/ChapterEffectsTimeline
+@onready var _timeline_filter_button: Button = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TimelineButtons/TimelineFilterButton
+@onready var _timeline_view_button: Button = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TimelineButtons/TimelineViewButton
+@onready var _timeline_anchor_button: Button = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TimelineButtons/TimelineAnchorButton
+@onready var _timeline_scope_button: Button = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TimelineButtons/TimelineScopeButton
+@onready var _unlock_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/Unlocks
+@onready var _hint_label: Label = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Hint
+@onready var _back_button: Button = $Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/BackButton
 
 var _active: bool = false
 var _timeline_filter_index: int = 0
@@ -66,9 +70,14 @@ const ENDING_FACTION_THEME: Dictionary = {
 
 func _ready() -> void:
     visible = false
+    _root.mouse_filter = Control.MOUSE_FILTER_STOP
+    _refresh_layout()
 
 
 func show_result(run_result: Dictionary) -> void:
+    _refresh_layout()
+    if _scroll_container != null:
+        _scroll_container.scroll_vertical = 0
     var outcome: String = str(run_result.get("outcome", "death")).to_upper()
     _title_label.text = "Run %s" % outcome
 
@@ -339,6 +348,24 @@ func show_result(run_result: Dictionary) -> void:
 
     visible = true
     _active = true
+    if _back_button != null:
+        _back_button.grab_focus()
+
+
+func _refresh_layout() -> void:
+    if _panel == null or _scroll_container == null:
+        return
+
+    var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+    var panel_width: float = clampf(viewport_size.x * 0.62, 720.0, 920.0)
+    var panel_height: float = clampf(viewport_size.y * 0.72, 520.0, 720.0)
+    if viewport_size.x < 780.0:
+        panel_width = maxf(320.0, viewport_size.x - 40.0)
+    if viewport_size.y < 620.0:
+        panel_height = maxf(420.0, viewport_size.y - 40.0)
+
+    _panel.custom_minimum_size = Vector2(panel_width, panel_height)
+    _scroll_container.custom_minimum_size = Vector2(0, maxf(240.0, panel_height - 240.0))
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -1,5 +1,13 @@
 extends CharacterBody2D
 
+const ENEMY_PROJECTILE_SCENE: PackedScene = preload("res://scenes/game/enemy_projectile.tscn")
+const KNOCKBACK_DECELERATION: float = 520.0
+const NORMAL_KNOCKBACK_SCALE: float = 1.18
+const ELITE_KNOCKBACK_SCALE: float = 0.92
+const BOSS_KNOCKBACK_SCALE: float = 0.34
+const MIN_VISIBLE_KNOCKBACK: float = 125.0
+const HIT_STUN_DURATION: float = 0.075
+
 @export var enemy_id: String = "enemy_shadowling"
 @export var move_speed: float = 72.0
 @export var touch_damage: float = 8.0
@@ -15,6 +23,7 @@ extends CharacterBody2D
 var _player: CharacterBody2D
 var _touch_cooldown: float = 0.0
 var _knockback_velocity: Vector2 = Vector2.ZERO
+var _hit_stun_timer: float = 0.0
 var _is_boss: bool = false
 var _phase_thresholds: Array[float] = [1.0, 0.6, 0.3]
 var _phase_index: int = 0
@@ -66,6 +75,8 @@ func _physics_process(delta: float) -> void:
         _touch_cooldown = maxf(0.0, _touch_cooldown - delta)
     if _ranged_cooldown > 0.0:
         _ranged_cooldown = maxf(0.0, _ranged_cooldown - delta)
+    if _hit_stun_timer > 0.0:
+        _hit_stun_timer = maxf(0.0, _hit_stun_timer - delta)
 
     if _player == null or not is_instance_valid(_player):
         _player = get_tree().get_first_node_in_group("player") as CharacterBody2D
@@ -85,8 +96,9 @@ func _physics_process(delta: float) -> void:
         direction = _get_ranged_direction(direction, distance_to_player)
         _process_ranged_attack(distance_to_player)
 
-    velocity = direction * (move_speed * _phase_speed_mult) + _knockback_velocity + _dash_velocity
-    _knockback_velocity = _knockback_velocity.move_toward(Vector2.ZERO, 780.0 * delta)
+    var chase_weight: float = 0.22 if _hit_stun_timer > 0.0 else 1.0
+    velocity = direction * (move_speed * _phase_speed_mult * chase_weight) + _knockback_velocity + _dash_velocity
+    _knockback_velocity = _knockback_velocity.move_toward(Vector2.ZERO, KNOCKBACK_DECELERATION * delta)
     _dash_velocity = _dash_velocity.move_toward(Vector2.ZERO, 1200.0 * delta)
     _dash_time = maxf(0.0, _dash_time - delta)
     move_and_slide()
@@ -117,17 +129,21 @@ func apply_damage(
     if _health_component != null and _health_component.has_method("take_damage"):
         _health_component.take_damage(amount)
     if knockback != Vector2.ZERO:
-        var knockback_scale: float = 1.0
-        if _is_boss:
-            knockback_scale = 0.45
-        _knockback_velocity += knockback * knockback_scale
-    _play_hit_feedback(is_crit)
+        var resolved_knockback: Vector2 = knockback
+        if resolved_knockback.length() < MIN_VISIBLE_KNOCKBACK:
+            resolved_knockback = resolved_knockback.normalized() * MIN_VISIBLE_KNOCKBACK
+        _knockback_velocity += resolved_knockback * _get_knockback_scale()
+    _hit_stun_timer = maxf(_hit_stun_timer, HIT_STUN_DURATION)
+    _play_hit_feedback(amount, is_crit)
 
 
 func _on_health_died(owner_node: Node) -> void:
     if owner_node != self:
         return
     EventBus.enemy_killed.emit(enemy_id, global_position)
+    if AudioManager != null and AudioManager.has_method("play_enemy_kill_cue"):
+        AudioManager.play_enemy_kill_cue(enemy_id)
+    _spawn_death_burst()
     if ObjectPool != null:
         ObjectPool.release("enemy_basic", self)
     else:
@@ -148,22 +164,87 @@ func is_pool_active() -> bool:
     return _pool_active
 
 
-func _play_hit_feedback(is_crit: bool) -> void:
+func _play_hit_feedback(amount: float, is_crit: bool) -> void:
     if _visual == null:
         return
 
-    var flash_color: Color = Color(1.0, 0.46, 0.46, 1.0)
-    var target_scale: Vector2 = _base_scale * 1.08
+    var flash_color: Color = Color(1.0, 0.94, 0.86, 1.0)
+    var target_scale: Vector2 = _base_scale * 1.14
     if is_crit:
-        flash_color = Color(1.0, 0.88, 0.36, 1.0)
-        target_scale = _base_scale * 1.22
+        flash_color = Color(1.0, 0.84, 0.28, 1.0)
+        target_scale = _base_scale * 1.28
 
     _visual.color = flash_color
     scale = target_scale
+    z_index = 4
 
     var tween: Tween = create_tween()
-    tween.tween_property(_visual, "color", _base_color, 0.12)
-    tween.parallel().tween_property(self, "scale", _base_scale, 0.12)
+    tween.tween_property(_visual, "color", _base_color, 0.18)
+    tween.parallel().tween_property(self, "scale", _base_scale, 0.16)
+    tween.tween_callback(func() -> void:
+        z_index = 0
+    )
+    _spawn_damage_number(amount, is_crit)
+
+
+func _spawn_damage_number(amount: float, is_crit: bool) -> void:
+    var parent_scene: Node = get_tree().current_scene
+    if parent_scene == null:
+        parent_scene = get_tree().root
+
+    var label: Label = Label.new()
+    label.text = "%d" % int(round(amount))
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    label.add_theme_font_size_override("font_size", 18 if is_crit else 14)
+    label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.28, 1.0) if is_crit else Color(0.92, 0.98, 1.0, 1.0))
+    label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+    label.add_theme_constant_override("shadow_offset_x", 1)
+    label.add_theme_constant_override("shadow_offset_y", 1)
+    label.size = Vector2(64, 24)
+    label.global_position = global_position + Vector2(-32.0, -38.0)
+    parent_scene.add_child(label)
+
+    var drift: Vector2 = Vector2(randf_range(-10.0, 10.0), -34.0 if is_crit else -26.0)
+    var tween: Tween = label.create_tween()
+    tween.tween_property(label, "global_position", label.global_position + drift, 0.34)
+    tween.parallel().tween_property(label, "modulate:a", 0.0, 0.34)
+    tween.tween_callback(label.queue_free)
+
+
+func _get_knockback_scale() -> float:
+    if _is_boss:
+        return BOSS_KNOCKBACK_SCALE
+    if _tier == "elite":
+        return ELITE_KNOCKBACK_SCALE
+    return NORMAL_KNOCKBACK_SCALE
+
+
+func _spawn_death_burst() -> void:
+    var parent_scene: Node = get_tree().current_scene
+    if parent_scene == null:
+        parent_scene = get_tree().root
+
+    var burst: Node2D = Node2D.new()
+    burst.global_position = global_position
+    burst.z_index = 5
+    parent_scene.add_child(burst)
+
+    var ray_count: int = 10 if _is_boss else 6
+    var ray_length: float = 34.0 if _is_boss else 22.0
+    var burst_color: Color = _base_color.lightened(0.28)
+    for i in range(ray_count):
+        var ray: Line2D = Line2D.new()
+        ray.width = 3.0 if _is_boss else 2.0
+        ray.default_color = Color(burst_color.r, burst_color.g, burst_color.b, 0.78)
+        var angle: float = TAU * float(i) / float(ray_count)
+        ray.points = PackedVector2Array([Vector2.ZERO, Vector2.RIGHT.rotated(angle) * ray_length])
+        burst.add_child(ray)
+
+    var tween: Tween = burst.create_tween()
+    tween.tween_property(burst, "scale", Vector2.ONE * 1.45, 0.2)
+    tween.parallel().tween_property(burst, "modulate:a", 0.0, 0.2)
+    tween.tween_callback(burst.queue_free)
 
 
 func set_visual_scale_base(new_scale: Vector2) -> void:
@@ -483,21 +564,46 @@ func _process_ranged_attack(distance_to_player: float) -> void:
     if _ranged_cooldown > 0.0:
         return
 
-    # 当前远程敌人走“即时命中 + 视觉脉冲”模型，先把战斗节奏跑通，再由投射物敌人单独扩展。
     _ranged_cooldown = _ranged_attack_interval
     var damage: float = touch_damage * _phase_damage_mult * _ranged_damage_mult
-    if _player.has_method("apply_damage"):
-        _player.apply_damage(damage)
-    if _player.has_method("apply_knockback"):
-        var push: Vector2 = (_player.global_position - global_position).normalized()
-        if push == Vector2.ZERO:
-            push = Vector2.RIGHT
-        _player.apply_knockback(push * 38.0)
+    _spawn_ranged_projectile(damage)
 
     if _visual != null:
         var pulse_tween: Tween = create_tween()
         pulse_tween.tween_property(_visual, "color", Color(1.0, 0.9, 0.4, 1.0), 0.06)
         pulse_tween.tween_property(_visual, "color", _base_color, 0.1)
+
+
+func _spawn_ranged_projectile(damage: float) -> void:
+    if ENEMY_PROJECTILE_SCENE == null:
+        return
+    if _player == null:
+        return
+
+    var projectile: Area2D = ENEMY_PROJECTILE_SCENE.instantiate() as Area2D
+    if projectile == null:
+        return
+
+    var direction: Vector2 = (_player.global_position - global_position).normalized()
+    if direction == Vector2.ZERO:
+        direction = Vector2.RIGHT
+
+    var parent_scene: Node = get_tree().current_scene
+    if parent_scene == null:
+        parent_scene = get_tree().root
+    parent_scene.add_child(projectile)
+    projectile.global_position = global_position + direction * 18.0
+
+    if projectile.has_method("setup"):
+        projectile.setup(direction, damage, 38.0, _get_ranged_projectile_style())
+
+
+func _get_ranged_projectile_style() -> String:
+    if enemy_id.find("void") >= 0:
+        return "void"
+    if enemy_id.find("frost") >= 0 or enemy_id.find("blizzard") >= 0:
+        return "frost"
+    return "hex"
 
 
 func _resolve_default_color() -> Color:
@@ -540,6 +646,7 @@ func _reset_for_spawn() -> void:
     attack_interval = _template_attack_interval
 
     _touch_cooldown = 0.0
+    _hit_stun_timer = 0.0
     _knockback_velocity = Vector2.ZERO
     _dash_velocity = Vector2.ZERO
     _dash_time = 0.0
@@ -578,6 +685,7 @@ func _reset_for_spawn() -> void:
 func _reset_for_pool() -> void:
     velocity = Vector2.ZERO
     _touch_cooldown = 0.0
+    _hit_stun_timer = 0.0
     _knockback_velocity = Vector2.ZERO
     _dash_velocity = Vector2.ZERO
     _dash_time = 0.0

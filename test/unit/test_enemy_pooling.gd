@@ -65,3 +65,25 @@ func test_enemy_died_releases_to_object_pool() -> void:
 
     assert_eq(enemy.get_parent(), ObjectPool, "Dead enemy should be released to ObjectPool")
     assert_false(enemy.is_pool_active(), "Enemy should be inactive after death release")
+
+
+func test_enemy_hit_feedback_applies_visible_knockback_and_damage_number() -> void:
+    var enemy: CharacterBody2D = await _spawn_enemy_node()
+    enemy.global_position = Vector2(240, 240)
+
+    enemy.apply_damage(12.0, null, 0, false, Vector2.RIGHT * 20.0)
+    await get_tree().process_frame
+
+    assert_gt(float(enemy.get("_hit_stun_timer")), 0.0, "Hit feedback should briefly slow enemy chase")
+    assert_gt((enemy.get("_knockback_velocity") as Vector2).length(), 20.0, "Small hit knockback should be raised to a visible impulse")
+
+    assert_true(_has_damage_label(get_tree().root, "12"), "Hit feedback should spawn a visible damage number")
+
+
+func _has_damage_label(node: Node, expected_text: String) -> bool:
+    if node is Label and str((node as Label).text) == expected_text:
+        return true
+    for child: Node in node.get_children():
+        if _has_damage_label(child, expected_text):
+            return true
+    return false

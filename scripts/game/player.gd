@@ -8,6 +8,8 @@ extends CharacterBody2D
 var _shake_strength: float = 1.0
 var _shake_trauma: float = 0.0
 
+const CAMERA_TRAUMA_KNOCKBACK_MIN_FORCE: float = 12.0
+
 
 func _ready() -> void:
     add_to_group("player")
@@ -39,7 +41,9 @@ func gain_xp(amount: int) -> void:
 func apply_knockback(force: Vector2) -> void:
     if _movement_component != null and _movement_component.has_method("add_external_velocity"):
         _movement_component.add_external_velocity(force)
-    _add_camera_trauma(clampf(force.length() / 220.0, 0.05, 0.18))
+    # 环境流动类推力会逐帧施加，低于阈值时只影响位移，不制造持续震屏。
+    if force.length() >= CAMERA_TRAUMA_KNOCKBACK_MIN_FORCE:
+        _add_camera_trauma(clampf(force.length() / 220.0, 0.05, 0.18))
 
 
 func _add_camera_trauma(amount: float) -> void:

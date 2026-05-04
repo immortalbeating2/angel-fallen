@@ -20,13 +20,13 @@ func _instantiate_world() -> Node:
 	return world
 
 
-func _instantiate_run_result_panel() -> Control:
+func _instantiate_run_result_panel() -> Node:
 	var scene: PackedScene = load(RUN_RESULT_PANEL_SCENE_PATH)
 	assert_not_null(scene, "run_result_panel scene should load")
 	if scene == null:
 		return null
 
-	var panel: Control = scene.instantiate() as Control
+	var panel: Node = scene.instantiate()
 	assert_not_null(panel, "run_result_panel scene should instantiate")
 	if panel == null:
 		return null
@@ -392,13 +392,13 @@ func test_game_world_fragment_pacing_and_run_result_panel_show_stage5_details() 
 		"route_style_timeline": []
 	})
 
-	var panel: Control = await _instantiate_run_result_panel()
+	var panel: Node = await _instantiate_run_result_panel()
 	if panel == null:
 		return
 	panel.call("show_result", run_result)
 
-	var ending_label: Label = panel.get_node_or_null("CenterContainer/PanelContainer/VBoxContainer/EndingStory")
-	var unlock_label: Label = panel.get_node_or_null("CenterContainer/PanelContainer/VBoxContainer/Unlocks")
+	var ending_label: Label = panel.get_node_or_null("Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/EndingStory")
+	var unlock_label: Label = panel.get_node_or_null("Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/Unlocks")
 	assert_not_null(ending_label, "EndingStory label should exist")
 	assert_not_null(unlock_label, "Unlocks label should exist")
 	if ending_label == null or unlock_label == null:
@@ -432,7 +432,7 @@ func test_game_world_fragment_pacing_and_run_result_panel_show_stage5_details() 
 
 
 func test_run_result_panel_renders_hidden_layer_story_archive_details() -> void:
-	var panel: Control = await _instantiate_run_result_panel()
+	var panel: Node = await _instantiate_run_result_panel()
 	if panel == null:
 		return
 
@@ -521,8 +521,8 @@ func test_run_result_panel_renders_hidden_layer_story_archive_details() -> void:
 		"new_hidden_layers": []
 	})
 
-	var unlock_label: Label = panel.get_node_or_null("CenterContainer/PanelContainer/VBoxContainer/Unlocks")
-	var summary_label: Label = panel.get_node_or_null("CenterContainer/PanelContainer/VBoxContainer/Summary")
+	var unlock_label: Label = panel.get_node_or_null("Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/Content/Unlocks")
+	var summary_label: Label = panel.get_node_or_null("Root/CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Summary")
 	assert_not_null(unlock_label, "Unlocks label should exist")
 	assert_not_null(summary_label, "Summary label should exist")
 	if unlock_label == null or summary_label == null:

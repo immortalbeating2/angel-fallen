@@ -34,9 +34,11 @@
 | [stage5-closure-2026-03-25.md](./stage5-closure-2026-03-25.md) | Stage 5 正式收口说明：明确已完成真值、Stage 5/6/7 边界与本轮自动化验收基线 |
 | [stage5-acceptance-record-2026-03-25.md](./stage5-acceptance-record-2026-03-25.md) | Stage 5 验收记录：回写三路线、三结局、首通/复通差异与主要 UI 出口的通过结论 |
 | [stage5-acceptance-summary-2026-03-25.md](./stage5-acceptance-summary-2026-03-25.md) | Stage 5 统一验收摘要：为后续 Stage 6 session 提供最短承接基线 |
-| [2026-5-2-plan.md](./2026-5-2-plan.md) | Stage 7 前的初步整改与人工复核补位计划，跟踪资源 catalog、LFS、文档口径与人工 ledger |
-| [current-remediation-baseline-2026-05-02.md](./current-remediation-baseline-2026-05-02.md) | 当前整改基线快照：记录轻量校验结果、资源 catalog 差异、已知阻塞与 Stage 7 进入条件 |
-| [manual-review-ledger-2026-05-02.md](./manual-review-ledger-2026-05-02.md) | 人工复核 ledger：为 Windows 启动、主菜单、长局、FS/CL 入口、音量设置与导出包启动建立首轮记录表 |
+| [2026-5-2-plan.md](./2026-5-2-plan.md) | Stage 7 剩余未开发内容执行计划与核验追踪，承接整改基线并推进资产、接入、联合回归、长局与发布验收 |
+| [survivor-core-development-plan-2026-05-03.md](./survivor-core-development-plan-2026-05-03.md) | Stage 7.5 类幸存者核心系统补完计划：时间制敌潮、多武器/被动栏位、武器等级、宝箱进化、磁铁拾取、构筑面板与长局探针 |
+| [current-remediation-baseline-2026-05-02.md](./current-remediation-baseline-2026-05-02.md) | 当前整改基线快照：记录轻量校验结果、资源 catalog 差异、已知阻塞与 Stage 7 执行前置状态 |
+| [manual-review-test-cases-2026-05-02.md](./manual-review-test-cases-2026-05-02.md) | 人工复核测试用例：覆盖核心循环、Stage 5 叙事、Stage 6 隐藏层/挑战层、Stage 7 成品化与发布 smoke |
+| [manual-review-ledger-2026-05-02.md](./manual-review-ledger-2026-05-02.md) | Godot MCP 辅助复核 ledger：为 Windows 启动、主菜单、长局、FS/CL 入口、音量设置与导出包启动建立首轮记录表 |
 | [mvp-release-freeze-2026-03-22.md](./mvp-release-freeze-2026-03-22.md) | D43 后的可发布 MVP 冻结范围、发布阻塞项与最短执行路径 |
 | [release-smoke-checklist-2026-03-22.md](./release-smoke-checklist-2026-03-22.md) | MVP 发布前的自动化门禁、三平台导出命令与人工 smoke checklist |
 | [export-template-setup-2026-03-22.md](./export-template-setup-2026-03-22.md) | Godot 4.6.1 导出模板安装要求、本机 CLI 约定与导出前置校验 |
@@ -157,3 +159,14 @@
 | 0.4.86 | 2026-05-02 | 基于初步整改计划新增执行追踪、当前整改基线与人工复核 ledger，记录资源 catalog、LFS 与 Godot 验证待办 |
 | 0.4.87 | 2026-05-02 | 执行下一步整改：通过同步脚本修复 resource catalog 漂移，并补跑 Python、Godot 启动、资源验收与全量 GUT 结果 |
 | 0.4.88 | 2026-05-02 | 执行 LFS 归一化下一步：将 7 个场景文件按 `.gitattributes` 重新登记为 LFS 对象，并保留插件/项目配置变更为独立待确认项 |
+| 0.4.89 | 2026-05-02 | 将 2026-05-02 计划升级为 Stage 7 剩余未开发内容执行计划，并把人工复核改为 Godot MCP 辅助核验口径 |
+| 0.4.90 | 2026-05-02 | 新增整体人工复核测试用例矩阵，并补记 Godot MCP 新局进入 GameWorld 的局部复核证据 |
+| 0.4.91 | 2026-05-02 | 继续执行 Godot MCP 人工复核：补 Archive/Codex、战斗房与截图证据，并记录 `0 HP` 未进入结算的阻塞项 |
+| 0.4.92 | 2026-05-02 | 修复玩家 `0 HP` 未进入死亡结算的问题，补回归测试与 MCP 死亡结算/Boss 生成/FS-CL Archive 回看证据 |
+| 0.4.93 | 2026-05-02 | 复跑全量 GUT 与资源验收，补齐 Godot 4.6.2 export templates，生成最新 Windows 包并通过 headless 启动检查 |
+| 0.4.94 | 2026-05-02 | 完成本轮全游戏工具化人工复核：补核心循环、三结局、FS1/FS2、CL1-CL4、音频设置、导出窗口启动 smoke 证据 |
+| 0.4.95 | 2026-05-02 | 修复玩家移动组件错误依赖场景 owner 导致键盘无法操控的问题，并补运行时移动回归测试 |
+| 0.4.96 | 2026-05-03 | 根据人工/MCP 反馈完成主菜单、设置、HUD、章节弹层、死亡结算与基础战斗反馈整改记录 |
+| 0.4.97 | 2026-05-03 | 新增类幸存者战斗表现层：环绕武器、持续光环、地面持续伤害区与拾取/击杀/命中音效入口，并补回归测试 |
+| 0.4.98 | 2026-05-03 | 新增 Stage 7.5 类幸存者核心系统补完计划，冻结敌潮导演、构筑栏位、武器等级、宝箱进化、磁铁拾取、构筑面板与长局探针接口 |
+| 0.4.99 | 2026-05-04 | 续补 Stage 7.5 运行时闭环：多武器槽独立自动发射、宝箱 pickup 实际开奖并接入主/副武器满级进化触发 |

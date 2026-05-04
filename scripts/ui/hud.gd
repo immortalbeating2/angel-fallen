@@ -1,5 +1,6 @@
 extends CanvasLayer
 
+@onready var _hud_items_container: BoxContainer = $MarginContainer/PanelContainer/VBoxContainer
 @onready var _health_value: Label = $MarginContainer/PanelContainer/VBoxContainer/HealthValue
 @onready var _stamina_value: Label = $MarginContainer/PanelContainer/VBoxContainer/StaminaValue
 @onready var _level_value: Label = $MarginContainer/PanelContainer/VBoxContainer/LevelValue
@@ -20,6 +21,11 @@ extends CanvasLayer
 @onready var _room_status_value: Label = $MarginContainer/PanelContainer/VBoxContainer/RoomStatusValue
 @onready var _toast_panel: PanelContainer = $ToastLayer/ToastPanel
 @onready var _toast_label: Label = $ToastLayer/ToastPanel/MarginContainer/ToastLabel
+@onready var _treasure_hint_panel: PanelContainer = $TreasureHintLayer/TreasureHintPanel
+@onready var _treasure_hint_label: Label = $TreasureHintLayer/TreasureHintPanel/MarginContainer/TreasureHintLabel
+@onready var _boss_health_panel: PanelContainer = $BossHealthLayer/BossHealthPanel
+@onready var _boss_name_label: Label = $BossHealthLayer/BossHealthPanel/MarginContainer/VBoxContainer/BossNameLabel
+@onready var _boss_health_bar: ProgressBar = $BossHealthLayer/BossHealthPanel/MarginContainer/VBoxContainer/BossHealthBar
 
 var _player: CharacterBody2D
 var _health_component: Node
@@ -30,9 +36,55 @@ var _toast_queue: Array[Dictionary] = []
 var _toast_timer: float = 0.0
 
 const TOAST_DURATION: float = 2.6
+const COMPACT_VALUE_NODES: Array[String] = [
+    "HealthValue",
+    "StaminaValue",
+    "LevelValue",
+    "XPValue",
+    "GoldValue",
+    "OreValue",
+    "RoomTypeValue",
+    "RoomKillValue"
+]
+const HIDDEN_DEBUG_NODES: Array[String] = [
+    "Title",
+    "HealthLabel",
+    "StaminaLabel",
+    "LevelLabel",
+    "XPLabel",
+    "GoldLabel",
+    "OreLabel",
+    "AccessoryLabel",
+    "AccessoryValue",
+    "RoomTypeLabel",
+    "AlignmentLabel",
+    "AlignmentValue",
+    "HazardLabel",
+    "HazardValue",
+    "FrostbiteLabel",
+    "FrostbiteValue",
+    "VoidCorruptionLabel",
+    "VoidCorruptionValue",
+    "ChapterEffectsLabel",
+    "ChapterEffectsValue",
+    "RouteStyleLabel",
+    "RouteStyleValue",
+    "MinimapLabel",
+    "MinimapValue",
+    "RoomTimeLabel",
+    "RoomTimeValue",
+    "RoomKillLabel",
+    "RoomStatusLabel",
+    "RoomStatusValue",
+    "Help",
+    "StateLabel",
+    "StateValue"
+]
 
 
 func _ready() -> void:
+    _apply_compact_layout()
+
     if EventBus != null:
         if EventBus.has_signal("achievement_unlocked"):
             EventBus.achievement_unlocked.connect(_on_achievement_unlocked)
@@ -51,6 +103,8 @@ func _ready() -> void:
 
     if _toast_panel != null:
         _toast_panel.visible = false
+    hide_treasure_chest_hint()
+    hide_boss_health()
 
 
 func _process(_delta: float) -> void:
@@ -65,27 +119,27 @@ func _process(_delta: float) -> void:
         _game_world = get_tree().get_first_node_in_group("game_world")
 
     if _health_component != null:
-        _health_value.text = "%.0f / %.0f" % [_health_component.current_hp, _health_component.max_hp]
+        _health_value.text = "HP %.0f/%.0f" % [_health_component.current_hp, _health_component.max_hp]
 
     if _stats_component != null:
-        _stamina_value.text = "%.0f / %.0f" % [_stats_component.current_stamina, _stats_component.stamina_max]
+        _stamina_value.text = "STA %.0f/%.0f" % [_stats_component.current_stamina, _stats_component.stamina_max]
 
     if _progression_component != null:
-        _level_value.text = str(_progression_component.current_level)
-        _xp_value.text = "%d / %d" % [_progression_component.current_xp, _progression_component.xp_to_next]
+        _level_value.text = "Lv %s" % str(_progression_component.current_level)
+        _xp_value.text = "XP %d/%d" % [_progression_component.current_xp, _progression_component.xp_to_next]
 
     if _game_world != null and _game_world.has_method("get_room_progress_text"):
-        _room_kill_value.text = _game_world.get_room_progress_text()
+        _room_kill_value.text = "Kills %s" % _game_world.get_room_progress_text()
     if _game_world != null and _game_world.has_method("get_room_status_text"):
-        _room_status_value.text = _game_world.get_room_status_text()
+        _room_status_value.text = str(_game_world.get_room_status_text())
     if _game_world != null and _game_world.has_method("get_gold_amount"):
-        _gold_value.text = str(_game_world.get_gold_amount())
+        _gold_value.text = "G %s" % str(_game_world.get_gold_amount())
     if _game_world != null and _game_world.has_method("get_ore_amount"):
-        _ore_value.text = str(_game_world.get_ore_amount())
+        _ore_value.text = "Ore %s" % str(_game_world.get_ore_amount())
     if _game_world != null and _game_world.has_method("get_accessories_text"):
         _accessory_value.text = _game_world.get_accessories_text()
     if _game_world != null and _game_world.has_method("get_room_type_text"):
-        _room_type_value.text = str(_game_world.get_room_type_text()).to_upper()
+        _room_type_value.text = "Room %s" % str(_game_world.get_room_type_text()).to_upper()
     if _game_world != null and _game_world.has_method("get_alignment_value"):
         _alignment_value.text = "%.0f" % _game_world.get_alignment_value()
     if _game_world != null and _game_world.has_method("get_active_hazards_text"):
@@ -103,6 +157,28 @@ func _process(_delta: float) -> void:
 
     _state_value.text = _get_state_name(GameManager.current_state)
     _process_toast(_delta)
+
+
+func _apply_compact_layout() -> void:
+    # HUD 只保留战斗中需要快速扫读的核心数据，调试明细交给后续专用面板承载。
+    if _hud_items_container == null:
+        return
+
+    for node_name: String in HIDDEN_DEBUG_NODES:
+        var node: CanvasItem = _hud_items_container.get_node_or_null(node_name) as CanvasItem
+        if node != null:
+            node.visible = false
+
+    for node_name: String in COMPACT_VALUE_NODES:
+        var label: Label = _hud_items_container.get_node_or_null(node_name) as Label
+        if label == null:
+            continue
+        label.visible = true
+        label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+        label.custom_minimum_size = Vector2(84, 24)
+        label.add_theme_font_size_override("font_size", 14)
+
 
 
 func _process_toast(delta: float) -> void:
@@ -127,6 +203,47 @@ func _enqueue_toast(text: String, color: Color) -> void:
         "text": text,
         "color": color
     })
+
+
+func show_treasure_chest_hint(text: String = "进化圣箱已出现") -> void:
+    if _treasure_hint_panel == null or _treasure_hint_label == null:
+        return
+
+    _treasure_hint_label.text = text
+    _treasure_hint_label.visible = true
+    _treasure_hint_panel.visible = true
+
+
+func hide_treasure_chest_hint() -> void:
+    if _treasure_hint_panel != null:
+        _treasure_hint_panel.visible = false
+    if _treasure_hint_label != null:
+        _treasure_hint_label.visible = false
+
+
+func show_boss_health(boss_name: String, max_health: float) -> void:
+    if _boss_health_panel == null or _boss_name_label == null or _boss_health_bar == null:
+        return
+
+    var normalized_max: float = maxf(1.0, max_health)
+    _boss_name_label.text = boss_name
+    _boss_health_bar.max_value = normalized_max
+    _boss_health_bar.value = normalized_max
+    _boss_health_panel.visible = true
+
+
+func update_boss_health(current_health: float, max_health: float) -> void:
+    if _boss_health_bar == null:
+        return
+
+    var normalized_max: float = maxf(1.0, max_health)
+    _boss_health_bar.max_value = normalized_max
+    _boss_health_bar.value = clampf(current_health, 0.0, normalized_max)
+
+
+func hide_boss_health() -> void:
+    if _boss_health_panel != null:
+        _boss_health_panel.visible = false
 
 
 func _on_achievement_unlocked(_achievement_id: String, title: String) -> void:

@@ -455,6 +455,78 @@ func test_new_environment_hazards_affect_status_and_speed() -> void:
 	assert_lt(float(movement.get("_environment_speed_multiplier")), 1.0, "spatial distortion should also reduce movement speed")
 
 
+func test_chapter_1_water_flow_does_not_create_constant_camera_shake() -> void:
+	var scene: PackedScene = load(GAME_WORLD_SCENE_PATH)
+	assert_not_null(scene, "game_world scene should load")
+	if scene == null:
+		return
+
+	var world: Node = scene.instantiate()
+	assert_not_null(world, "game_world scene should instantiate")
+	if world == null:
+		return
+
+	add_child_autofree(world)
+	await get_tree().process_frame
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player should exist")
+	if player == null:
+		return
+
+	_set_room_plan(world, 301, "chapter_1", "combat")
+	world.set("_room_active", true)
+	world.set("_current_room_type", "combat")
+	world.set("_room_index", 301)
+	world.set("_active_hazards", ["water_flow"])
+	player.set("_shake_trauma", 0.0)
+
+	world.call("_process_environment_hazards", 1.0 / 60.0)
+
+	assert_eq(float(player.get("_shake_trauma")), 0.0, "chapter_1 water flow should drift the player without constant camera shake")
+
+
+func test_chapter_1_spore_cloud_drains_stamina_without_passive_hp_loss() -> void:
+	var scene: PackedScene = load(GAME_WORLD_SCENE_PATH)
+	assert_not_null(scene, "game_world scene should load")
+	if scene == null:
+		return
+
+	var world: Node = scene.instantiate()
+	assert_not_null(world, "game_world scene should instantiate")
+	if world == null:
+		return
+
+	add_child_autofree(world)
+	await get_tree().process_frame
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player should exist")
+	if player == null:
+		return
+
+	var health: Node = player.get_node_or_null("HealthComponent")
+	var stats: Node = player.get_node_or_null("StatsComponent")
+	assert_not_null(health, "HealthComponent should exist")
+	assert_not_null(stats, "StatsComponent should exist")
+	if health == null or stats == null:
+		return
+
+	_set_room_plan(world, 302, "chapter_1", "combat")
+	world.set("_room_active", true)
+	world.set("_current_room_type", "combat")
+	world.set("_room_index", 302)
+	world.set("_active_hazards", ["spore_cloud"])
+	world.set("_hazard_tick_timer", 0.0)
+	health.set("current_hp", float(health.get("max_hp")))
+	stats.set("current_stamina", float(stats.get("stamina_max")))
+
+	world.call("_process_environment_hazards", 1.0)
+
+	assert_eq(float(health.get("current_hp")), float(health.get("max_hp")), "chapter_1 spore cloud should not cause passive HP loss")
+	assert_lt(float(stats.get("current_stamina")), float(stats.get("stamina_max")), "chapter_1 spore cloud should still drain stamina")
+
+
 func test_tile_atlas_manifest_declares_handdrawn_profile() -> void:
 	var manifest_text: String = FileAccess.get_file_as_string("res://assets/sprites/tiles/atlas_manifest.json")
 	assert_true(not manifest_text.is_empty(), "atlas_manifest.json should be readable")

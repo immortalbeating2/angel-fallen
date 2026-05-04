@@ -9,7 +9,7 @@ var _environment_speed_multiplier: float = 1.0
 
 
 func _ready() -> void:
-    _body = owner as CharacterBody2D
+    _body = get_parent() as CharacterBody2D
     if _body != null:
         _stats = _body.get_node_or_null("StatsComponent")
 

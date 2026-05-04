@@ -9,6 +9,7 @@ var _progression: Node
 var _stats: Node
 var _health: Node
 var _weapon: Node
+var _loadout: Node
 var _option_lookup: Dictionary = {}
 var _passive_levels: Dictionary = {}
 var _evolution_recipes: Array[Dictionary] = []
@@ -100,6 +101,7 @@ func _ready() -> void:
     _stats = _player.get_node_or_null("StatsComponent")
     _health = _player.get_node_or_null("HealthComponent")
     _weapon = _player.get_node_or_null("AutoWeapon")
+    _loadout = get_node_or_null("../WeaponLoadout")
     _load_evolution_recipes()
 
     if _progression != null and _progression.has_signal("leveled_up"):
@@ -194,6 +196,8 @@ func _mark_passive_progress(option_id: String) -> void:
     if passive_id == "":
         return
     _passive_levels[passive_id] = int(_passive_levels.get(passive_id, 0)) + 1
+    if _loadout != null and _loadout.has_method("add_or_level_passive"):
+        _loadout.add_or_level_passive(passive_id)
     var anchor_id: String = _resolve_anchor_from_passive(passive_id)
     if anchor_id != "":
         register_build_anchor(anchor_id, 0.85, "level_up:%s" % option_id)
@@ -219,6 +223,8 @@ func _collect_available_evolution_options() -> Array[Dictionary]:
     var current_weapon_id: String = str(_weapon.get("current_weapon_id")).strip_edges()
     # 进化候选不是静态列表，而是按当前武器、被动等级和构筑倾向实时筛出来的。
     for recipe in _evolution_recipes:
+        if str(recipe.get("trigger_source", "level_up")) != "level_up":
+            continue
         if not _can_trigger_evolution(recipe, current_weapon_id):
             continue
 
@@ -243,7 +249,7 @@ func _collect_available_evolution_options() -> Array[Dictionary]:
     return options
 
 
-func _can_trigger_evolution(recipe: Dictionary, current_weapon_id: String) -> bool:
+func _can_trigger_evolution(recipe: Dictionary, current_weapon_id: String, allow_loadout_weapon: bool = false) -> bool:
     if _weapon == null:
         return false
 
@@ -251,19 +257,69 @@ func _can_trigger_evolution(recipe: Dictionary, current_weapon_id: String) -> bo
     var passive_id: String = str(recipe.get("passive_id", "")).strip_edges()
     var result_weapon_id: String = str(recipe.get("result_weapon_id", "")).strip_edges()
     var required_passive_level: int = maxi(1, int(recipe.get("required_passive_level", 1)))
+    var required_weapon_level: int = maxi(1, int(recipe.get("required_weapon_level", 1)))
 
     if weapon_id == "" or passive_id == "" or result_weapon_id == "":
         return false
-    if weapon_id != current_weapon_id:
+    if weapon_id != current_weapon_id and not allow_loadout_weapon:
+        return false
+    if weapon_id != current_weapon_id and _loadout != null and _loadout.has_method("get_weapon_level") and int(_loadout.get_weapon_level(weapon_id)) <= 0:
         return false
 
     var passive_level: int = int(_passive_levels.get(passive_id, 0))
+    if _loadout != null and _loadout.has_method("get_passive_level"):
+        passive_level = maxi(passive_level, int(_loadout.get_passive_level(passive_id)))
     if passive_level < required_passive_level:
+        return false
+
+    var weapon_level: int = 1
+    if _loadout != null and _loadout.has_method("get_weapon_level"):
+        weapon_level = maxi(0, int(_loadout.get_weapon_level(weapon_id)))
+    if weapon_level < required_weapon_level:
         return false
 
     if _weapon.has_method("has_evolved_to") and _weapon.has_evolved_to(result_weapon_id):
         return false
+    if _loadout != null and _loadout.has_method("has_weapon_evolved") and bool(_loadout.has_weapon_evolved(weapon_id, result_weapon_id)):
+        return false
     return true
+
+
+func get_available_treasure_evolutions(trigger_source: String = "treasure_chest") -> Array[Dictionary]:
+    var options: Array[Dictionary] = []
+    if _weapon == null:
+        return options
+
+    var current_weapon_id: String = str(_weapon.get("current_weapon_id")).strip_edges()
+    for recipe in _evolution_recipes:
+        var source: String = str(recipe.get("trigger_source", "level_up"))
+        if source != trigger_source and not (trigger_source == "treasure_chest" and source == "boss_reward"):
+            continue
+        if not _can_trigger_evolution(recipe, current_weapon_id, true):
+            continue
+        options.append(recipe.duplicate(true))
+    return options
+
+
+func apply_evolution_recipe(recipe: Dictionary) -> bool:
+    if _weapon == null or recipe.is_empty():
+        return false
+    var current_weapon_id: String = str(_weapon.get("current_weapon_id")).strip_edges()
+    if not _can_trigger_evolution(recipe, current_weapon_id, true):
+        return false
+    var weapon_id: String = str(recipe.get("weapon_id", "")).strip_edges()
+    var applied: bool = false
+    if weapon_id == current_weapon_id:
+        if not _weapon.has_method("apply_evolution_profile"):
+            return false
+        applied = bool(_weapon.apply_evolution_profile(recipe))
+    elif _loadout != null and _loadout.has_method("apply_weapon_evolution"):
+        applied = bool(_loadout.apply_weapon_evolution(recipe))
+    if applied:
+        var result_weapon_id: String = str(recipe.get("result_weapon_id", "")).strip_edges()
+        if result_weapon_id != "" and SaveManager != null and SaveManager.has_method("unlock_codex_entry"):
+            SaveManager.unlock_codex_entry("weapons", result_weapon_id, "weapon_evolution", str(GameManager.current_chapter_id))
+    return applied
 
 
 func _apply_evolution_option(option: Dictionary) -> void:
@@ -274,16 +330,9 @@ func _apply_evolution_option(option: Dictionary) -> void:
         return
     var recipe: Dictionary = recipe_var
 
-    if not _weapon.has_method("apply_evolution_profile"):
-        return
-
-    var applied: bool = bool(_weapon.apply_evolution_profile(recipe))
+    var applied: bool = apply_evolution_recipe(recipe)
     if not applied:
         return
-
-    var result_weapon_id: String = str(recipe.get("result_weapon_id", "")).strip_edges()
-    if result_weapon_id != "" and SaveManager != null and SaveManager.has_method("unlock_codex_entry"):
-        SaveManager.unlock_codex_entry("weapons", result_weapon_id, "weapon_evolution", str(GameManager.current_chapter_id))
 
 
 func _prettify_result_id(raw_id: String) -> String:
@@ -314,6 +363,10 @@ func register_build_anchor_from_forge(forge_type: String) -> void:
 
 func get_build_anchor_snapshot() -> Dictionary:
     return _build_anchor_scores.duplicate(true)
+
+
+func get_passive_levels_snapshot() -> Dictionary:
+    return _passive_levels.duplicate(true)
 
 
 func get_evolution_anchor_weight(recipe: Dictionary) -> float:

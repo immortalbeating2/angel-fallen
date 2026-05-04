@@ -11,6 +11,8 @@ var _test_tone_stream: AudioStreamWAV
 var _tone_cache: Dictionary = {}
 var _last_boss_phase_cue: Dictionary = {}
 var _last_boss_support_cue: Dictionary = {}
+var _last_gameplay_cue: Dictionary = {}
+var _cue_cooldowns: Dictionary = {}
 
 
 func _ready() -> void:
@@ -97,6 +99,51 @@ func play_test_tone() -> void:
     play_sfx(_test_tone_stream)
 
 
+func play_pickup_cue(pickup_type: String, amount: int = 1) -> void:
+    var cue_id: String = "pickup_%s" % pickup_type
+    if not _can_play_limited(cue_id, 0.035):
+        return
+    var frequency: float = 820.0 + clampf(float(amount), 1.0, 12.0) * 8.0
+    match pickup_type:
+        "gold":
+            frequency = 1040.0
+        "ore":
+            frequency = 620.0
+        "hp":
+            frequency = 760.0
+        "accessory":
+            frequency = 1180.0
+    _last_gameplay_cue = {"cue": cue_id, "pickup_type": pickup_type, "amount": amount, "frequency": frequency, "duration": 0.055}
+    play_sfx(_get_cached_tone(0.055, frequency + randf_range(-18.0, 18.0)))
+
+
+func play_enemy_kill_cue(enemy_id: String = "") -> void:
+    var cue_id: String = "kill_boss" if enemy_id.begins_with("boss_") else "kill_enemy"
+    if not _can_play_limited(cue_id, 0.055):
+        return
+    var frequency: float = 360.0 if cue_id == "kill_boss" else 520.0
+    var duration: float = 0.11 if cue_id == "kill_boss" else 0.045
+    _last_gameplay_cue = {"cue": cue_id, "enemy_id": enemy_id, "frequency": frequency, "duration": duration}
+    play_sfx(_get_cached_tone(duration, frequency + randf_range(-12.0, 12.0)))
+
+
+func play_weapon_impact_cue(style_id: String = "default", is_crit: bool = false) -> void:
+    var cue_id: String = "impact_crit" if is_crit else "impact"
+    if not _can_play_limited(cue_id, 0.025):
+        return
+    var frequency: float = 690.0
+    if style_id.find("void") >= 0 or style_id.find("abyssal") >= 0:
+        frequency = 430.0
+    elif style_id.find("radiant") >= 0 or style_id.find("solar") >= 0:
+        frequency = 760.0
+    elif style_id.find("glacial") >= 0 or style_id.find("frost") >= 0:
+        frequency = 840.0
+    if is_crit:
+        frequency += 180.0
+    _last_gameplay_cue = {"cue": cue_id, "style_id": style_id, "is_crit": is_crit, "frequency": frequency, "duration": 0.045}
+    play_sfx(_get_cached_tone(0.045, frequency + randf_range(-10.0, 10.0)))
+
+
 func play_boss_phase_cue(boss_id: String, phase_index: int, pulse_count: int = 2, tempo: float = 0.12) -> void:
     var family: String = "core"
     var base_frequency: float = 700.0
@@ -158,9 +205,18 @@ func get_last_boss_support_cue_snapshot() -> Dictionary:
     return _last_boss_support_cue.duplicate(true)
 
 
+func get_last_gameplay_cue_snapshot() -> Dictionary:
+    return _last_gameplay_cue.duplicate(true)
+
+
 func clear_boss_cue_snapshots() -> void:
     _last_boss_phase_cue.clear()
     _last_boss_support_cue.clear()
+
+
+func clear_gameplay_cue_snapshot() -> void:
+    _last_gameplay_cue.clear()
+    _cue_cooldowns.clear()
 
 
 func get_tone_cache_size() -> int:
@@ -212,3 +268,12 @@ func _get_cached_tone(duration: float, frequency: float) -> AudioStreamWAV:
     var tone: AudioStreamWAV = _build_test_tone_stream(duration, frequency)
     _tone_cache[key] = tone
     return tone
+
+
+func _can_play_limited(cue_id: String, cooldown_seconds: float) -> bool:
+    var now_msec: int = Time.get_ticks_msec()
+    var next_allowed: int = int(_cue_cooldowns.get(cue_id, 0))
+    if now_msec < next_allowed:
+        return false
+    _cue_cooldowns[cue_id] = now_msec + int(maxf(0.0, cooldown_seconds) * 1000.0)
+    return true

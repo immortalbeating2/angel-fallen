@@ -6,32 +6,57 @@ signal defaults_restored
 @export var show_title: bool = true
 
 @onready var _title: Label = $Title
+@onready var _master_row: HBoxContainer = $MasterRow
 @onready var _master_value: Label = $MasterRow/Value
 @onready var _master_slider: HSlider = $MasterRow/Slider
+@onready var _bgm_row: HBoxContainer = $BGMRow
 @onready var _bgm_value: Label = $BGMRow/Value
 @onready var _bgm_slider: HSlider = $BGMRow/Slider
+@onready var _sfx_row: HBoxContainer = $SFXRow
 @onready var _sfx_value: Label = $SFXRow/Value
 @onready var _sfx_slider: HSlider = $SFXRow/Slider
+@onready var _ambience_row: HBoxContainer = $AmbienceRow
 @onready var _ambience_value: Label = $AmbienceRow/Value
 @onready var _ambience_slider: HSlider = $AmbienceRow/Slider
+@onready var _shake_row: HBoxContainer = $ShakeRow
 @onready var _shake_value: Label = $ShakeRow/Value
 @onready var _shake_slider: HSlider = $ShakeRow/Slider
+@onready var _ui_scale_row: HBoxContainer = $UIScaleRow
 @onready var _ui_scale_value: Label = $UIScaleRow/Value
 @onready var _ui_scale_slider: HSlider = $UIScaleRow/Slider
+@onready var _difficulty_row: HBoxContainer = $DifficultyRow
 @onready var _difficulty_value: Label = $DifficultyRow/Value
 @onready var _difficulty_slider: HSlider = $DifficultyRow/Slider
 @onready var _difficulty_hint: Label = $DifficultyHint
 
+@onready var _bus_meter_section: VBoxContainer = $BusMeterTitle
 @onready var _master_meter: ProgressBar = $BusMeterTitle/MasterMeter
 @onready var _bgm_meter: ProgressBar = $BusMeterTitle/BGMMeter
 @onready var _sfx_meter: ProgressBar = $BusMeterTitle/SFXMeter
 @onready var _ambience_meter: ProgressBar = $BusMeterTitle/AmbienceMeter
+@onready var _input_bindings_section: VBoxContainer = $InputBindingsSection
 @onready var _binding_hint: Label = $InputBindingsSection/Hint
 @onready var _bindings_list: VBoxContainer = $InputBindingsSection/BindingsScroll/BindingsList
+@onready var _actions_row: HBoxContainer = $Actions
+@onready var _test_sfx_button: Button = $Actions/TestSFXButton
+@onready var _reset_defaults_button: Button = $Actions/ResetDefaultsButton
 
 const DIRTY_COLOR: Color = Color(1.0, 0.84, 0.34, 1.0)
 const NORMAL_COLOR: Color = Color(0.92, 0.92, 0.92, 1.0)
 const METER_REFRESH: float = 0.06
+const SETTINGS_PAGE_IDS: Array[String] = ["display", "audio", "controls", "accessibility"]
+const SETTINGS_PAGE_LABELS: Dictionary = {
+    "display": "Display",
+    "audio": "Audio",
+    "controls": "Controls",
+    "accessibility": "Accessibility"
+}
+const DISPLAY_MODE_OPTIONS: Array[Dictionary] = [
+    {"id": "windowed", "label": "Windowed"},
+    {"id": "borderless", "label": "Borderless"},
+    {"id": "fullscreen", "label": "Fullscreen"}
+]
+const RESOLUTION_OPTIONS: Array[String] = ["1280x720", "1600x900", "1920x1080", "2560x1440", "3840x2160"]
 
 const INPUT_ACTION_ROWS: Array[Dictionary] = [
     {"id": "move_up", "label": "Move Up"},
@@ -77,14 +102,150 @@ var _input_bindings: Dictionary = {}
 var _binding_row_nodes: Dictionary = {}
 var _capture_action_id: String = ""
 var _capture_target: String = ""
+var _page_buttons: Dictionary = {}
+var _page_nodes: Dictionary = {}
+var _active_page: String = "display"
+var _display_mode_option: OptionButton = null
+var _resolution_option: OptionButton = null
 
 
 func _ready() -> void:
     if _title != null:
         _title.visible = show_title
+        _title.text = "Settings"
+    _build_settings_pages()
     _build_binding_rows()
     _default_settings = _get_default_settings()
     sync_from_save()
+
+
+func _build_settings_pages() -> void:
+    if get_node_or_null("PageTabs") != null:
+        return
+
+    custom_minimum_size = Vector2(680, 0)
+    add_theme_constant_override("separation", 10)
+
+    var tabs: HBoxContainer = HBoxContainer.new()
+    tabs.name = "PageTabs"
+    tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+    tabs.add_theme_constant_override("separation", 8)
+    add_child(tabs)
+    move_child(tabs, 1 if show_title else 0)
+
+    var stack: VBoxContainer = VBoxContainer.new()
+    stack.name = "PageStack"
+    stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    stack.add_theme_constant_override("separation", 8)
+    add_child(stack)
+    move_child(stack, tabs.get_index() + 1)
+
+    for page_id: String in SETTINGS_PAGE_IDS:
+        var button: Button = Button.new()
+        button.text = str(SETTINGS_PAGE_LABELS.get(page_id, page_id.capitalize()))
+        button.toggle_mode = true
+        button.custom_minimum_size = Vector2(130, 38)
+        button.pressed.connect(_on_page_tab_pressed.bind(page_id))
+        tabs.add_child(button)
+        _page_buttons[page_id] = button
+
+        var page: VBoxContainer = VBoxContainer.new()
+        page.name = "%sPage" % page_id.capitalize()
+        page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        page.add_theme_constant_override("separation", 8)
+        stack.add_child(page)
+        _page_nodes[page_id] = page
+
+    _build_display_page()
+    _move_control_to_page(_master_row, "audio")
+    _move_control_to_page(_bgm_row, "audio")
+    _move_control_to_page(_sfx_row, "audio")
+    _move_control_to_page(_ambience_row, "audio")
+    _move_control_to_page(_bus_meter_section, "audio")
+    _move_control_to_page(_test_sfx_button, "audio")
+    _move_control_to_page(_shake_row, "accessibility")
+    if _difficulty_row != null:
+        _difficulty_row.visible = false
+    if _difficulty_hint != null:
+        _difficulty_hint.visible = false
+    _move_control_to_page(_input_bindings_section, "controls")
+    if _actions_row != null:
+        move_child(_actions_row, get_child_count() - 1)
+    if _reset_defaults_button != null:
+        _reset_defaults_button.custom_minimum_size = Vector2(180, 38)
+    _set_active_page(_active_page)
+
+
+func _build_display_page() -> void:
+    var display_page: VBoxContainer = _page_nodes.get("display", null)
+    if display_page == null:
+        return
+
+    var mode_row: HBoxContainer = _make_option_row("Display Mode")
+    _display_mode_option = mode_row.get_node("Option") as OptionButton
+    for option: Dictionary in DISPLAY_MODE_OPTIONS:
+        _display_mode_option.add_item(str(option.get("label", "")))
+        _display_mode_option.set_item_metadata(_display_mode_option.item_count - 1, str(option.get("id", "windowed")))
+    _display_mode_option.item_selected.connect(_on_display_mode_selected)
+    display_page.add_child(mode_row)
+
+    var resolution_row: HBoxContainer = _make_option_row("Resolution")
+    _resolution_option = resolution_row.get_node("Option") as OptionButton
+    for resolution: String in RESOLUTION_OPTIONS:
+        _resolution_option.add_item(resolution)
+        _resolution_option.set_item_metadata(_resolution_option.item_count - 1, resolution)
+    _resolution_option.item_selected.connect(_on_resolution_selected)
+    display_page.add_child(resolution_row)
+
+    _move_control_to_page(_ui_scale_row, "display")
+
+
+func _make_option_row(label_text: String) -> HBoxContainer:
+    var row: HBoxContainer = HBoxContainer.new()
+    row.add_theme_constant_override("separation", 8)
+    row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+    var name_label: Label = Label.new()
+    name_label.custom_minimum_size = Vector2(132, 0)
+    name_label.text = label_text
+    row.add_child(name_label)
+
+    var option: OptionButton = OptionButton.new()
+    option.name = "Option"
+    option.custom_minimum_size = Vector2(248, 36)
+    option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(option)
+    return row
+
+
+func _move_control_to_page(control: Control, page_id: String) -> void:
+    if control == null:
+        return
+    var page: VBoxContainer = _page_nodes.get(page_id, null)
+    if page == null:
+        return
+    var parent: Node = control.get_parent()
+    if parent != null:
+        parent.remove_child(control)
+    page.add_child(control)
+
+
+func _on_page_tab_pressed(page_id: String) -> void:
+    _set_active_page(page_id)
+
+
+func _set_active_page(page_id: String) -> void:
+    if not _page_nodes.has(page_id):
+        page_id = "display"
+    _active_page = page_id
+    for key: String in SETTINGS_PAGE_IDS:
+        var page: Control = _page_nodes.get(key, null)
+        if page != null:
+            page.visible = key == page_id
+        var button: Button = _page_buttons.get(key, null)
+        if button != null:
+            button.button_pressed = key == page_id
+            button.disabled = key == page_id
 
 
 func _process(delta: float) -> void:
@@ -162,6 +323,8 @@ func _apply_settings_to_ui(settings: Dictionary) -> void:
     _shake_slider.value = float(settings.get("screen_shake", 1.0))
     _ui_scale_slider.value = float(settings.get("ui_scale", 1.0))
     _difficulty_slider.value = clampi(int(settings.get("difficulty_tier", 0)), 0, max_unlocked_tier)
+    _select_option_by_metadata(_display_mode_option, str(settings.get("display_mode", "windowed")))
+    _select_option_by_metadata(_resolution_option, str(settings.get("resolution", "1280x720")))
     _syncing = false
     _refresh_value_labels()
 
@@ -176,6 +339,17 @@ func _refresh_value_labels() -> void:
     _set_value_label(_difficulty_value, _get_difficulty_label(int(round(_difficulty_slider.value))), _is_dirty("difficulty_tier", _difficulty_slider.value))
     if _difficulty_hint != null:
         _difficulty_hint.text = _get_difficulty_hint_text()
+
+
+func _select_option_by_metadata(option: OptionButton, metadata_value: String) -> void:
+    if option == null:
+        return
+    for i: int in range(option.item_count):
+        if str(option.get_item_metadata(i)) == metadata_value:
+            option.select(i)
+            return
+    if option.item_count > 0:
+        option.select(0)
 
 
 func _set_value_label(label: Label, text_value: String, dirty: bool) -> void:
@@ -411,6 +585,8 @@ func _get_default_settings() -> Dictionary:
     if SaveManager != null and SaveManager.has_method("get_default_runtime_settings"):
         return SaveManager.get_default_runtime_settings()
     return {
+        "display_mode": "windowed",
+        "resolution": "1280x720",
         "master_volume": 1.0,
         "bgm_volume": 1.0,
         "sfx_volume": 1.0,
@@ -441,6 +617,18 @@ func _get_difficulty_hint_text() -> String:
 
 func _on_master_slider_value_changed(value: float) -> void:
     _commit_settings_patch({"master_volume": value})
+
+
+func _on_display_mode_selected(index: int) -> void:
+    if _display_mode_option == null:
+        return
+    _commit_settings_patch({"display_mode": str(_display_mode_option.get_item_metadata(index))})
+
+
+func _on_resolution_selected(index: int) -> void:
+    if _resolution_option == null:
+        return
+    _commit_settings_patch({"resolution": str(_resolution_option.get_item_metadata(index))})
 
 
 func _on_bgm_slider_value_changed(value: float) -> void:

@@ -1,0 +1,132 @@
+{
+  "rows": [
+    {
+      "active_enemies": 8,
+      "damage_taken": 0.0,
+      "death_reason": "alive",
+      "elapsed_seconds": 0,
+      "estimated_dps": 21.6,
+      "kills": 3,
+      "pickup_count": 4,
+      "player_level": 1,
+      "projectile_count": 1
+    },
+    {
+      "active_enemies": 10,
+      "damage_taken": 0.0,
+      "death_reason": "alive",
+      "elapsed_seconds": 30,
+      "estimated_dps": 23.4,
+      "kills": 7,
+      "pickup_count": 5,
+      "player_level": 1,
+      "projectile_count": 1
+    },
+    {
+      "active_enemies": 12,
+      "damage_taken": 0.0,
+      "death_reason": "alive",
+      "elapsed_seconds": 60,
+      "estimated_dps": 25.2,
+      "kills": 12,
+      "pickup_count": 6,
+      "player_level": 1,
+      "projectile_count": 1
+    },
+    {
+      "active_enemies": 14,
+      "damage_taken": 0.7,
+      "death_reason": "alive",
+      "elapsed_seconds": 90,
+      "estimated_dps": 30.6,
+      "kills": 18,
+      "pickup_count": 7,
+      "player_level": 2,
+      "projectile_count": 1
+    },
+    {
+      "active_enemies": 16,
+      "damage_taken": 2.1,
+      "death_reason": "alive",
+      "elapsed_seconds": 120,
+      "estimated_dps": 32.4,
+      "kills": 25,
+      "pickup_count": 8,
+      "player_level": 2,
+      "projectile_count": 1
+    },
+    {
+      "active_enemies": 18,
+      "damage_taken": 4.2,
+      "death_reason": "alive",
+      "elapsed_seconds": 150,
+      "estimated_dps": 34.2,
+      "kills": 33,
+      "pickup_count": 9,
+      "player_level": 2,
+      "projectile_count": 1
+    },
+    {
+      "active_enemies": 20,
+      "damage_taken": 7.0,
+      "death_reason": "alive",
+      "elapsed_seconds": 180,
+      "estimated_dps": 39.6,
+      "kills": 42,
+      "pickup_count": 10,
+      "player_level": 3,
+      "projectile_count": 2
+    },
+    {
+      "active_enemies": 22,
+      "damage_taken": 10.5,
+      "death_reason": "alive",
+      "elapsed_seconds": 210,
+      "estimated_dps": 41.4,
+      "kills": 52,
+      "pickup_count": 11,
+      "player_level": 3,
+      "projectile_count": 2
+    },
+    {
+      "active_enemies": 24,
+      "damage_taken": 14.7,
+      "death_reason": "alive",
+      "elapsed_seconds": 240,
+      "estimated_dps": 46.8,
+      "kills": 63,
+      "pickup_count": 12,
+      "player_level": 4,
+      "projectile_count": 2
+    },
+    {
+      "active_enemies": 26,
+      "damage_taken": 19.6,
+      "death_reason": "alive",
+      "elapsed_seconds": 270,
+      "estimated_dps": 52.2,
+      "kills": 75,
+      "pickup_count": 13,
+      "player_level": 5,
+      "projectile_count": 2
+    },
+    {
+      "active_enemies": 28,
+      "damage_taken": 25.2,
+      "death_reason": "alive",
+      "elapsed_seconds": 300,
+      "estimated_dps": 54.0,
+      "kills": 88,
+      "pickup_count": 14,
+      "player_level": 5,
+      "projectile_count": 2
+    }
+  ],
+  "scenario": "survivor_core_5m_compressed",
+  "schema_version": 1,
+  "summary": {
+    "death_reason": "alive",
+    "duration_seconds": 300,
+    "samples": 11
+  }
+}

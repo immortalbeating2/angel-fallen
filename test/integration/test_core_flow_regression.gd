@@ -108,7 +108,50 @@ func test_character_select_to_room_progress_and_run_persist() -> void:
 	assert_eq(int(last_run.get("rooms_cleared", -1)), int(world.get("_run_rooms_cleared")), "Run result should persist cleared-room count")
 
 
-func test_level_up_path_can_trigger_and_apply_weapon_evolution() -> void:
+func test_player_lethal_damage_finishes_run_as_death() -> void:
+	var world: Node = await _spawn_game_world()
+	if world == null:
+		return
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player node should exist")
+	if player == null:
+		return
+
+	assert_true(player.is_in_group("player"), "Player must be in player group before taking damage")
+	player.call("apply_damage", 9999.0)
+	await get_tree().process_frame
+
+	var run_result_panel: Node = world.get_node_or_null("RunResultPanel")
+	assert_not_null(run_result_panel, "Run result panel should exist")
+	if run_result_panel == null:
+		return
+	assert_true(bool(run_result_panel.get("visible")), "Lethal player damage should show run result panel")
+
+	var last_run: Dictionary = SaveManager.get_last_run()
+	assert_eq(str(last_run.get("outcome", "")), "death", "Lethal player damage should persist death outcome")
+
+
+func test_player_input_moves_runtime_player_body() -> void:
+	var world: Node = await _spawn_game_world()
+	if world == null:
+		return
+
+	var player: CharacterBody2D = world.get_node_or_null("Player") as CharacterBody2D
+	assert_not_null(player, "Player node should exist")
+	if player == null:
+		return
+
+	var start_x: float = player.global_position.x
+	Input.action_press("move_right")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	Input.action_release("move_right")
+
+	assert_gt(player.global_position.x, start_x, "Pressed move_right should move the runtime player body")
+
+
+func test_treasure_path_can_trigger_and_apply_weapon_evolution() -> void:
 	var world: Node = await _spawn_game_world()
 	if world == null:
 		return
@@ -120,41 +163,167 @@ func test_level_up_path_can_trigger_and_apply_weapon_evolution() -> void:
 
 	var weapon: Node = player.get_node_or_null("AutoWeapon")
 	var level_system: Node = world.get_node_or_null("LevelUpSystem")
+	var loadout: Node = world.get_node_or_null("WeaponLoadout")
 	assert_not_null(weapon, "AutoWeapon should exist")
 	assert_not_null(level_system, "LevelUpSystem should exist")
-	if weapon == null or level_system == null:
+	assert_not_null(loadout, "WeaponLoadout should exist")
+	if weapon == null or level_system == null or loadout == null:
 		return
 
 	assert_eq(str(weapon.get("current_weapon_id")), "wpn_holy_cross", "Knight run should start with holy_cross weapon id")
 
+	for _i in range(7):
+		loadout.call("add_or_level_weapon", "wpn_holy_cross")
 	level_system.call("_mark_passive_progress", "precision")
 	level_system.call("_mark_passive_progress", "precision")
 
-	var evo_options_var: Variant = level_system.call("_collect_available_evolution_options")
+	var evo_options_var: Variant = level_system.call("get_available_treasure_evolutions", "treasure_chest")
 	var evo_options: Array = []
 	if evo_options_var is Array:
 		evo_options = evo_options_var
-	assert_false(evo_options.is_empty(), "Passive progress should expose at least one evolution option")
+	assert_false(evo_options.is_empty(), "满级武器 + 被动进度应暴露宝箱进化候选")
 
-	var picked_option: Dictionary = {}
+	var picked_recipe: Dictionary = {}
 	for row_var: Variant in evo_options:
 		if not (row_var is Dictionary):
 			continue
-		var row: Dictionary = row_var
-		var recipe_var: Variant = row.get("recipe", {})
-		if recipe_var is Dictionary:
-			var recipe: Dictionary = recipe_var
-			if str(recipe.get("result_weapon_id", "")) == "wpn_holy_judgment":
-				picked_option = row
-				break
+		var recipe: Dictionary = row_var
+		if str(recipe.get("result_weapon_id", "")) == "wpn_holy_judgment":
+			picked_recipe = recipe
+			break
 
-	assert_false(picked_option.is_empty(), "holy_judgment evolution option should be available for holy_cross + precision Lv2")
-	if picked_option.is_empty():
+	assert_false(picked_recipe.is_empty(), "holy_judgment treasure evolution should be available for full holy_cross + precision Lv2")
+	if picked_recipe.is_empty():
 		return
 
-	level_system.call("_apply_evolution_option", picked_option)
+	level_system.call("apply_evolution_recipe", picked_recipe)
 	assert_eq(str(weapon.get("current_weapon_id")), "wpn_holy_judgment", "Evolution should update current weapon id")
 	assert_true(weapon.has_method("has_evolved_to") and bool(weapon.call("has_evolved_to", "wpn_holy_judgment")), "Evolution should be tracked in evolved id set")
+
+
+func test_runtime_chest_pickup_opens_treasure_and_applies_evolution() -> void:
+	var world: Node = await _spawn_game_world()
+	if world == null:
+		return
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player node should exist")
+	if player == null:
+		return
+
+	var weapon: Node = player.get_node_or_null("AutoWeapon")
+	var level_system: Node = world.get_node_or_null("LevelUpSystem")
+	var loadout: Node = world.get_node_or_null("WeaponLoadout")
+	assert_not_null(weapon, "AutoWeapon should exist")
+	assert_not_null(level_system, "LevelUpSystem should exist")
+	assert_not_null(loadout, "WeaponLoadout should exist")
+	if weapon == null or level_system == null or loadout == null:
+		return
+
+	for _i in range(7):
+		loadout.call("add_or_level_weapon", "wpn_holy_cross")
+	level_system.call("_mark_passive_progress", "precision")
+	level_system.call("_mark_passive_progress", "precision")
+
+	var rewards: Array = world.call("_open_runtime_treasure_chest", 40, "chest_rare")
+	assert_false(rewards.is_empty(), "Runtime treasure chest should return rewards")
+	assert_eq(str(rewards[0].get("type", "")), "evolution", "Eligible treasure chest should prioritize evolution")
+	assert_eq(str(weapon.get("current_weapon_id")), "wpn_holy_judgment", "Runtime treasure chest should apply evolution recipe")
+	assert_true(bool(loadout.get("weapon_slots")[0].get("evolved", false)), "Runtime treasure evolution should mark loadout slot evolved")
+
+
+func test_runtime_chest_can_evolve_secondary_loadout_weapon() -> void:
+	var world: Node = await _spawn_game_world()
+	if world == null:
+		return
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player node should exist")
+	if player == null:
+		return
+
+	var weapon: Node = player.get_node_or_null("AutoWeapon")
+	var loadout: Node = world.get_node_or_null("WeaponLoadout")
+	assert_not_null(weapon, "AutoWeapon should exist")
+	assert_not_null(loadout, "WeaponLoadout should exist")
+	if weapon == null or loadout == null:
+		return
+
+	loadout.call("add_or_level_weapon", "wpn_radiant_hammer")
+	for _i in range(7):
+		loadout.call("add_or_level_weapon", "wpn_radiant_hammer")
+	for _i in range(3):
+		loadout.call("add_or_level_passive", "pas_armor")
+
+	var rewards: Array = world.call("_open_runtime_treasure_chest", 40, "chest_rare")
+	assert_false(rewards.is_empty(), "Secondary full weapon treasure chest should return rewards")
+	assert_eq(str(rewards[0].get("type", "")), "evolution", "Secondary full weapon should be eligible for treasure evolution")
+	assert_eq(str(rewards[0].get("id", "")), "wpn_radiant_cataclysm", "Treasure chest should evolve the eligible secondary weapon")
+	assert_eq(str(weapon.get("current_weapon_id")), "wpn_holy_cross", "Secondary evolution should not overwrite the character starting weapon executor")
+	assert_true(bool(loadout.call("has_weapon_evolved", "wpn_radiant_hammer", "wpn_radiant_cataclysm")), "Secondary loadout slot should record evolved result")
+
+	var profiles_var: Variant = weapon.call("get_runtime_weapon_slot_profiles")
+	var profiles: Array = profiles_var if profiles_var is Array else []
+	var found_cataclysm: bool = false
+	for row_var: Variant in profiles:
+		if row_var is Dictionary and str((row_var as Dictionary).get("projectile_style", "")) == "radiant_cataclysm":
+			found_cataclysm = true
+			break
+	assert_true(found_cataclysm, "Secondary evolved weapon should update runtime projectile profile")
+
+
+func test_multi_weapon_loadout_exposes_independent_runtime_profiles() -> void:
+	var world: Node = await _spawn_game_world()
+	if world == null:
+		return
+
+	var player: Node = world.get_node_or_null("Player")
+	assert_not_null(player, "Player node should exist")
+	if player == null:
+		return
+
+	var weapon: Node = player.get_node_or_null("AutoWeapon")
+	var loadout: Node = world.get_node_or_null("WeaponLoadout")
+	assert_not_null(weapon, "AutoWeapon should exist")
+	assert_not_null(loadout, "WeaponLoadout should exist")
+	if weapon == null or loadout == null:
+		return
+
+	loadout.call("add_or_level_weapon", "wpn_radiant_hammer")
+	var profiles_var: Variant = weapon.call("get_runtime_weapon_slot_profiles")
+	var profiles: Array = profiles_var if profiles_var is Array else []
+	assert_gte(profiles.size(), 2, "AutoWeapon should expose one runtime profile per weapon slot")
+
+	var found_radiant: bool = false
+	for row_var: Variant in profiles:
+		if row_var is Dictionary and str((row_var as Dictionary).get("weapon_id", "")) == "wpn_radiant_hammer":
+			found_radiant = true
+			assert_eq(str((row_var as Dictionary).get("projectile_style", "")), "radiant_hammer", "Secondary weapon should keep its own projectile style")
+	assert_true(found_radiant, "Secondary weapon should have an independent runtime profile")
+
+	var target: Node2D = Node2D.new()
+	target.name = "RuntimeProfileTarget"
+	target.add_to_group("enemy")
+	target.global_position = (player as Node2D).global_position + Vector2.RIGHT * 180.0
+	world.add_child(target)
+
+	assert_eq(GameManager.current_state, GameManager.GameState.PLAYING, "Game world should be in PLAYING state before auto weapon runtime fire check")
+	assert_not_null(weapon.call("_find_nearest_enemy"), "Runtime target should be discoverable by AutoWeapon")
+	assert_not_null(weapon.get("projectile_scene"), "AutoWeapon should have a projectile scene before runtime fire check")
+	await get_tree().process_frame
+
+	var found_radiant_projectile: bool = false
+	var observed_styles: Array[String] = []
+	for child: Node in world.get_children():
+		var script: Script = child.get_script() as Script
+		if script == null or script.resource_path != "res://scripts/game/projectile.gd":
+			continue
+		var style_id: String = str(child.get("_style_id"))
+		observed_styles.append(style_id)
+		if style_id == "radiant_hammer":
+			found_radiant_projectile = true
+			break
+	assert_true(found_radiant_projectile, "Secondary weapon should fire a projectile with its own runtime style; observed=%s" % [", ".join(observed_styles)])
 
 
 func test_shop_purchase_updates_resource_and_stat_feedback() -> void:
@@ -274,6 +443,7 @@ func test_shop_purchase_can_apply_d13_weapon_effect() -> void:
 	world.call("_enter_shop_room")
 
 	var base_damage: float = float(weapon.get("base_damage"))
+	var base_style: String = str(weapon.get("projectile_style"))
 	world.set("_gold", 180)
 	var offers_seed: Array = world.get("_shop_offers")
 	assert_false(offers_seed.is_empty(), "Shop room should generate offers")
@@ -294,8 +464,11 @@ func test_shop_purchase_can_apply_d13_weapon_effect() -> void:
 	world.call("_try_buy_shop_slot", 0)
 
 	assert_eq(int(world.get("_gold")), 118, "Shop purchase should deduct forced D13 weapon price")
-	assert_true(float(weapon.get("base_damage")) > base_damage, "wpn_radiant_hammer should increase base_damage")
-	assert_eq(str(weapon.get("projectile_style")), "radiant_hammer", "wpn_radiant_hammer should apply style override")
+	var loadout: Node = world.get_node_or_null("WeaponLoadout")
+	assert_not_null(loadout, "WeaponLoadout should exist")
+	assert_eq(int(loadout.call("get_weapon_level", "wpn_radiant_hammer")), 1, "wpn_radiant_hammer should enter loadout as a new weapon")
+	assert_eq(str(weapon.get("projectile_style")), base_style, "New non-primary weapon should not overwrite the character starting weapon executor")
+	assert_true(is_equal_approx(float(weapon.get("base_damage")), base_damage), "New non-primary weapon should not directly mutate AutoWeapon damage")
 
 
 func test_shop_purchase_can_apply_d18_weapon_effect() -> void:
@@ -318,6 +491,7 @@ func test_shop_purchase_can_apply_d18_weapon_effect() -> void:
 
 	var base_damage: float = float(weapon.get("base_damage"))
 	var base_hits: int = int(weapon.get("projectile_hits"))
+	var base_style: String = str(weapon.get("projectile_style"))
 	world.set("_gold", 190)
 	var offers_seed: Array = world.get("_shop_offers")
 	assert_false(offers_seed.is_empty(), "Shop room should generate offers")
@@ -338,6 +512,9 @@ func test_shop_purchase_can_apply_d18_weapon_effect() -> void:
 	world.call("_try_buy_shop_slot", 0)
 
 	assert_eq(int(world.get("_gold")), 126, "Shop purchase should deduct forced D18 weapon price")
-	assert_true(float(weapon.get("base_damage")) > base_damage, "wpn_vowblade should increase base_damage")
-	assert_true(int(weapon.get("projectile_hits")) > base_hits, "wpn_vowblade should increase projectile_hits")
-	assert_eq(str(weapon.get("projectile_style")), "vowblade", "wpn_vowblade should apply style override")
+	var loadout: Node = world.get_node_or_null("WeaponLoadout")
+	assert_not_null(loadout, "WeaponLoadout should exist")
+	assert_eq(int(loadout.call("get_weapon_level", "wpn_vowblade")), 1, "wpn_vowblade should enter loadout as a new weapon")
+	assert_eq(str(weapon.get("projectile_style")), base_style, "New non-primary weapon should not overwrite the character starting weapon executor")
+	assert_true(is_equal_approx(float(weapon.get("base_damage")), base_damage), "New non-primary weapon should not directly mutate AutoWeapon damage")
+	assert_eq(int(weapon.get("projectile_hits")), base_hits, "New non-primary weapon should not directly mutate primary projectile hits")
