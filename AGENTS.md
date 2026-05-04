@@ -29,6 +29,18 @@
 - Godot 工具脚本：`scripts/tools/*.gd`
 - Python 校验脚本：`scripts/*.py`、`scripts/tools/*.py`
 - 测试：`test/unit/`、`test/integration/`
+- 人工复核证据：`test/manual_review_evidence/`
+
+## 当前文档真源
+连续多轮开发后，`spec-design/` 中同时存在历史计划、阶段冻结、资产手册和最新执行记录。后续代理优先按以下顺序读取，不要把历史大计划当成当前完成真值。
+
+1. `spec-design/README.md`：文档入口、索引和版本记录
+2. `spec-design/current-project-status-and-cleanup-plan-2026-05-04.md`：当前开发状态、剩余缺口、深度整理路线
+3. `spec-design/2026-5-2-plan.md`：Stage 7 执行跟踪和人工复核承接记录
+4. `spec-design/survivor-core-development-plan-2026-05-03.md`：Stage 7.5 类幸存者核心系统补完计划
+5. `test/manual_review_evidence/README.md`：人工复核截图证据索引
+
+历史文档仍可引用，但引用时必须说明“历史参考”或“当前仍适用”的部分。新增计划、验收结论或流程变更时，必须同步更新 `spec-design/README.md`。
 
 ## 构建 / 运行 / 测试命令
 以下命令均从仓库根目录执行。
@@ -192,6 +204,23 @@ godot --headless --path . -s res://scripts/tools/run_visual_snapshot_regression.
 - 完成前检查 `.github/workflows/ci.yml`，不要凭印象声称“已经覆盖 CI”
 - 改动 JSON、资源、场景验收数据时，必须运行对应校验
 - 如果新增了命令、流程或约定，请同步更新本文件
+- 使用 subagent 时，任务必须要求输出具体结论、检查过的文件和风险；如果 subagent 只回复角色确认或空泛说明，不应视为有效复核
+- 人工复核截图统一保存到 `test/manual_review_evidence/<date-or-topic>/`，并更新证据 README 或相关 ledger
+
+## 文档治理约定
+- 新文档只在以下场景创建：阶段计划、当前状态快照、验收记录、人工复核证据索引、资产/发布流程真源
+- 同一主题不要反复创建相近文件；优先更新现有状态文档或 README 版本记录
+- 历史文档归档应单独提交；迁移时保留 README 链接，不要让旧链接静默失效
+- 文档中记录“已完成”必须对应可追溯证据：测试命令、人工截图、提交哈希或具体实现文件
+- 计划文档应区分“已完成”“待开发”“风险/后续”，避免把愿景描述写成完成状态
+
+## 代码整理约定
+- `scripts/game/game_world.gd` 仅作为运行编排入口继续维护；新增独立系统优先放入 `scripts/systems/`、`scripts/game/` 或 `scripts/ui/`
+- `scripts/ui/main_menu.gd` 已较大，新增菜单页或复杂弹层优先拆成独立脚本/场景，不再继续堆到单文件
+- `scripts/game/auto_weapon.gd` 可保留主执行器职责，但武器族配置、特效映射和构筑统计应逐步抽到 resolver 或专门系统
+- 单个业务脚本超过 800 行时，除 bugfix 外不再追加新系统；单个 UI 脚本超过 600 行时，新视图必须独立脚本/场景
+- 大文件拆分必须有回归测试护栏，先抽纯函数/数据映射/子面板，再移动运行时状态
+- 不要在整理提交中混入新玩法；整理、功能和资产接入应分开提交
 
 ## 提交约定
 - 这类持续迭代工作默认按阶段拆分提交，不要把多轮小改动全部压成一个提交
