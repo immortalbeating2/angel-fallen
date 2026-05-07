@@ -18,3 +18,4 @@
 - 截图状态：pending
 - 资产批次：Stage 8.1 pilot
 - 对应计划：`spec-design/stage8-asset-pilot-implementation-plan-2026-05-07.md`
+- 2026-05-07：已完成程序化 fallback candidate / v1 落盘，并连接第一批角色、敌人、武器 preview 路径；正式运行时 sprite / SFX 替换和 Godot MCP 截图仍待执行。
