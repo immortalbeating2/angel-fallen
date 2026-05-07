@@ -472,7 +472,7 @@
         "source_json": "res://data/balance/characters.json",
         "material_profile": "res://resources/material_profiles/mat_character_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "preview_texture": "res://assets/sprites/characters/char_knight_topdown_concept_v1.png",
         "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
         "acceptance_profile": "menu_ready_matrix",
         "acceptance_tier": "ready"
@@ -483,7 +483,7 @@
         "source_json": "res://data/balance/characters.json",
         "material_profile": "res://resources/material_profiles/mat_character_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "preview_texture": "res://assets/sprites/characters/char_mage_topdown_concept_v1.png",
         "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
         "acceptance_profile": "menu_ready_matrix",
         "acceptance_tier": "ready"
@@ -516,7 +516,7 @@
         "source_json": "res://data/balance/characters.json",
         "material_profile": "res://resources/material_profiles/mat_character_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/ground_ch1.png",
+        "preview_texture": "res://assets/sprites/characters/char_rogue_topdown_concept_v1.png",
         "acceptance_scene": "res://scenes/main_menu/main_menu.tscn",
         "acceptance_profile": "menu_ready_matrix",
         "acceptance_tier": "ready"
@@ -606,7 +606,7 @@
         "source_json": "res://data/balance/shop_items.json",
         "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "preview_texture": "res://assets/sprites/weapons/wpn_holy_cross_projectile_v1.png",
         "acceptance_scene": "res://scenes/game/game_world.tscn",
         "acceptance_profile": "combat_ready_matrix",
         "acceptance_tier": "ready"
@@ -661,7 +661,7 @@
         "source_json": "res://data/balance/shop_items.json",
         "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "preview_texture": "res://assets/sprites/weapons/wpn_reliquary_orb_projectile_v1.png",
         "acceptance_scene": "res://scenes/game/game_world.tscn",
         "acceptance_profile": "combat_ready_matrix",
         "acceptance_tier": "ready"
@@ -672,7 +672,7 @@
         "source_json": "res://data/balance/shop_items.json",
         "material_profile": "res://resources/material_profiles/mat_weapon_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/ambient_fx_ch2.png",
+        "preview_texture": "res://assets/sprites/weapons/wpn_sacred_lance_projectile_v1.png",
         "acceptance_scene": "res://scenes/game/game_world.tscn",
         "acceptance_profile": "combat_ready_matrix",
         "acceptance_tier": "ready"
@@ -964,7 +964,7 @@
         "source_json": "res://data/balance/enemy_scaling.json",
         "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "preview_texture": "res://assets/sprites/enemies/enemy_brute_topdown_concept_v1.png",
         "acceptance_scene": "res://scenes/game/enemy.tscn",
         "acceptance_profile": "combat_ready_matrix",
         "acceptance_tier": "ready"
@@ -1107,7 +1107,7 @@
         "source_json": "res://data/balance/enemy_scaling.json",
         "material_profile": "res://resources/material_profiles/mat_enemy_base.tres",
         "asset_state": "production_ready",
-        "preview_texture": "res://assets/sprites/tiles/hazard_overlay_ch4.png",
+        "preview_texture": "res://assets/sprites/enemies/enemy_shadowling_topdown_concept_v1.png",
         "acceptance_scene": "res://scenes/game/enemy.tscn",
         "acceptance_profile": "combat_ready_matrix",
         "acceptance_tier": "ready"

@@ -18,15 +18,15 @@
 
 | 批次 | asset_id / cue_id | 类型 | candidate_path | selected_path | 当前替换目标 | 状态 |
 |------|-------------------|------|----------------|---------------|--------------|------|
-| S8.1-C | `char_knight` | character concept | `assets/sprites/characters/char_knight_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_knight_topdown_concept_v1.png` | `resources/characters/char_knight.tres` preview | fallback_ready |
-| S8.1-C | `char_mage` | character concept | `assets/sprites/characters/char_mage_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_mage_topdown_concept_v1.png` | `resources/characters/char_mage.tres` preview | fallback_ready |
-| S8.1-C | `char_rogue` | character concept | `assets/sprites/characters/char_rogue_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_rogue_topdown_concept_v1.png` | `resources/characters/char_rogue.tres` preview | fallback_ready |
-| S8.1-E | `enemy_shadowling` | enemy concept | `assets/sprites/enemies/enemy_shadowling_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_shadowling_topdown_concept_v1.png` | `resources/enemies/enemy_shadowling.tres` preview | fallback_ready |
-| S8.1-E | `enemy_brute` | enemy concept | `assets/sprites/enemies/enemy_brute_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_brute_topdown_concept_v1.png` | `resources/enemies/enemy_brute.tres` preview | fallback_ready |
-| S8.1-W | `wpn_holy_cross` | weapon projectile | `assets/sprites/weapons/wpn_holy_cross_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_holy_cross_projectile_v1.png` | `resources/weapons/wpn_holy_cross.tres` preview | fallback_ready |
-| S8.1-W | `wpn_reliquary_orb` | weapon projectile | `assets/sprites/weapons/wpn_reliquary_orb_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_reliquary_orb_projectile_v1.png` | `resources/weapons/wpn_reliquary_orb.tres` preview | fallback_ready |
+| S8.1-C | `char_knight` | character concept | `assets/sprites/characters/char_knight_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_knight_topdown_concept_v1.png` | `resources/characters/char_knight.tres` preview | preview_connected |
+| S8.1-C | `char_mage` | character concept | `assets/sprites/characters/char_mage_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_mage_topdown_concept_v1.png` | `resources/characters/char_mage.tres` preview | preview_connected |
+| S8.1-C | `char_rogue` | character concept | `assets/sprites/characters/char_rogue_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_rogue_topdown_concept_v1.png` | `resources/characters/char_rogue.tres` preview | preview_connected |
+| S8.1-E | `enemy_shadowling` | enemy concept | `assets/sprites/enemies/enemy_shadowling_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_shadowling_topdown_concept_v1.png` | `resources/enemies/enemy_shadowling.tres` preview | preview_connected |
+| S8.1-E | `enemy_brute` | enemy concept | `assets/sprites/enemies/enemy_brute_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_brute_topdown_concept_v1.png` | `resources/enemies/enemy_brute.tres` preview | preview_connected |
+| S8.1-W | `wpn_holy_cross` | weapon projectile | `assets/sprites/weapons/wpn_holy_cross_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_holy_cross_projectile_v1.png` | `resources/weapons/wpn_holy_cross.tres` preview | preview_connected |
+| S8.1-W | `wpn_reliquary_orb` | weapon projectile | `assets/sprites/weapons/wpn_reliquary_orb_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_reliquary_orb_projectile_v1.png` | `resources/weapons/wpn_reliquary_orb.tres` preview | preview_connected |
 | S8.1-W | `wpn_solar_lance` | weapon projectile | `assets/sprites/weapons/wpn_solar_lance_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_solar_lance_projectile_v1.png` | 数据层存在，catalog 当前缺 `resources/weapons/wpn_solar_lance.tres`，先记录为 gap | fallback_ready_gap_pending |
-| S8.1-W | `wpn_sacred_lance` | weapon projectile fallback | `assets/sprites/weapons/wpn_sacred_lance_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_sacred_lance_projectile_v1.png` | `resources/weapons/wpn_sacred_lance.tres` preview | fallback_ready |
+| S8.1-W | `wpn_sacred_lance` | weapon projectile fallback | `assets/sprites/weapons/wpn_sacred_lance_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_sacred_lance_projectile_v1.png` | `resources/weapons/wpn_sacred_lance.tres` preview | preview_connected |
 | S8.1-UI | `ui_hud_health_icon` | UI icon | `assets/sprites/ui/icons/ui_hud_health_icon_candidate_01.png` | `assets/sprites/ui/icons/ui_hud_health_icon_v1.png` | HUD HP / status icon candidate | fallback_ready |
 | S8.1-UI | `ui_hud_xp_icon` | UI icon | `assets/sprites/ui/icons/ui_hud_xp_icon_candidate_01.png` | `assets/sprites/ui/icons/ui_hud_xp_icon_v1.png` | HUD XP / pickup icon candidate | fallback_ready |
 | S8.1-A | `pickup_xp_small` | SFX | `assets/audio/sfx/pickup_xp_small_candidate_01.wav` | `assets/audio/sfx/pickup_xp_small_v1.wav` | small pickup cue | fallback_ready |
@@ -44,7 +44,7 @@
 
 ## 运行时接入顺序
 
-1. 仅替换 preview：更新对应 `.tres` / catalog 的 `preview_texture`，跑资源校验。
+1. 仅替换 preview：更新对应 `.tres` / catalog 的 `preview_texture`，跑资源校验。2026-05-07 已完成第一批 8 个 catalog / `.tres` preview 连接；`wpn_solar_lance` 仍停留在 gap 记录。
 2. 角色/敌人 concept 接入运行时显示前，先确认缩放和碰撞不受影响。
 3. 武器 projectile 接入前，先确认 `AutoWeapon` 当前 style resolver 是否支持 texture path；不支持时先只做 preview。
 4. SFX 接入前，先列出 `AudioManager` 已有 cue 名，避免新增重复入口。
