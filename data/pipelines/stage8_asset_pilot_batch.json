@@ -1,0 +1,121 @@
+{
+  "global_config": {
+    "style_prefix": "dark fantasy, fallen angel themed, sacred ruins aesthetic, Angel Fallen survivor roguelike",
+    "style_suffix": "high contrast, no text, no watermark, game-ready, readable at small scale",
+    "image_suffix": "top-down 2D game asset concept, clear silhouette, transparent background when applicable",
+    "sfx_suffix": "short game sound effect, clean transient, no long reverb tail, no vocal",
+    "seed": 81,
+    "default_variants": 1
+  },
+  "tasks": [
+    {
+      "type": "image",
+      "prompt": "char_knight, armored frontline knight, holy lance, sturdy posture, readable top-down silhouette, sacred silver armor with muted gold highlights",
+      "path": "assets/sprites/characters/char_knight_topdown_concept_candidate_01.png",
+      "use_nano_banana": "false",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "char_mage, arcane caster, floating spell focus, robe silhouette, blue violet arcane glow, readable top-down body shape",
+      "path": "assets/sprites/characters/char_mage_topdown_concept_candidate_01.png",
+      "use_nano_banana": "false",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "char_rogue, agile shadow rogue, dual dagger outline, low stance, dark cloak, readable top-down silhouette, not confused with enemies",
+      "path": "assets/sprites/characters/char_rogue_topdown_concept_candidate_01.png",
+      "use_nano_banana": "false",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "enemy_shadowling, small corrupted shadow creature, chapter 1 hostile, hunched dark silhouette, readable danger shape distinct from player",
+      "path": "assets/sprites/enemies/enemy_shadowling_topdown_concept_candidate_01.png",
+      "use_nano_banana": "false",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "enemy_brute, large corrupted brute enemy, heavy shoulders, slow tank silhouette, chapter 1 stone shadow corruption, readable at 48 pixels",
+      "path": "assets/sprites/enemies/enemy_brute_topdown_concept_candidate_01.png",
+      "use_nano_banana": "false",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "wpn_holy_cross projectile, bright holy cross bolt, gold white sacred light, simple readable projectile icon, distinct from enemy attacks",
+      "path": "assets/sprites/weapons/wpn_holy_cross_projectile_candidate_01.png",
+      "use_nano_banana": "true",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "wpn_reliquary_orb projectile, small orbiting relic orb, ivory metal and pale blue glow, readable circular projectile for survivor orbit weapon",
+      "path": "assets/sprites/weapons/wpn_reliquary_orb_projectile_candidate_01.png",
+      "use_nano_banana": "true",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "wpn_solar_lance projectile, narrow solar lance beam icon, warm gold and white core, readable long projectile, player-safe color language",
+      "path": "assets/sprites/weapons/wpn_solar_lance_projectile_candidate_01.png",
+      "use_nano_banana": "true",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "wpn_sacred_lance projectile, sacred lance bolt, pale gold spear-like projectile, clean outline, player weapon readable at 32 pixels",
+      "path": "assets/sprites/weapons/wpn_sacred_lance_projectile_candidate_01.png",
+      "use_nano_banana": "true",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "ui_hud_health_icon, compact health icon, sacred heart and silver frame, dark fantasy UI, transparent background, readable at 24 pixels",
+      "path": "assets/sprites/ui/icons/ui_hud_health_icon_candidate_01.png",
+      "use_nano_banana": "true",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "image",
+      "prompt": "ui_hud_xp_icon, compact experience shard icon, memory crystal, blue white glow, dark fantasy UI, transparent background, readable at 24 pixels",
+      "path": "assets/sprites/ui/icons/ui_hud_xp_icon_candidate_01.png",
+      "use_nano_banana": "true",
+      "aspect_ratio": "1:1",
+      "variants": 1
+    },
+    {
+      "type": "sfx",
+      "prompt": "pickup_xp_small, short magical pickup chime, memory shard sparkle, bright but gentle, suitable for frequent survivor game pickups",
+      "path": "assets/audio/sfx/pickup_xp_small_candidate_01.wav",
+      "variants": 1,
+      "duration": 1
+    },
+    {
+      "type": "sfx",
+      "prompt": "weapon_impact_light, dark fantasy holy projectile impact, crisp hit, small burst of sacred light, short combat feedback",
+      "path": "assets/audio/sfx/weapon_impact_light_candidate_01.wav",
+      "variants": 1,
+      "duration": 1
+    },
+    {
+      "type": "sfx",
+      "prompt": "enemy_kill, short enemy defeat sound, corrupted spirit dissolving, soft ash burst, readable combat feedback, not gore",
+      "path": "assets/audio/sfx/enemy_kill_candidate_01.wav",
+      "variants": 1,
+      "duration": 1
+    }
+  ]
+}

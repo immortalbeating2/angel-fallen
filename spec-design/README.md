@@ -40,6 +40,7 @@
 | [survivor-core-development-plan-2026-05-03.md](./survivor-core-development-plan-2026-05-03.md) | Stage 7.5 类幸存者核心系统补完计划：时间制敌潮、多武器/被动栏位、武器等级、宝箱进化、磁铁拾取、构筑面板与长局探针 |
 | [stage8-asset-production-plan-2026-05-04.md](./stage8-asset-production-plan-2026-05-04.md) | Stage 8 资产成品化分批规划：按 UI、角色、敌人、武器、音频和运行时验收组织占位替换路线 |
 | [stage8-asset-generation-prompt-pack-2026-05-04.md](./stage8-asset-generation-prompt-pack-2026-05-04.md) | Stage 8 资产生成提示词包：整合旧 Stage 7 提示词，明确资源 ID、输出路径、命名、格式、二次处理和替换目标 |
+| [stage8-asset-pilot-implementation-plan-2026-05-07.md](./stage8-asset-pilot-implementation-plan-2026-05-07.md) | Stage 8.1 资产替换试点执行计划：冻结第一批角色、敌人、武器、UI 与 SFX 候选路径、生成配置、接入顺序和 MCP 证据目录 |
 | [current-remediation-baseline-2026-05-02.md](./current-remediation-baseline-2026-05-02.md) | 当前整改基线快照：记录轻量校验结果、资源 catalog 差异、已知阻塞与 Stage 7 执行前置状态 |
 | [manual-review-test-cases-2026-05-02.md](./manual-review-test-cases-2026-05-02.md) | 人工复核测试用例：覆盖核心循环、Stage 5 叙事、Stage 6 隐藏层/挑战层、Stage 7 成品化与发布 smoke |
 | [manual-review-ledger-2026-05-02.md](./manual-review-ledger-2026-05-02.md) | Godot MCP 辅助复核 ledger：为 Windows 启动、主菜单、长局、FS/CL 入口、音量设置与导出包启动建立首轮记录表 |
@@ -176,3 +177,4 @@
 | 0.4.99 | 2026-05-04 | 续补 Stage 7.5 运行时闭环：多武器槽独立自动发射、宝箱 pickup 实际开奖并接入主/副武器满级进化触发 |
 | 0.5.00 | 2026-05-04 | 新增当前项目状态与深度整理计划，确立现行文档真源、代码拆分边界和后续资产/平衡优先级 |
 | 0.5.01 | 2026-05-04 | 新增代码整理实施计划与 Stage 8 资产成品化规划/提示词包，明确占位替换、路径命名和二次处理流程 |
+| 0.5.02 | 2026-05-07 | 新增 Stage 8.1 资产替换试点执行计划与首批批量生成配置，冻结第一批候选路径、接入顺序和 MCP 证据目录 |

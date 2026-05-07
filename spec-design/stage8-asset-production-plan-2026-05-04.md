@@ -85,3 +85,9 @@ Stage 8 接续 Stage 7 的资产方向稿和提示词文档，将资产工作从
 - 每个角色、敌人、武器批次都有明确路径、命名和替换目标。
 - 旧 Stage 7 文档仍作为历史参考保留，不再作为当前执行真源。
 - 没有生成新图像、没有替换运行时占位、没有修改资源 catalog。
+
+## Stage 8.1 试点承接
+
+Stage 8.1 的当前执行真源为 `stage8-asset-pilot-implementation-plan-2026-05-07.md`。第一批只覆盖 `char_knight`、`char_mage`、`char_rogue`、`enemy_shadowling`、`enemy_brute`、`wpn_holy_cross`、`wpn_reliquary_orb`、`wpn_solar_lance` / `wpn_sacred_lance` fallback、HUD 图标和 3 个核心 SFX。
+
+本阶段已新增 `data/pipelines/stage8_asset_pilot_batch.json` 作为批量生成入口；由于本机当前未配置 `.env` / API key，生成步骤需等待密钥或人工/Agent 图像通道就绪后执行。运行时替换、catalog 更新和 MCP 截图证据不得早于候选资产生成与人工确认。
