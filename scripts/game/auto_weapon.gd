@@ -2,6 +2,7 @@ extends Node
 
 const ORBIT_WEAPON_SCRIPT: Script = preload("res://scripts/game/orbit_weapon.gd")
 const AURA_WEAPON_SCRIPT: Script = preload("res://scripts/game/aura_weapon.gd")
+const RUNTIME_PROFILE_RESOLVER_SCRIPT: Script = preload("res://scripts/systems/weapon_runtime_profile_resolver.gd")
 
 @export var base_damage: float = 12.0
 @export var attack_interval: float = 0.45
@@ -143,55 +144,22 @@ func get_runtime_weapon_slot_profiles() -> Array[Dictionary]:
 
 
 func _build_slot_runtime_profile(slot: Dictionary, slot_index: int) -> Dictionary:
-    if slot_index == 0:
-        return {
-            "weapon_id": str(slot.get("id", current_weapon_id)),
-            "level": maxi(1, int(slot.get("level", 1))),
-            "base_damage": base_damage,
-            "attack_interval": attack_interval,
-            "weapon_mode": weapon_mode,
-            "projectile_count": projectile_count,
-            "spread_angle_deg": spread_angle_deg,
-            "spread_jitter_deg": spread_jitter_deg,
-            "projectile_hits": projectile_hits,
-            "projectile_style": projectile_style,
-            "impact_radius": _get_resolved_impact_radius(),
-            "impact_damage_mult": impact_damage_mult,
-        }
+    return RUNTIME_PROFILE_RESOLVER_SCRIPT.build_slot_profile(slot, slot_index, _get_base_runtime_profile_defaults())
 
-    var stats_var: Variant = slot.get("stats", {})
-    var stats: Dictionary = stats_var if stats_var is Dictionary else {}
-    var level: int = maxi(1, int(slot.get("level", stats.get("level", 1))))
-    var style_id: String = str(stats.get("projectile_style", slot.get("style", projectile_style))).strip_edges()
-    if style_id == "":
-        style_id = projectile_style
 
-    var damage: float = base_damage
-    damage *= maxf(0.1, float(stats.get("damage_mult", 1.0)))
-    damage += float(stats.get("flat_damage_bonus", 0.0))
-    damage *= 0.82 if slot_index > 0 else 1.0
-
-    var interval: float = attack_interval * clampf(float(stats.get("interval_mult", 1.0)), 0.35, 1.25)
-    interval *= 1.0 + float(slot_index) * 0.14
-
-    var count: int = clampi(int(stats.get("projectile_count", projectile_count)), 1, 8)
-    var mode: String = str(stats.get("weapon_mode", weapon_mode))
-    if count > 1 and mode == "single":
-        mode = "spread"
-
+func _get_base_runtime_profile_defaults() -> Dictionary:
     return {
-        "weapon_id": str(slot.get("evolved_id", slot.get("id", current_weapon_id))),
-        "level": level,
-        "base_damage": maxf(1.0, damage),
-        "attack_interval": maxf(0.10, interval),
-        "weapon_mode": mode,
-        "projectile_count": count,
-        "spread_angle_deg": clampf(float(stats.get("spread_angle_deg", spread_angle_deg)), 0.0, 60.0),
-        "spread_jitter_deg": clampf(float(stats.get("spread_jitter_deg", spread_jitter_deg)), 0.0, 20.0),
-        "projectile_hits": clampi(int(stats.get("projectile_hits", projectile_hits)), 1, 12),
-        "projectile_style": style_id,
-        "impact_radius": clampf(float(stats.get("impact_radius", impact_radius)), 0.0, 140.0),
-        "impact_damage_mult": clampf(float(stats.get("impact_damage_mult", impact_damage_mult)), 0.15, 0.95),
+        "current_weapon_id": current_weapon_id,
+        "base_damage": base_damage,
+        "attack_interval": attack_interval,
+        "weapon_mode": weapon_mode,
+        "projectile_count": projectile_count,
+        "spread_angle_deg": spread_angle_deg,
+        "spread_jitter_deg": spread_jitter_deg,
+        "projectile_hits": projectile_hits,
+        "projectile_style": projectile_style,
+        "impact_radius": impact_radius,
+        "impact_damage_mult": impact_damage_mult,
     }
 
 
@@ -322,37 +290,11 @@ func _play_weapon_feedback(direction: Vector2, is_crit: bool, style_id: String =
 
 
 func _get_weapon_color(style_id: String, is_crit: bool) -> Color:
-    var color: Color = Color(0.72, 0.90, 1.0, 1.0)
-    match style_id.to_lower():
-        "mage_orb":
-            color = Color(0.72, 0.62, 1.0, 1.0)
-        "rogue_dart":
-            color = Color(0.58, 1.0, 0.78, 1.0)
-        "storm_arrow":
-            color = Color(0.58, 0.88, 1.0, 1.0)
-        "cleric_halo":
-            color = Color(1.0, 0.94, 0.58, 1.0)
-    if is_crit:
-        color = color.lerp(Color(1.0, 0.86, 0.28, 1.0), 0.45)
-    return color
+    return RUNTIME_PROFILE_RESOLVER_SCRIPT.get_weapon_color(style_id, is_crit)
 
 
 func _get_resolved_impact_radius() -> float:
-    if impact_radius > 0.0:
-        return impact_radius
-
-    match projectile_style.to_lower():
-        "arcane_comet":
-            return 42.0
-        "holy_judgment", "vowblade", "vowstorm":
-            return 38.0
-        "radiant_hammer", "radiant_cataclysm":
-            return 58.0
-        "solar_supernova", "glacial_nova":
-            return 66.0
-        "astral_disc", "astral_horizon", "reliquary_orb", "zenith_reliquary":
-            return 46.0
-    return 0.0
+    return RUNTIME_PROFILE_RESOLVER_SCRIPT.get_resolved_impact_radius(projectile_style, impact_radius)
 
 
 func _refresh_survivor_effect_layers() -> void:
@@ -402,25 +344,11 @@ func _remove_effect_node(property_name: String) -> void:
 
 
 func _get_orbit_config() -> Dictionary:
-    var style: String = projectile_style.to_lower()
-    if style.find("astral") >= 0:
-        return {"style_id": projectile_style, "radius": 66.0, "count": 2 + int(has_evolved_to("wpn_astral_horizon")), "damage_mult": 0.46, "hit_interval": 0.32}
-    if style.find("reliquary") >= 0 or style.find("zenith") >= 0:
-        return {"style_id": projectile_style, "radius": 74.0, "count": 3 if style.find("zenith") >= 0 else 2, "damage_mult": 0.42, "hit_interval": 0.36}
-    if style.find("void_chain") >= 0 or style.find("abyssal") >= 0:
-        return {"style_id": projectile_style, "radius": 62.0, "count": 2, "damage_mult": 0.38, "hit_interval": 0.38}
-    return {}
+    return RUNTIME_PROFILE_RESOLVER_SCRIPT.get_orbit_config(projectile_style, _evolved_weapon_ids)
 
 
 func _get_aura_config() -> Dictionary:
-    var style: String = projectile_style.to_lower()
-    if style.find("holy_judgment") >= 0 or style.find("seraph") >= 0 or style.find("cleric_halo") >= 0:
-        return {"style_id": projectile_style, "radius": 88.0, "damage_mult": 0.24, "tick_interval": 0.45}
-    if style.find("radiant") >= 0:
-        return {"style_id": projectile_style, "radius": 78.0, "damage_mult": 0.22, "tick_interval": 0.5}
-    if style.find("glacial") >= 0:
-        return {"style_id": projectile_style, "radius": 82.0, "damage_mult": 0.20, "tick_interval": 0.48}
-    return {}
+    return RUNTIME_PROFILE_RESOLVER_SCRIPT.get_aura_config(projectile_style)
 
 
 func _find_nearest_enemy() -> Node2D:
