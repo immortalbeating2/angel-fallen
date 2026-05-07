@@ -12,29 +12,30 @@
 - 当前本机未检测到 `.env`、`GEMINI_API_KEY`、`ELEVENLABS_API_KEY`，因此 API 批量生成需要等密钥就绪后执行。
 - `assets/sprites/characters/`、`assets/sprites/enemies/`、`assets/sprites/weapons/` 目前主要是 README / `.gitkeep`，可作为第一批候选落库目录。
 - `assets/audio/` 当前只有 README 和 Stage 7 提示词文档，SFX/BGM 正式文件仍待生成。
+- 2026-05-07 已生成一批程序化 fallback candidate / v1 文件，用于先跑通审阅、接入和可读性验证链路；这些文件不是最终美术资产，后续可被 AI/人工成品资产替换。
 
 ## 第一批试点清单
 
 | 批次 | asset_id / cue_id | 类型 | candidate_path | selected_path | 当前替换目标 | 状态 |
 |------|-------------------|------|----------------|---------------|--------------|------|
-| S8.1-C | `char_knight` | character concept | `assets/sprites/characters/char_knight_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_knight_topdown_concept_v1.png` | `resources/characters/char_knight.tres` preview | pending_generation |
-| S8.1-C | `char_mage` | character concept | `assets/sprites/characters/char_mage_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_mage_topdown_concept_v1.png` | `resources/characters/char_mage.tres` preview | pending_generation |
-| S8.1-C | `char_rogue` | character concept | `assets/sprites/characters/char_rogue_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_rogue_topdown_concept_v1.png` | `resources/characters/char_rogue.tres` preview | pending_generation |
-| S8.1-E | `enemy_shadowling` | enemy concept | `assets/sprites/enemies/enemy_shadowling_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_shadowling_topdown_concept_v1.png` | `resources/enemies/enemy_shadowling.tres` preview | pending_generation |
-| S8.1-E | `enemy_brute` | enemy concept | `assets/sprites/enemies/enemy_brute_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_brute_topdown_concept_v1.png` | `resources/enemies/enemy_brute.tres` preview | pending_generation |
-| S8.1-W | `wpn_holy_cross` | weapon projectile | `assets/sprites/weapons/wpn_holy_cross_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_holy_cross_projectile_v1.png` | `resources/weapons/wpn_holy_cross.tres` preview | pending_generation |
-| S8.1-W | `wpn_reliquary_orb` | weapon projectile | `assets/sprites/weapons/wpn_reliquary_orb_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_reliquary_orb_projectile_v1.png` | `resources/weapons/wpn_reliquary_orb.tres` preview | pending_generation |
-| S8.1-W | `wpn_solar_lance` | weapon projectile | `assets/sprites/weapons/wpn_solar_lance_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_solar_lance_projectile_v1.png` | 数据层存在，catalog 当前缺 `resources/weapons/wpn_solar_lance.tres`，先记录为 gap | pending_gap_resolution |
-| S8.1-W | `wpn_sacred_lance` | weapon projectile fallback | `assets/sprites/weapons/wpn_sacred_lance_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_sacred_lance_projectile_v1.png` | `resources/weapons/wpn_sacred_lance.tres` preview | pending_generation |
-| S8.1-UI | `ui_hud_health_icon` | UI icon | `assets/sprites/ui/icons/ui_hud_health_icon_candidate_01.png` | `assets/sprites/ui/icons/ui_hud_health_icon_v1.png` | HUD HP / status icon candidate | pending_generation |
-| S8.1-UI | `ui_hud_xp_icon` | UI icon | `assets/sprites/ui/icons/ui_hud_xp_icon_candidate_01.png` | `assets/sprites/ui/icons/ui_hud_xp_icon_v1.png` | HUD XP / pickup icon candidate | pending_generation |
-| S8.1-A | `pickup_xp_small` | SFX | `assets/audio/sfx/pickup_xp_small_candidate_01.wav` | `assets/audio/sfx/pickup_xp_small_v1.wav` | small pickup cue | pending_generation |
-| S8.1-A | `weapon_impact_light` | SFX | `assets/audio/sfx/weapon_impact_light_candidate_01.wav` | `assets/audio/sfx/weapon_impact_light_v1.wav` | light hit cue | pending_generation |
-| S8.1-A | `enemy_kill` | SFX | `assets/audio/sfx/enemy_kill_candidate_01.wav` | `assets/audio/sfx/enemy_kill_v1.wav` | enemy kill cue | pending_generation |
+| S8.1-C | `char_knight` | character concept | `assets/sprites/characters/char_knight_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_knight_topdown_concept_v1.png` | `resources/characters/char_knight.tres` preview | fallback_ready |
+| S8.1-C | `char_mage` | character concept | `assets/sprites/characters/char_mage_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_mage_topdown_concept_v1.png` | `resources/characters/char_mage.tres` preview | fallback_ready |
+| S8.1-C | `char_rogue` | character concept | `assets/sprites/characters/char_rogue_topdown_concept_candidate_01.png` | `assets/sprites/characters/char_rogue_topdown_concept_v1.png` | `resources/characters/char_rogue.tres` preview | fallback_ready |
+| S8.1-E | `enemy_shadowling` | enemy concept | `assets/sprites/enemies/enemy_shadowling_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_shadowling_topdown_concept_v1.png` | `resources/enemies/enemy_shadowling.tres` preview | fallback_ready |
+| S8.1-E | `enemy_brute` | enemy concept | `assets/sprites/enemies/enemy_brute_topdown_concept_candidate_01.png` | `assets/sprites/enemies/enemy_brute_topdown_concept_v1.png` | `resources/enemies/enemy_brute.tres` preview | fallback_ready |
+| S8.1-W | `wpn_holy_cross` | weapon projectile | `assets/sprites/weapons/wpn_holy_cross_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_holy_cross_projectile_v1.png` | `resources/weapons/wpn_holy_cross.tres` preview | fallback_ready |
+| S8.1-W | `wpn_reliquary_orb` | weapon projectile | `assets/sprites/weapons/wpn_reliquary_orb_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_reliquary_orb_projectile_v1.png` | `resources/weapons/wpn_reliquary_orb.tres` preview | fallback_ready |
+| S8.1-W | `wpn_solar_lance` | weapon projectile | `assets/sprites/weapons/wpn_solar_lance_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_solar_lance_projectile_v1.png` | 数据层存在，catalog 当前缺 `resources/weapons/wpn_solar_lance.tres`，先记录为 gap | fallback_ready_gap_pending |
+| S8.1-W | `wpn_sacred_lance` | weapon projectile fallback | `assets/sprites/weapons/wpn_sacred_lance_projectile_candidate_01.png` | `assets/sprites/weapons/wpn_sacred_lance_projectile_v1.png` | `resources/weapons/wpn_sacred_lance.tres` preview | fallback_ready |
+| S8.1-UI | `ui_hud_health_icon` | UI icon | `assets/sprites/ui/icons/ui_hud_health_icon_candidate_01.png` | `assets/sprites/ui/icons/ui_hud_health_icon_v1.png` | HUD HP / status icon candidate | fallback_ready |
+| S8.1-UI | `ui_hud_xp_icon` | UI icon | `assets/sprites/ui/icons/ui_hud_xp_icon_candidate_01.png` | `assets/sprites/ui/icons/ui_hud_xp_icon_v1.png` | HUD XP / pickup icon candidate | fallback_ready |
+| S8.1-A | `pickup_xp_small` | SFX | `assets/audio/sfx/pickup_xp_small_candidate_01.wav` | `assets/audio/sfx/pickup_xp_small_v1.wav` | small pickup cue | fallback_ready |
+| S8.1-A | `weapon_impact_light` | SFX | `assets/audio/sfx/weapon_impact_light_candidate_01.wav` | `assets/audio/sfx/weapon_impact_light_v1.wav` | light hit cue | fallback_ready |
+| S8.1-A | `enemy_kill` | SFX | `assets/audio/sfx/enemy_kill_candidate_01.wav` | `assets/audio/sfx/enemy_kill_v1.wav` | enemy kill cue | fallback_ready |
 
 ## 生成与二次处理步骤
 
-1. 使用 `data/pipelines/stage8_asset_pilot_batch.json` 执行批量生成；若无 API 密钥，则保留配置并等待人工/Agent 图像通道补齐候选文件。
+1. 使用 `data/pipelines/stage8_asset_pilot_batch.json` 执行批量生成；若无 API 密钥，则使用当前程序化 fallback 资产继续跑通接入链路，并在后续成品资产生成后替换。
 2. 所有候选先保留 `*_candidate_01`，人工确认后复制为 `*_v1`。
 3. 图像候选必须完成透明背景、裁切、尺寸归一和 48px / 64px 缩放可读性检查。
 4. 武器 projectile 必须在 25%、50%、100% 缩放下仍能和敌方威胁色区分。

@@ -1,0 +1,175 @@
+{
+  "generated_at": "2026-05-07 00:00:00",
+  "config_source": "stage8_asset_pilot_batch.json",
+  "generation_mode": "local_procedural_fallback_no_api_keys",
+  "entries": [
+    {
+      "base": "char_knight_topdown_concept",
+      "type": "image",
+      "dir": "assets/sprites/characters",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/characters/char_knight_topdown_concept_candidate_01.png",
+        "assets/sprites/characters/char_knight_topdown_concept_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "char_mage_topdown_concept",
+      "type": "image",
+      "dir": "assets/sprites/characters",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/characters/char_mage_topdown_concept_candidate_01.png",
+        "assets/sprites/characters/char_mage_topdown_concept_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "char_rogue_topdown_concept",
+      "type": "image",
+      "dir": "assets/sprites/characters",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/characters/char_rogue_topdown_concept_candidate_01.png",
+        "assets/sprites/characters/char_rogue_topdown_concept_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "enemy_shadowling_topdown_concept",
+      "type": "image",
+      "dir": "assets/sprites/enemies",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/enemies/enemy_shadowling_topdown_concept_candidate_01.png",
+        "assets/sprites/enemies/enemy_shadowling_topdown_concept_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "enemy_brute_topdown_concept",
+      "type": "image",
+      "dir": "assets/sprites/enemies",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/enemies/enemy_brute_topdown_concept_candidate_01.png",
+        "assets/sprites/enemies/enemy_brute_topdown_concept_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "wpn_holy_cross_projectile",
+      "type": "image",
+      "dir": "assets/sprites/weapons",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/weapons/wpn_holy_cross_projectile_candidate_01.png",
+        "assets/sprites/weapons/wpn_holy_cross_projectile_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "wpn_reliquary_orb_projectile",
+      "type": "image",
+      "dir": "assets/sprites/weapons",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/weapons/wpn_reliquary_orb_projectile_candidate_01.png",
+        "assets/sprites/weapons/wpn_reliquary_orb_projectile_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "wpn_solar_lance_projectile",
+      "type": "image",
+      "dir": "assets/sprites/weapons",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/weapons/wpn_solar_lance_projectile_candidate_01.png",
+        "assets/sprites/weapons/wpn_solar_lance_projectile_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "wpn_sacred_lance_projectile",
+      "type": "image",
+      "dir": "assets/sprites/weapons",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/weapons/wpn_sacred_lance_projectile_candidate_01.png",
+        "assets/sprites/weapons/wpn_sacred_lance_projectile_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "ui_hud_health_icon",
+      "type": "image",
+      "dir": "assets/sprites/ui/icons",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/ui/icons/ui_hud_health_icon_candidate_01.png",
+        "assets/sprites/ui/icons/ui_hud_health_icon_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "ui_hud_xp_icon",
+      "type": "image",
+      "dir": "assets/sprites/ui/icons",
+      "ext": ".png",
+      "variants": [
+        "assets/sprites/ui/icons/ui_hud_xp_icon_candidate_01.png",
+        "assets/sprites/ui/icons/ui_hud_xp_icon_v1.png"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "pickup_xp_small",
+      "type": "sfx",
+      "dir": "assets/audio/sfx",
+      "ext": ".wav",
+      "variants": [
+        "assets/audio/sfx/pickup_xp_small_candidate_01.wav",
+        "assets/audio/sfx/pickup_xp_small_v1.wav"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "weapon_impact_light",
+      "type": "sfx",
+      "dir": "assets/audio/sfx",
+      "ext": ".wav",
+      "variants": [
+        "assets/audio/sfx/weapon_impact_light_candidate_01.wav",
+        "assets/audio/sfx/weapon_impact_light_v1.wav"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    },
+    {
+      "base": "enemy_kill",
+      "type": "sfx",
+      "dir": "assets/audio/sfx",
+      "ext": ".wav",
+      "variants": [
+        "assets/audio/sfx/enemy_kill_candidate_01.wav",
+        "assets/audio/sfx/enemy_kill_v1.wav"
+      ],
+      "variants_requested": 1,
+      "status": "fallback_ready"
+    }
+  ]
+}
